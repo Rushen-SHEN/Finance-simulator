@@ -180,6 +180,20 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
           ))}
         </div>
       </div>
+
+      {/* Legend */}
+      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[10px] text-slate-400 leading-relaxed">
+        <span className="font-semibold text-slate-500">图例：</span>
+        <span><b className="text-slate-600">M</b> = 月份（Month）</span>
+        <span><b className="text-slate-600">M1</b> = 2026年7月，种子轮融资启动</span>
+        <span><b className="text-slate-600">M12</b> = 2027年6月，首年结束</span>
+        <span><b className="text-slate-600">M24</b> = 2028年6月</span>
+        <span><b className="text-slate-600">M36</b> = 2029年6月</span>
+        <span><b className="text-slate-600">M60</b> = 2031年6月，五年规划终点</span>
+        <span className="text-slate-300">|</span>
+        <span>🟢 Best = 最乐观进度</span>
+        <span>🔵 Base = 保守基准进度</span>
+      </div>
     </section>
   );
 }

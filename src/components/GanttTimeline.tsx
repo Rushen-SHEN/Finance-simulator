@@ -88,6 +88,17 @@ function GanttChart({ items, label }: { items: MilestoneItem[]; label: string })
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-green-600" /> 商业化</span>
           <span className="flex items-center gap-1"><i className="inline-block w-2.5 h-2.5 bg-green-600 rotate-45 rounded-sm" /> ★关键里程碑</span>
         </div>
+        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-gray-400 mt-2" style={{ paddingLeft: 200 }}>
+          <span><b className="text-gray-500">M</b> = 月份</span>
+          <span><b className="text-gray-500">M1</b> = 2026.07 种子轮启动</span>
+          <span><b className="text-gray-500">M12</b> = 2027.06</span>
+          <span><b className="text-gray-500">M24</b> = 2028.06</span>
+          <span><b className="text-gray-500">M36</b> = 2029.06</span>
+          <span><b className="text-gray-500">M48</b> = 2030.06</span>
+          <span><b className="text-gray-500">M60</b> = 2031.06</span>
+          <span className="text-gray-300">|</span>
+          <span>Lag = 前置活动结束后的等待月数</span>
+        </div>
       </div>
 
       {/* Milestone Table */}
