@@ -19,17 +19,41 @@ import GanttTimeline from '@/components/GanttTimeline';
 import Assumptions from '@/components/Assumptions';
 import ParameterPanel from '@/components/ParameterPanel';
 
+const CODE_HASH = 'c50281c3dd92d836d2ba7702fad19f778404cddd49059afc7b2e6e537f436ea7';
+
+async function sha256(text: string): Promise<string> {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
 export default function Home() {
   const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
   const [showParams, setShowParams] = useState(false);
   const [scenario, setScenario] = useState<string>('neutral');
   const [mounted, setMounted] = useState(false);
+  const [unlocked, setUnlocked] = useState(false);
+  const [code, setCode] = useState('');
+  const [codeError, setCodeError] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setModel(loadModel());
     setMounted(true);
+    if (typeof window !== 'undefined' && sessionStorage.getItem('aria-unlocked') === '1') {
+      setUnlocked(true);
+    }
   }, []);
+
+  const handleUnlock = useCallback(async () => {
+    const hash = await sha256(code);
+    if (hash === CODE_HASH) {
+      setUnlocked(true);
+      setCodeError(false);
+      sessionStorage.setItem('aria-unlocked', '1');
+    } else {
+      setCodeError(true);
+    }
+  }, [code]);
 
   const result: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best);
 
@@ -77,6 +101,37 @@ export default function Home() {
     );
   }
 
+  if (!unlocked) {
+    return (
+      <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center px-4">
+        <div className="bg-slate-900/80 border border-slate-700 rounded-2xl p-8 sm:p-10 max-w-sm w-full text-center backdrop-blur-md shadow-2xl">
+          <div className="text-3xl mb-3">🔐</div>
+          <h1 className="text-xl font-bold text-slate-100 mb-2">ARIA 财务模型</h1>
+          <p className="text-sm text-slate-400 mb-6">输入Rushen的手机号尾号</p>
+          <input
+            type="password"
+            inputMode="numeric"
+            maxLength={4}
+            value={code}
+            onChange={e => { setCode(e.target.value.replace(/\D/g, '')); setCodeError(false); }}
+            onKeyDown={e => e.key === 'Enter' && handleUnlock()}
+            className={`w-full text-center text-2xl tracking-[0.5em] font-mono py-3 rounded-lg bg-slate-800 border ${codeError ? 'border-red-500 shake' : 'border-slate-600'} text-slate-100 outline-none focus:border-cyan-500 transition-colors placeholder:text-slate-600 placeholder:text-lg placeholder:tracking-normal`}
+            placeholder="****"
+            autoFocus
+          />
+          {codeError && <p className="text-red-400 text-xs mt-2">验证码错误，请重试</p>}
+          <button
+            onClick={handleUnlock}
+            className="mt-5 w-full py-2.5 rounded-lg bg-cyan-600 hover:bg-cyan-500 text-white font-semibold text-sm transition-colors"
+          >
+            进入面板
+          </button>
+          <p className="text-[11px] text-slate-600 mt-4">财务数据受密码保护 · 仅限授权人员访问</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#0B0F1A]">
       <Header
@@ -89,12 +144,6 @@ export default function Home() {
 
       <div ref={printRef} className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-12">
         <StatusStrip />
-        <div data-export-module>
-          <PhaseOverview milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
-        </div>
-        <div data-export-module>
-          <PhaseTimeline milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
-        </div>
 
         {showParams && (
           <div data-no-export>
@@ -106,6 +155,13 @@ export default function Home() {
             />
           </div>
         )}
+
+        <div data-export-module>
+          <PhaseOverview milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
+        </div>
+        <div data-export-module>
+          <PhaseTimeline milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
+        </div>
 
         <div data-export-module><MarketSection /></div>
         <div data-export-module><BusinessModel global={model.global} result={result} /></div>
