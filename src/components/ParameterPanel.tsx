@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, resolveMilestones } from '@/lib/calculator';
 import { DEFAULT_MODEL, YEAR_LABELS, OPEX_LABELS, COGS_LABELS, DEFAULT_ANNOTATIONS } from '@/lib/defaults';
-import { listProfiles, saveProfile, loadProfile, deleteProfile, ProfileEntry } from '@/lib/storage';
+import { listProfiles, saveProfile, loadProfile, deleteProfile, ProfileEntry, saveModel } from '@/lib/storage';
 
 interface Props {
   model: ModelInputs;
@@ -29,8 +29,52 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
   const [tab, setTab] = useState<TabKey>('pricing');
   const [profiles, setProfiles] = useState<ProfileEntry[]>([]);
   const [profileName, setProfileName] = useState('');
+  const [showCloseDialog, setShowCloseDialog] = useState(false);
+  const [lastAutoSave, setLastAutoSave] = useState<number | null>(null);
+  const [autoSaveCount, setAutoSaveCount] = useState(0);
+
+  // Snapshot at panel open to detect dirty state
+  const openSnapshotRef = useRef<string>(JSON.stringify(model));
+  const isDirty = JSON.stringify(model) !== openSnapshotRef.current;
 
   useEffect(() => { setProfiles(listProfiles()); }, []);
+
+  // Auto-save every 60s when dirty
+  useEffect(() => {
+    const timer = setInterval(() => {
+      if (JSON.stringify(model) !== openSnapshotRef.current) {
+        saveModel(model);
+        setLastAutoSave(Date.now());
+        setAutoSaveCount(c => c + 1);
+      }
+    }, 60_000);
+    return () => clearInterval(timer);
+  }, [model]);
+
+  // Close handler — show dialog if dirty, otherwise close directly
+  const handleClose = useCallback(() => {
+    if (isDirty) {
+      setShowCloseDialog(true);
+    } else {
+      onClose();
+    }
+  }, [isDirty, onClose]);
+
+  const handleCloseSave = useCallback(() => {
+    saveModel(model);
+    setShowCloseDialog(false);
+    onClose();
+  }, [model, onClose]);
+
+  const handleCloseSaveAs = useCallback(() => {
+    setShowCloseDialog(false);
+    setTab('profiles');
+  }, []);
+
+  const handleCloseDiscard = useCallback(() => {
+    setShowCloseDialog(false);
+    onClose();
+  }, [onClose]);
 
   const g = model.global;
   const y = model.yearly;
@@ -116,13 +160,18 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
   const handleSaveProfile = useCallback(() => {
     if (!profileName.trim()) return;
     saveProfile(profileName.trim(), model);
+    saveModel(model);
+    openSnapshotRef.current = JSON.stringify(model);
     setProfiles(listProfiles());
     setProfileName('');
   }, [profileName, model]);
 
   const handleLoadProfile = useCallback((name: string) => {
     const data = loadProfile(name);
-    if (data) onModelChange(data);
+    if (data) {
+      onModelChange(data);
+      openSnapshotRef.current = JSON.stringify(data);
+    }
   }, [onModelChange]);
 
   const handleDeleteProfile = useCallback((name: string) => {
@@ -143,14 +192,26 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-cyan-500/20">⚙</div>
           <div>
             <h2 className="text-lg font-bold text-white tracking-wide">参数控制台</h2>
-            <p className="text-[11px] text-slate-400">实时调整 · 全量存档 · 投资人路演专属</p>
+            <div className="flex items-center gap-2">
+              <p className="text-[11px] text-slate-400">实时调整 · 全量存档 · 投资人路演专属</p>
+              {isDirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">未保存</span>}
+              {lastAutoSave && (
+                <span className="text-[9px] text-slate-500">
+                  自动保存 {new Date(lastAutoSave).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
+                  {autoSaveCount > 1 && ` (${autoSaveCount}次)`}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => { saveModel(model); openSnapshotRef.current = JSON.stringify(model); setLastAutoSave(Date.now()); }} className="px-3 py-1.5 text-xs rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 transition-all">
+            💾 保存
+          </button>
           <button onClick={onReset} className="px-3 py-1.5 text-xs rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500/20 transition-all">
             ↻ 恢复默认
           </button>
-          <button onClick={onClose} className="px-3 py-1.5 text-xs rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-400 hover:bg-slate-600/50 transition-all">
+          <button onClick={handleClose} className="px-3 py-1.5 text-xs rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-400 hover:bg-slate-600/50 transition-all">
             ✕ 关闭
           </button>
         </div>
@@ -521,6 +582,32 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
           </div>
         )}
       </div>
+
+      {/* Close confirmation dialog */}
+      {showCloseDialog && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
+          <div className="bg-slate-800 border border-slate-600/60 rounded-xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-lg">⚠️</div>
+              <div>
+                <h3 className="text-white font-bold text-sm">参数已修改</h3>
+                <p className="text-[11px] text-slate-400">关闭前是否保存当前修改？</p>
+              </div>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <button onClick={handleCloseDiscard} className="px-4 py-2 text-xs rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all">
+                不保存
+              </button>
+              <button onClick={handleCloseSaveAs} className="px-4 py-2 text-xs rounded-lg bg-purple-500/10 border border-purple-500/30 text-purple-400 hover:bg-purple-500/20 transition-all">
+                命名存档
+              </button>
+              <button onClick={handleCloseSave} className="px-4 py-2 text-xs rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 text-white font-semibold hover:shadow-lg hover:shadow-cyan-500/20 transition-all">
+                💾 保存并关闭
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
