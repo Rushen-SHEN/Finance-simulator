@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs } from '@/lib/calculator';
+import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, resolveMilestones } from '@/lib/calculator';
 import { DEFAULT_MODEL, YEAR_LABELS, OPEX_LABELS, COGS_LABELS, DEFAULT_ANNOTATIONS } from '@/lib/defaults';
 import { listProfiles, saveProfile, loadProfile, deleteProfile, ProfileEntry } from '@/lib/storage';
 
@@ -57,18 +57,37 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
     onModelChange({ ...model, funding: { ...model.funding, [key]: val } });
   }, [model, onModelChange]);
 
-  const setMilestone = useCallback((idx: number, field: keyof MilestoneItem, val: string | boolean) => {
-    const next = model.milestones.map((m, i) => i === idx ? { ...m, [field]: val } : m);
-    onModelChange({ ...model, milestones: next });
-  }, [model, onModelChange]);
+  const [msCase, setMsCase] = useState<'best' | 'base'>('best');
+
+  const currentMs = msCase === 'best' ? model.milestones_best : model.milestones_base;
+  const msKey = msCase === 'best' ? 'milestones_best' : 'milestones_base';
+
+  const setMilestone = useCallback((idx: number, field: keyof MilestoneItem, val: string | boolean | number) => {
+    const next = currentMs.map((m, i) => {
+      if (i !== idx) return m;
+      const updated = { ...m, [field]: val };
+      // If user manually sets startM or endM, mark as manual
+      if (field === 'startM') updated.manualStart = true;
+      return updated;
+    });
+    // Resolve predecessor chains after edit
+    onModelChange({ ...model, [msKey]: next });
+  }, [model, onModelChange, currentMs, msKey]);
 
   const addMilestone = useCallback(() => {
-    onModelChange({ ...model, milestones: [...model.milestones, { month: 'M__', desc: '新里程碑', kpi: '', type: '商业化', bold: false }] });
-  }, [model, onModelChange]);
+    const newId = 'ms_' + Date.now().toString(36);
+    const item: MilestoneItem = { id: newId, desc: '新活动', kpi: '', type: '商业化', bold: false, startM: 1, endM: 3, predecessorId: null, lagMonths: 0, manualStart: true };
+    onModelChange({ ...model, [msKey]: [...currentMs, item] });
+  }, [model, onModelChange, currentMs, msKey]);
 
   const removeMilestone = useCallback((idx: number) => {
-    onModelChange({ ...model, milestones: model.milestones.filter((_, i) => i !== idx) });
-  }, [model, onModelChange]);
+    const removedId = currentMs[idx].id;
+    // Clear predecessor references to deleted item
+    const next = currentMs.filter((_, i) => i !== idx).map(m =>
+      m.predecessorId === removedId ? { ...m, predecessorId: null, manualStart: true } : m
+    );
+    onModelChange({ ...model, [msKey]: next });
+  }, [model, onModelChange, currentMs, msKey]);
 
   const setAnnotation = useCallback((key: string, val: string) => {
     onModelChange({ ...model, annotations: { ...model.annotations, [key]: val } });
@@ -272,29 +291,91 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
         {tab === 'milestones' && (
           <div className="space-y-4">
             <div className="flex items-center justify-between">
-              <SectionTitle>里程碑计划 (可增删编辑)</SectionTitle>
-              <button onClick={addMilestone} className="px-3 py-1.5 text-xs rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all">+ 添加</button>
+              <SectionTitle>里程碑计划 — 前置依赖自动推算</SectionTitle>
+              <div className="flex gap-2">
+                <div className="flex rounded-lg overflow-hidden border border-slate-600/50">
+                  <button onClick={() => setMsCase('best')} className={`px-3 py-1.5 text-xs font-medium transition-all ${msCase === 'best' ? 'bg-green-600/30 text-green-400 border-r border-green-500/30' : 'text-slate-400 hover:text-slate-200'}`}>🚀 Best</button>
+                  <button onClick={() => setMsCase('base')} className={`px-3 py-1.5 text-xs font-medium transition-all ${msCase === 'base' ? 'bg-blue-600/30 text-blue-400' : 'text-slate-400 hover:text-slate-200'}`}>📊 Base</button>
+                </div>
+                <button onClick={addMilestone} className="px-3 py-1.5 text-xs rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all">+ 添加</button>
+              </div>
             </div>
             <NoteBar text={model.annotations.milestones} annotationKey="milestones" onChange={setAnnotation} />
-            <div className="space-y-2">
-              {model.milestones.map((m, i) => (
-                <div key={i} className={`rounded-xl bg-slate-800/50 border p-3 flex flex-col md:flex-row gap-2 items-start ${m.bold ? 'border-cyan-500/40' : 'border-slate-700/50'}`}>
-                  <input value={m.month} onChange={e => setMilestone(i, 'month', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50" placeholder="M__" />
-                  <input value={m.desc} onChange={e => setMilestone(i, 'desc', e.target.value)} className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 min-w-[200px]" placeholder="描述" />
-                  <input value={m.kpi} onChange={e => setMilestone(i, 'kpi', e.target.value)} className="w-40 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50" placeholder="KPI" />
-                  <select value={m.type} onChange={e => setMilestone(i, 'type', e.target.value)} className="bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50">
-                    <option value="研发">🔵 研发</option>
-                    <option value="注册">🟣 注册</option>
-                    <option value="融资">🟡 融资</option>
-                    <option value="商业化">🟢 商业化</option>
-                  </select>
-                  <label className="flex items-center gap-1 text-xs text-slate-400">
-                    <input type="checkbox" checked={m.bold} onChange={e => setMilestone(i, 'bold', e.target.checked)} className="accent-cyan-500" /> ★
-                  </label>
-                  <button onClick={() => removeMilestone(i)} className="text-red-400/60 hover:text-red-400 text-xs px-1.5">✕</button>
+
+            <p className="text-[11px] text-slate-500">设置前置活动后，该活动的开始月份 = 前置活动结束月份 + Lag + 1。修改前置活动时所有依赖链自动重算。</p>
+
+            {/* Resolved preview */}
+            {(() => {
+              const resolved = resolveMilestones(currentMs);
+              return (
+                <div className="space-y-2">
+                  {currentMs.map((m, i) => {
+                    const rm = resolved[i];
+                    const duration = m.endM - m.startM + 1;
+                    const resolvedDuration = rm.endM - rm.startM + 1;
+                    const isAutoShifted = !m.manualStart && m.predecessorId && (rm.startM !== m.startM);
+
+                    return (
+                      <div key={m.id} className={`rounded-xl bg-slate-800/50 border p-3 space-y-2 ${m.bold ? 'border-cyan-500/40' : 'border-slate-700/50'}`}>
+                        {/* Row 1: ID + Description + KPI + Type + Bold + Delete */}
+                        <div className="flex gap-2 items-center flex-wrap">
+                          <input value={m.id} onChange={e => setMilestone(i, 'id', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-[10px] text-cyan-400 font-mono outline-none focus:border-cyan-500/50" placeholder="id" />
+                          <input value={m.desc} onChange={e => setMilestone(i, 'desc', e.target.value)} className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 min-w-[180px]" placeholder="活动描述" />
+                          <input value={m.kpi} onChange={e => setMilestone(i, 'kpi', e.target.value)} className="w-36 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50" placeholder="KPI" />
+                          <select value={m.type} onChange={e => setMilestone(i, 'type', e.target.value)} className="bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50">
+                            <option value="研发">🔵 研发</option>
+                            <option value="注册">🟣 注册</option>
+                            <option value="融资">🟡 融资</option>
+                            <option value="商业化">🟢 商业化</option>
+                          </select>
+                          <label className="flex items-center gap-1 text-xs text-slate-400"><input type="checkbox" checked={m.bold} onChange={e => setMilestone(i, 'bold', e.target.checked)} className="accent-cyan-500" /> ★</label>
+                          <button onClick={() => removeMilestone(i)} className="text-red-400/60 hover:text-red-400 text-xs px-1.5">✕</button>
+                        </div>
+
+                        {/* Row 2: Start/End/Duration + Predecessor + Lag */}
+                        <div className="flex gap-2 items-center flex-wrap text-xs">
+                          <span className="text-slate-500 w-12">开始M</span>
+                          <input type="number" value={m.startM} min={1} max={60} onChange={e => { const v = parseInt(e.target.value) || 1; setMilestone(i, 'startM', v); }} className="w-16 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 text-center" />
+                          <span className="text-slate-500 w-12">结束M</span>
+                          <input type="number" value={m.endM} min={m.startM} max={60} onChange={e => { const v = parseInt(e.target.value) || m.startM; setMilestone(i, 'endM', v); }} className="w-16 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 text-center" />
+                          <span className="text-slate-500">工期: <span className="text-white font-semibold">{duration}月</span></span>
+
+                          <span className="text-slate-600 mx-1">|</span>
+
+                          <span className="text-slate-500">前置:</span>
+                          <select
+                            value={m.predecessorId || ''}
+                            onChange={e => {
+                              const val = e.target.value || null;
+                              const next = currentMs.map((item, j) => j === i ? { ...item, predecessorId: val, manualStart: !val } : item);
+                              onModelChange({ ...model, [msKey]: next });
+                            }}
+                            className="bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 max-w-[120px]"
+                          >
+                            <option value="">无</option>
+                            {currentMs.filter(other => other.id !== m.id).map(other => (
+                              <option key={other.id} value={other.id}>{other.id}</option>
+                            ))}
+                          </select>
+
+                          {m.predecessorId && (
+                            <>
+                              <span className="text-slate-500">Lag:</span>
+                              <input type="number" value={m.lagMonths} onChange={e => setMilestone(i, 'lagMonths', parseInt(e.target.value) || 0)} className="w-14 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 text-center" />
+                              <span className="text-slate-500">月</span>
+                            </>
+                          )}
+
+                          {isAutoShifted && (
+                            <span className="text-amber-400 text-[10px] ml-1">→ 实际M{rm.startM}–M{rm.endM} ({resolvedDuration}月)</span>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
-              ))}
-            </div>
+              );
+            })()}
           </div>
         )}
 

@@ -56,11 +56,40 @@ export interface FundingInputs {
 }
 
 export interface MilestoneItem {
-  month: string;
+  id: string;
   desc: string;
   kpi: string;
-  type: string;
+  type: '研发' | '注册' | '融资' | '商业化';
   bold: boolean;
+  startM: number;        // start month (1–60)
+  endM: number;          // end month (1–60)
+  predecessorId: string | null;  // id of predecessor activity
+  lagMonths: number;     // months after predecessor ends before this starts
+  manualStart: boolean;  // true = user-set start; false = auto from predecessor
+}
+
+/** Resolve milestone schedule: propagate predecessor chains */
+export function resolveMilestones(items: MilestoneItem[]): MilestoneItem[] {
+  const byId = new Map(items.map(m => [m.id, { ...m }]));
+  const resolved = items.map(m => ({ ...m }));
+  // Topological resolve — iterate until stable (max 20 passes for safety)
+  for (let pass = 0; pass < 20; pass++) {
+    let changed = false;
+    for (const m of resolved) {
+      if (m.manualStart || !m.predecessorId) continue;
+      const pred = resolved.find(p => p.id === m.predecessorId);
+      if (!pred) continue;
+      const duration = m.endM - m.startM; // preserve duration
+      const newStart = pred.endM + m.lagMonths + 1;
+      if (newStart !== m.startM) {
+        m.startM = newStart;
+        m.endM = newStart + duration;
+        changed = true;
+      }
+    }
+    if (!changed) break;
+  }
+  return resolved;
 }
 
 export interface YearlyInputs {
@@ -78,7 +107,8 @@ export interface ModelInputs {
   yearly: YearlyInputs;
   opex: OpExDetail;
   funding: FundingInputs;
-  milestones: MilestoneItem[];
+  milestones_best: MilestoneItem[];
+  milestones_base: MilestoneItem[];
   annotations: Record<string, string>;
 }
 

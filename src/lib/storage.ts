@@ -102,7 +102,8 @@ function mergeWithDefaults(partial: Partial<ModelInputs>): ModelInputs {
       travel_ops: partial.opex?.travel_ops || [...d.opex.travel_ops],
     },
     funding: { ...d.funding, ...(partial.funding || {}) },
-    milestones: partial.milestones || [...d.milestones.map(m => ({ ...m }))],
+    milestones_best: partial.milestones_best || d.milestones_best.map(m => ({ ...m })),
+    milestones_base: partial.milestones_base || d.milestones_base.map(m => ({ ...m })),
     annotations: { ...d.annotations, ...(partial.annotations || {}) },
   };
 }

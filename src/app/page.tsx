@@ -89,7 +89,7 @@ export default function Home() {
         <RevenueCharts result={result} />
         <ProfitCharts result={result} />
         <FundingPlan result={result} scenario={scenario} funding={model.funding} />
-        <GanttTimeline scenario={scenario} milestones={model.milestones} />
+        <GanttTimeline scenario={scenario} milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
         <Assumptions scenario={scenario} global={model.global} result={result} />
 
         <footer className="text-center py-8 border-t border-gray-200 mt-8 text-xs text-gray-500">

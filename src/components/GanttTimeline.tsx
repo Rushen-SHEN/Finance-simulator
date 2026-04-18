@@ -1,91 +1,87 @@
-import { MilestoneItem } from '@/lib/calculator';
+'use client';
+import { useState } from 'react';
+import { MilestoneItem, resolveMilestones } from '@/lib/calculator';
 
 const TYPE_ICONS: Record<string, string> = { '研发': '🔵', '注册': '🟣', '融资': '🟡', '商业化': '🟢' };
-const TYPE_CLS: Record<string, string> = { '研发': 'bg-blue-100 text-blue-800', '注册': 'bg-purple-100 text-purple-800', '融资': 'bg-amber-100 text-amber-800', '商业化': 'bg-green-100 text-green-800' };
+const TYPE_CLS: Record<string, string> = {
+  '研发': 'bg-blue-100 text-blue-800',
+  '注册': 'bg-purple-100 text-purple-800',
+  '融资': 'bg-amber-100 text-amber-800',
+  '商业化': 'bg-green-100 text-green-800',
+};
+const BAR_CLS: Record<string, string> = {
+  '研发': 'bg-gradient-to-r from-blue-600 to-blue-400',
+  '注册': 'bg-gradient-to-r from-purple-600 to-purple-400',
+  '融资': 'bg-gradient-to-r from-amber-500 to-amber-400',
+  '商业化': 'bg-gradient-to-r from-green-600 to-green-400',
+};
 
-interface Props { scenario: string; milestones: MilestoneItem[]; }
+const MAX_M = 60;
 
-function parseMonth(m: string): number {
-  const match = m.match(/M(\d+)/);
-  return match ? parseInt(match[1]) : 0;
+interface Props {
+  scenario: string;
+  milestonesBest: MilestoneItem[];
+  milestonesBase: MilestoneItem[];
 }
 
-function buildGanttBars(milestones: MilestoneItem[]) {
-  const barColorMap: Record<string, string> = {
-    '研发': 'bg-gradient-to-r from-blue-600 to-blue-400',
-    '注册': 'bg-gradient-to-r from-purple-600 to-purple-400',
-    '融资': 'bg-gradient-to-r from-amber-500 to-amber-400',
-    '商业化': 'bg-gradient-to-r from-green-600 to-green-400',
-  };
+function GanttChart({ items, label }: { items: MilestoneItem[]; label: string }) {
+  const resolved = resolveMilestones(items);
 
-  return milestones.map(m => {
-    const parts = m.month.replace(/\s|⚠️/g, '').split('–');
-    const startM = parseMonth(parts[0]);
-    const endM = parts.length > 1 ? parseMonth(parts[1]) : startM;
-    const left = ((startM - 1) / 60 * 100).toFixed(1) + '%';
-    const width = (Math.max(1, endM - startM + 1) / 60 * 100).toFixed(1) + '%';
-    const isMilestone = m.bold && startM === endM;
-    return {
-      label: m.desc.substring(0, 16),
-      left,
-      width,
-      text: m.month,
-      cls: barColorMap[m.type] || barColorMap['商业化'],
-      isMilestone,
-      milestonePos: ((startM - 0.5) / 60 * 100).toFixed(1) + '%',
-    };
-  });
-}
-
-export default function GanttTimeline({ scenario, milestones }: Props) {
-  const isDelayed = scenario === 'delayed';
-  const bars = buildGanttBars(milestones);
-
-  // Find C2 and C3 approval months
-  const c2Item = milestones.find(m => m.desc.includes('二类') && m.bold);
-  const c3Item = milestones.find(m => m.desc.includes('三类') && m.bold);
-  const c2Month = c2Item ? parseMonth(c2Item.month.split('–').pop() || 'M15') : 15;
-  const c3Month = c3Item ? parseMonth(c3Item.month.split('–').pop() || 'M31') : 31;
+  const c2Item = resolved.find(m => m.desc.includes('二类') && m.bold);
+  const c3Item = resolved.find(m => m.desc.includes('三类') && m.bold);
+  const c2End = c2Item ? c2Item.endM : '?';
+  const c3End = c3Item ? c3Item.endM : '?';
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
-      <h2 className="text-[22px] font-bold text-gray-800 mb-1">里程碑时间表 — M1至M60{isDelayed ? ' (延迟+3个月)' : ''}</h2>
-      <p className="text-[13px] text-gray-500 mb-6">M1=2026年7月 · ★ 关键里程碑: 二类获批M{c2Month} / 三类获批M{c3Month} · 可在参数面板编辑</p>
+    <div>
+      <p className="text-[13px] text-gray-500 mb-4">
+        {label} · M1=2026年7月 · ★ 关键里程碑: 二类获批M{c2End} / 三类获批M{c3End}
+      </p>
 
       <div className="overflow-x-auto">
         {/* Year headers */}
-        <div className="flex" style={{ paddingLeft: 180 }}>
-          {['Year 1 (M1–12)', 'Year 2 (M13–24)', 'Year 3 (M25–36)', 'Year 4 (M37–48)', 'Year 5 (M49–60)'].map((label, i) => (
+        <div className="flex" style={{ paddingLeft: 200 }}>
+          {['Year 1 (M1–12)', 'Year 2 (M13–24)', 'Year 3 (M25–36)', 'Year 4 (M37–48)', 'Year 5 (M49–60)'].map((lbl, i) => (
             <div key={i} className={`flex-1 text-center text-xs text-gray-500 font-semibold py-1 ${i > 0 ? 'border-l-2 border-dashed border-gray-200' : ''}`}>
-              {label}
+              {lbl}
             </div>
           ))}
         </div>
 
-        {/* Gantt bars from milestones */}
-        {bars.map((bar, i) => (
-          <div key={i} className="flex items-center my-0.5" style={{ minHeight: 26 }}>
-            <div className="w-[180px] flex-shrink-0 text-xs text-gray-800 pr-2.5 text-right font-medium truncate">{bar.label}</div>
-            <div className="flex-1 relative h-[22px]">
-              {bar.isMilestone ? (
-                <div
-                  className="absolute top-[-1px] w-5 h-5 bg-green-600 rotate-45 rounded-sm shadow-md"
-                  style={{ left: bar.milestonePos }}
-                />
-              ) : (
-                <div
-                  className={`absolute h-[18px] rounded-md top-[2px] flex items-center justify-center text-white text-[10px] font-semibold shadow-sm ${bar.cls}`}
-                  style={{ left: bar.left, width: bar.width }}
-                >
-                  {bar.text}
-                </div>
-              )}
+        {/* Gantt bars */}
+        {resolved.map((m, i) => {
+          const left = ((m.startM - 1) / MAX_M * 100).toFixed(1) + '%';
+          const width = (Math.max(1, m.endM - m.startM + 1) / MAX_M * 100).toFixed(1) + '%';
+          const isSingleMonth = m.bold && m.startM === m.endM;
+          const diamondPos = ((m.startM - 0.5) / MAX_M * 100).toFixed(1) + '%';
+          const duration = m.endM - m.startM + 1;
+
+          return (
+            <div key={m.id + '-' + i} className="flex items-center my-0.5" style={{ minHeight: 26 }}>
+              <div className="w-[200px] flex-shrink-0 text-xs text-gray-800 pr-2.5 text-right font-medium truncate" title={m.desc}>
+                {m.desc.substring(0, 18)}
+              </div>
+              <div className="flex-1 relative h-[22px]">
+                {isSingleMonth ? (
+                  <div
+                    className="absolute top-[-1px] w-5 h-5 bg-green-600 rotate-45 rounded-sm shadow-md"
+                    style={{ left: diamondPos }}
+                  />
+                ) : (
+                  <div
+                    className={`absolute h-[18px] rounded-md top-[2px] flex items-center justify-center text-white text-[10px] font-semibold shadow-sm ${BAR_CLS[m.type] || BAR_CLS['商业化']}`}
+                    style={{ left, width, minWidth: 30 }}
+                  >
+                    M{m.startM}–{m.endM} ({duration}月)
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
 
         {/* Legend */}
-        <div className="flex gap-4 text-xs text-gray-500 mt-3.5" style={{ paddingLeft: 180 }}>
+        <div className="flex gap-4 text-xs text-gray-500 mt-3.5" style={{ paddingLeft: 200 }}>
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-blue-600" /> 研发</span>
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-purple-600" /> 注册</span>
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-amber-500" /> 融资</span>
@@ -100,27 +96,76 @@ export default function GanttTimeline({ scenario, milestones }: Props) {
         <table className="w-full border-collapse text-[13px]">
           <thead>
             <tr>
-              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3.5 text-left border-b-2 border-blue-200">月份</th>
-              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3.5 text-left border-b-2 border-blue-200">里程碑</th>
-              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3.5 text-left border-b-2 border-blue-200">关键KPI</th>
-              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3.5 text-left border-b-2 border-blue-200">类型</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200 w-16">ID</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200 w-24">时间</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200 w-14">工期</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200">里程碑</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200">KPI</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200 w-20">前置</th>
+              <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3 text-left border-b-2 border-blue-200 w-16">类型</th>
             </tr>
           </thead>
           <tbody>
-            {milestones.map((m, i) => (
-              <tr key={i} className={`${m.bold ? 'font-bold' : ''} even:bg-gray-50/50`}>
-                <td className="py-2 px-3.5 border-b border-gray-100">{m.month}</td>
-                <td className="py-2 px-3.5 border-b border-gray-100">{m.desc}</td>
-                <td className="py-2 px-3.5 border-b border-gray-100">{m.kpi}</td>
-                <td className="py-2 px-3.5 border-b border-gray-100">
-                  <span className={`inline-block px-2.5 py-0.5 rounded-xl text-[11px] font-semibold ${TYPE_CLS[m.type] || 'bg-gray-100 text-gray-800'}`}>
-                    {TYPE_ICONS[m.type] || ''} {m.type}
-                  </span>
-                </td>
-              </tr>
-            ))}
+            {resolved.map((m, i) => {
+              const duration = m.endM - m.startM + 1;
+              const predLabel = m.predecessorId ? `${m.predecessorId}${m.lagMonths >= 0 ? '+' : ''}${m.lagMonths}月` : '—';
+              return (
+                <tr key={m.id + '-' + i} className={`${m.bold ? 'font-bold' : ''} even:bg-gray-50/50`}>
+                  <td className="py-2 px-3 border-b border-gray-100 text-gray-400 font-mono text-[11px]">{m.id}</td>
+                  <td className="py-2 px-3 border-b border-gray-100">M{m.startM}–M{m.endM}</td>
+                  <td className="py-2 px-3 border-b border-gray-100 text-center">{duration}月</td>
+                  <td className="py-2 px-3 border-b border-gray-100">{m.desc}</td>
+                  <td className="py-2 px-3 border-b border-gray-100">{m.kpi}</td>
+                  <td className="py-2 px-3 border-b border-gray-100 text-[11px] text-gray-500">{predLabel}</td>
+                  <td className="py-2 px-3 border-b border-gray-100">
+                    <span className={`inline-block px-2 py-0.5 rounded-xl text-[11px] font-semibold ${TYPE_CLS[m.type] || 'bg-gray-100 text-gray-800'}`}>
+                      {TYPE_ICONS[m.type] || ''} {m.type}
+                    </span>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
+      </div>
+    </div>
+  );
+}
+
+export default function GanttTimeline({ scenario, milestonesBest, milestonesBase }: Props) {
+  const [activeCase, setActiveCase] = useState<'best' | 'base'>('best');
+  const isDelayed = scenario === 'delayed';
+
+  return (
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+      <div className="flex items-center justify-between mb-1">
+        <h2 className="text-[22px] font-bold text-gray-800">
+          里程碑时间表 — M1至M60{isDelayed ? ' ⚠️延迟情景' : ''}
+        </h2>
+        <div className="flex rounded-lg overflow-hidden border border-gray-300">
+          <button
+            onClick={() => setActiveCase('best')}
+            className={`px-4 py-1.5 text-xs font-semibold transition-all ${activeCase === 'best' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            🚀 Best Case
+          </button>
+          <button
+            onClick={() => setActiveCase('base')}
+            className={`px-4 py-1.5 text-xs font-semibold transition-all ${activeCase === 'base' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            📊 Base Case
+          </button>
+        </div>
+      </div>
+
+      {activeCase === 'best' ? (
+        <GanttChart items={milestonesBest} label="Best Case — 最乐观进度，所有活动按最短工期" />
+      ) : (
+        <GanttChart items={milestonesBase} label="Base Case — 保守进度，考虑延迟和缓冲期" />
+      )}
+
+      <div className="mt-4 rounded-lg p-3 px-4 text-[12px] flex items-start gap-2 bg-amber-50 border border-amber-300 text-amber-800 leading-relaxed">
+        💡 <b>前置依赖</b>：修改某活动的结束月份或工期后，所有依赖该活动的后续里程碑会自动重新推算。可在参数面板「里程碑」标签页中编辑每个活动的起止月份和前置关系。
       </div>
     </section>
   );
