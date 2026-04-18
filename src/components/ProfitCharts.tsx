@@ -15,7 +15,7 @@ export default function ProfitCharts({ result }: Props) {
   const y = result.years;
   const ebitda = y.map(v => v.ebitda / 10000);
   const netProfit = y.map(v => v.net_profit / 10000);
-  const cumBeds = y.map(v => v.cumulative_commercial);
+  const cumBeds = y.map(v => v.cumulative_beds);
   const activeBeds = y.map(v => v.active_paying);
 
   const profitData = {

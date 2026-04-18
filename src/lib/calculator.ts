@@ -1,47 +1,56 @@
-// ARIA Financial Model Calculator
-// Replicates the Excel Calc sheet logic in TypeScript
+// ARIA Financial Model Calculator — BPcc v2
+// Matches BP §9.2/9.3/9.4: direct + Baxter channel, dual BOM, OpEx detail
 
 export interface GlobalInputs {
+  // Pricing (元/bed)
   price_hw_c2: number;
   price_hw_c3: number;
   price_upgrade: number;
   price_saas_c2: number;
   price_saas_c3: number;
-  cogs_hw_c2: number;
-  cogs_hw_c3: number;
-  cogs_upgrade: number;
+  price_saas_c3_bulk: number; // 5-year large customer
+  // BOM (元/bed)
+  bom_c2: number;
+  bom_c3: number;
+  bom_upgrade: number;
+  // Rates
   rr_base: number;
-  factor_saas_y2: number;
-  factor_saas_y3: number;
-  factor_saas_y4: number;
-  factor_saas_y5: number;
-  // COGS reduction
-  use_shared_hub: number;
-  supplier_discount: number;
-  yield_improvement: number;
+  // Baxter channel commissions
+  baxter_hw_commission: number;   // 0.15
+  baxter_saas_commission: number; // 0.35
+  // ROI value anchors (元/bed/yr)
+  value_anchor_c2: number;
+  value_anchor_c3: number;
 }
 
 export interface YearlyInputs {
-  new_c2_beds: number[];    // [Y1..Y5]
-  new_c3_beds: number[];
+  direct_c2: number[];       // [Y1..Y5]
+  direct_c3: number[];
+  baxter_c2: number[];
+  baxter_c3: number[];
   planned_upgrade: number[];
-  opex: number[];           // in 元
-  depreciation: number[];   // in 元
+  opex: number[];            // total OpEx per year (元)
+  depreciation: number[];    // (元)
+  baxter_license: number[];  // 授权金+里程碑 (元)
 }
 
 export interface YearlyCalc {
   // Deployment
-  new_c2_beds: number;
-  new_c3_beds: number;
-  planned_upgrade: number;
-  upgrade_cap: number;
+  direct_c2: number;
+  direct_c3: number;
+  baxter_c2: number;
+  baxter_c3: number;
+  total_new: number;
   actual_upgrade: number;
-  cumulative_commercial: number;
+  cumulative_beds: number;
   active_paying: number;
-  // Revenue
-  hw_revenue: number;
+  // Revenue detail
+  hw_direct: number;
+  hw_baxter: number;
   upgrade_revenue: number;
-  saas_revenue: number;
+  saas_direct: number;
+  saas_baxter: number;
+  baxter_license: number;
   total_revenue: number;
   // Cost
   cogs: number;
@@ -60,124 +69,130 @@ export interface YearlyCalc {
 export interface CalcResult {
   years: YearlyCalc[];
   cumulative_net_profit: number;
-  effective_c2_bom: number;
-  effective_c3_bom: number;
-  effective_upgrade_cogs: number;
+  bom_c2: number;
+  bom_c3: number;
+  bom_upgrade: number;
 }
 
-const EDGE_MODULE_BASELINE = 20000;
-const HUB_SAVING_PER_BED = 2167; // rounded from 2166.67
-
-export function calculateEffectiveBOM(g: GlobalInputs) {
-  const hubSaving = g.use_shared_hub ? HUB_SAVING_PER_BED : 0;
-  const c2_bom = (g.cogs_hw_c2 - hubSaving) * (1 - g.supplier_discount) * (1 - g.yield_improvement);
-  const c3_bom = (g.cogs_hw_c3 - hubSaving) * (1 - g.supplier_discount) * (1 - g.yield_improvement);
-  const upgrade_cogs = g.cogs_upgrade * (1 - g.supplier_discount) * (1 - g.yield_improvement);
-  return { c2_bom, c3_bom, upgrade_cogs };
-}
+// First-year SaaS factor (partial year revenue from new deployments)
+// Y2 = first commercial year, slower ramp. Y3+ = established channels.
+const FIRST_YEAR_FACTOR = [0, 0.375, 0.5, 0.5, 0.5];
 
 export function calculate(g: GlobalInputs, y: YearlyInputs): CalcResult {
-  const { c2_bom, c3_bom, upgrade_cogs } = calculateEffectiveBOM(g);
   const rr = g.rr_base;
   const years: YearlyCalc[] = [];
 
-  // Track cumulative beds for upgrade cap and SaaS
-  let cumC2 = 0; // cumulative class II beds deployed
-  let cumC3 = 0;
-  const c2_by_year: number[] = []; // new c2 beds each year
-  const c3_by_year: number[] = [];
-  const upgrade_by_year: number[] = [];
+  // Track bed cohorts for SaaS renewal (direct channel)
+  // Each entry: { c2, c3 } beds deployed that year via direct channel
+  const directCohorts: { c2: number; c3: number }[] = [];
+  // Baxter cohorts
+  const baxterCohorts: { c2: number; c3: number }[] = [];
+
+  let cumBeds = 0;
 
   for (let i = 0; i < 5; i++) {
-    const newC2 = y.new_c2_beds[i] || 0;
-    const newC3 = y.new_c3_beds[i] || 0;
+    const dC2 = y.direct_c2[i] || 0;
+    const dC3 = y.direct_c3[i] || 0;
+    const bC2 = y.baxter_c2[i] || 0;
+    const bC3 = y.baxter_c3[i] || 0;
+    const totalNew = dC2 + dC3 + bC2 + bC3;
+
+    // Upgrades — cap by surviving C2 beds
     const plannedUpg = y.planned_upgrade[i] || 0;
-
-    // Upgrade cap: only Y4 has meaningful value
-    // Y4 cap = Y2_c2 × rr² + Y3_c2 × rr
-    let upgradeCap = 0;
-    if (i >= 3) {
-      // Y2 is index 1, Y3 is index 2
-      const y2c2 = c2_by_year[1] || 0;
-      const y3c2 = c2_by_year[2] || 0;
-      upgradeCap = y2c2 * rr * rr + y3c2 * rr;
-    }
-    const actualUpgrade = Math.min(plannedUpg, upgradeCap > 0 ? upgradeCap : plannedUpg);
-
-    // Hardware revenue
-    const hwRevenue = newC2 * g.price_hw_c2 + newC3 * g.price_hw_c3;
-    const upgradeRevenue = actualUpgrade * g.price_upgrade;
-
-    // SaaS revenue calculation
-    let saasRevenue = 0;
-    const saasFactors = [0, g.factor_saas_y2, g.factor_saas_y3, g.factor_saas_y4, g.factor_saas_y5];
-
-    if (i === 0) {
-      // Y1: no commercial revenue
-      saasRevenue = 0;
-    } else if (i === 1) {
-      // Y2: new C2 beds × C2 SaaS × factor_y2
-      saasRevenue = newC2 * g.price_saas_c2 * saasFactors[1];
-    } else if (i === 2) {
-      // Y3: Y2 renewals + new Y3 beds
-      const y2Renew = (c2_by_year[1] || 0) * rr * g.price_saas_c2;
-      const y3New = newC2 * g.price_saas_c2 * saasFactors[2];
-      saasRevenue = y2Renew + y3New;
-    } else if (i === 3) {
-      // Y4: Y2 double-renewed + Y3 renewed + upgrade SaaS + new C3 SaaS
-      const y2DoubleRenew = (c2_by_year[1] || 0) * rr * rr * g.price_saas_c3; // upgraded to C3
-      const y3Renew = (c2_by_year[2] || 0) * rr * g.price_saas_c3; // upgraded to C3 
-      const newC3Saas = newC3 * g.price_saas_c3 * saasFactors[3];
-      saasRevenue = y2DoubleRenew + y3Renew + newC3Saas;
-    } else if (i === 4) {
-      // Y5: surviving C3 renewals + new C3 SaaS
-      // Y4 total active beds × rr × C3 price + new C3 × factor
-      const prevActive = years[3] ? years[3].active_paying : 0;
-      const renewSaas = prevActive * rr * g.price_saas_c3;
-      const newC3Saas = newC3 * g.price_saas_c3 * saasFactors[4];
-      saasRevenue = renewSaas + newC3Saas;
+    let actualUpg = 0;
+    if (plannedUpg > 0 && i >= 2) {
+      let survivingC2 = 0;
+      for (let j = 0; j < i; j++) {
+        const yearsElapsed = i - j;
+        const cohortC2 = (directCohorts[j]?.c2 || 0) + (baxterCohorts[j]?.c2 || 0);
+        survivingC2 += cohortC2 * Math.pow(rr, yearsElapsed);
+      }
+      actualUpg = Math.min(plannedUpg, Math.floor(survivingC2));
     }
 
-    const totalRevenue = hwRevenue + upgradeRevenue + saasRevenue;
+    // === Hardware Revenue ===
+    const hwDirect = dC2 * g.price_hw_c2 + dC3 * g.price_hw_c3;
+    const hwBaxter = (bC2 * g.price_hw_c2 + bC3 * g.price_hw_c3) * g.baxter_hw_commission;
+    const upgradeRev = actualUpg * g.price_upgrade;
 
-    // COGS
-    const cogs = newC2 * c2_bom + newC3 * c3_bom + actualUpgrade * upgrade_cogs;
+    // === SaaS Revenue (cohort-based) ===
+    const fyf = FIRST_YEAR_FACTOR[i] || 0.5;
+    let saasDirect = 0;
+    let saasBaxter = 0;
+
+    // Revenue from prior cohorts (renewed, full year)
+    for (let j = 0; j < i; j++) {
+      const elapsed = i - j;
+      const survRate = Math.pow(rr, elapsed);
+
+      // Direct cohort renewals
+      const dc = directCohorts[j];
+      if (dc) {
+        saasDirect += dc.c2 * g.price_saas_c2 * survRate;
+        saasDirect += dc.c3 * g.price_saas_c3 * survRate;
+      }
+
+      // Baxter cohort renewals — ARIA gets commission share
+      const bc = baxterCohorts[j];
+      if (bc) {
+        saasBaxter += bc.c2 * g.price_saas_c2 * survRate * g.baxter_saas_commission;
+        saasBaxter += bc.c3 * g.price_saas_c3 * survRate * g.baxter_saas_commission;
+      }
+    }
+
+    // Revenue from THIS year's new deployments (partial year)
+    saasDirect += (dC2 * g.price_saas_c2 + dC3 * g.price_saas_c3) * fyf;
+    saasBaxter += (bC2 * g.price_saas_c2 + bC3 * g.price_saas_c3) * fyf * g.baxter_saas_commission;
+
+    // Licensing fees
+    const license = y.baxter_license[i] || 0;
+
+    const totalRevenue = hwDirect + hwBaxter + upgradeRev + saasDirect + saasBaxter + license;
+
+    // === COGS ===
+    const totalC2 = dC2 + bC2;
+    const totalC3 = dC3 + bC3;
+    const cogs = totalC2 * g.bom_c2 + totalC3 * g.bom_c3 + actualUpg * g.bom_upgrade;
     const grossProfit = totalRevenue - cogs;
 
-    // OpEx (already adjusted in Excel via OPEX_Drivers reduction)
+    // === OpEx & Profit ===
     const opex = y.opex[i] || 0;
     const ebitda = grossProfit - opex;
     const dep = y.depreciation[i] || 0;
     const netProfit = ebitda - dep;
 
-    // Track
-    c2_by_year.push(newC2);
-    c3_by_year.push(newC3);
-    upgrade_by_year.push(actualUpgrade);
-    cumC2 += newC2;
-    cumC3 += newC3 + actualUpgrade;
+    // Track cohorts for future SaaS renewals
+    directCohorts.push({ c2: dC2, c3: dC3 });
+    baxterCohorts.push({ c2: bC2, c3: bC3 });
 
-    // Active paying beds (approximate with renewal decay)
+    // Active paying beds (approximate)
     let activePaying = 0;
-    if (i === 0) activePaying = 0;
-    else if (i === 1) activePaying = newC2;
-    else {
-      // Previous active × rr + new beds
-      const prevActive = years[i - 1] ? years[i - 1].active_paying : 0;
-      activePaying = prevActive * rr + newC2 + newC3 + actualUpgrade;
+    if (i === 0) {
+      activePaying = 0;
+    } else if (i === 1) {
+      activePaying = totalNew;
+    } else {
+      const prev = years[i - 1].active_paying;
+      activePaying = Math.round(prev * rr + totalNew + actualUpg);
     }
 
+    cumBeds += totalNew;
+
     years.push({
-      new_c2_beds: newC2,
-      new_c3_beds: newC3,
-      planned_upgrade: plannedUpg,
-      upgrade_cap: upgradeCap,
-      actual_upgrade: actualUpgrade,
-      cumulative_commercial: i === 0 ? 0 : (years[i - 1] ? years[i - 1].cumulative_commercial : 0) + newC2 + newC3,
-      active_paying: Math.round(activePaying),
-      hw_revenue: hwRevenue,
-      upgrade_revenue: upgradeRevenue,
-      saas_revenue: saasRevenue,
+      direct_c2: dC2,
+      direct_c3: dC3,
+      baxter_c2: bC2,
+      baxter_c3: bC3,
+      total_new: totalNew,
+      actual_upgrade: actualUpg,
+      cumulative_beds: cumBeds,
+      active_paying: activePaying,
+      hw_direct: hwDirect,
+      hw_baxter: hwBaxter,
+      upgrade_revenue: upgradeRev,
+      saas_direct: saasDirect,
+      saas_baxter: saasBaxter,
+      baxter_license: license,
       total_revenue: totalRevenue,
       cogs,
       gross_profit: grossProfit,
@@ -191,13 +206,11 @@ export function calculate(g: GlobalInputs, y: YearlyInputs): CalcResult {
     });
   }
 
-  const cumNetProfit = years.reduce((s, y) => s + y.net_profit, 0);
-
   return {
     years,
-    cumulative_net_profit: cumNetProfit,
-    effective_c2_bom: c2_bom,
-    effective_c3_bom: c3_bom,
-    effective_upgrade_cogs: upgrade_cogs,
+    cumulative_net_profit: years.reduce((s, yr) => s + yr.net_profit, 0),
+    bom_c2: g.bom_c2,
+    bom_c3: g.bom_c3,
+    bom_upgrade: g.bom_upgrade,
   };
 }

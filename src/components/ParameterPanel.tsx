@@ -29,41 +29,33 @@ export default function ParameterPanel({ global, yearly, onGlobalChange, onYearl
 
       <p className="text-xs text-gray-500 mb-4">修改下方参数后，所有图表和表格实时更新。黄色背景 = 已修改（与默认值不同）</p>
 
-      {/* Global Inputs */}
-      <h3 className="text-sm font-semibold text-blue-600 mb-2 mt-4">定价与成本参数</h3>
+      {/* Pricing */}
+      <h3 className="text-sm font-semibold text-blue-600 mb-2 mt-4">定价参数</h3>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-        <ParamInput label="二类硬件单价(元/床)" value={global.price_hw_c2} defaultVal={DEFAULT_GLOBAL.price_hw_c2} onChange={v => onGlobalChange('price_hw_c2', v)} />
-        <ParamInput label="三类硬件单价(元/床)" value={global.price_hw_c3} defaultVal={DEFAULT_GLOBAL.price_hw_c3} onChange={v => onGlobalChange('price_hw_c3', v)} />
-        <ParamInput label="升级服务单价(元/床)" value={global.price_upgrade} defaultVal={DEFAULT_GLOBAL.price_upgrade} onChange={v => onGlobalChange('price_upgrade', v)} />
-        <ParamInput label="二类SaaS年费(元/床)" value={global.price_saas_c2} defaultVal={DEFAULT_GLOBAL.price_saas_c2} onChange={v => onGlobalChange('price_saas_c2', v)} />
-        <ParamInput label="三类SaaS年费(元/床)" value={global.price_saas_c3} defaultVal={DEFAULT_GLOBAL.price_saas_c3} onChange={v => onGlobalChange('price_saas_c3', v)} />
-        <ParamInput label="二类硬件BOM(元/床)" value={global.cogs_hw_c2} defaultVal={DEFAULT_GLOBAL.cogs_hw_c2} onChange={v => onGlobalChange('cogs_hw_c2', v)} />
-        <ParamInput label="三类硬件BOM(元/床)" value={global.cogs_hw_c3} defaultVal={DEFAULT_GLOBAL.cogs_hw_c3} onChange={v => onGlobalChange('cogs_hw_c3', v)} />
-        <ParamInput label="升级COGS(元/床)" value={global.cogs_upgrade} defaultVal={DEFAULT_GLOBAL.cogs_upgrade} onChange={v => onGlobalChange('cogs_upgrade', v)} />
+        <ParamInput label="二类硬件(元/床)" value={global.price_hw_c2} defaultVal={DEFAULT_GLOBAL.price_hw_c2} onChange={v => onGlobalChange('price_hw_c2', v)} />
+        <ParamInput label="三类硬件(元/床)" value={global.price_hw_c3} defaultVal={DEFAULT_GLOBAL.price_hw_c3} onChange={v => onGlobalChange('price_hw_c3', v)} />
+        <ParamInput label="升级单价(元/床)" value={global.price_upgrade} defaultVal={DEFAULT_GLOBAL.price_upgrade} onChange={v => onGlobalChange('price_upgrade', v)} />
+        <ParamInput label="二类SaaS(元/年)" value={global.price_saas_c2} defaultVal={DEFAULT_GLOBAL.price_saas_c2} onChange={v => onGlobalChange('price_saas_c2', v)} />
+        <ParamInput label="三类SaaS(元/年)" value={global.price_saas_c3} defaultVal={DEFAULT_GLOBAL.price_saas_c3} onChange={v => onGlobalChange('price_saas_c3', v)} />
+        <ParamInput label="三类大客户SaaS" value={global.price_saas_c3_bulk} defaultVal={DEFAULT_GLOBAL.price_saas_c3_bulk} onChange={v => onGlobalChange('price_saas_c3_bulk', v)} />
       </div>
 
-      <h3 className="text-sm font-semibold text-blue-600 mb-2">续约率与计费系数</h3>
+      {/* BOM & Rates */}
+      <h3 className="text-sm font-semibold text-blue-600 mb-2">BOM与续约率</h3>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-4">
+        <ParamInput label="二类BOM(元/床)" value={global.bom_c2} defaultVal={DEFAULT_GLOBAL.bom_c2} onChange={v => onGlobalChange('bom_c2', v)} />
+        <ParamInput label="三类BOM(元/床)" value={global.bom_c3} defaultVal={DEFAULT_GLOBAL.bom_c3} onChange={v => onGlobalChange('bom_c3', v)} />
+        <ParamInput label="升级BOM(元/床)" value={global.bom_upgrade} defaultVal={DEFAULT_GLOBAL.bom_upgrade} onChange={v => onGlobalChange('bom_upgrade', v)} />
         <ParamInput label="基准续约率" value={global.rr_base} defaultVal={DEFAULT_GLOBAL.rr_base} onChange={v => onGlobalChange('rr_base', v)} step={0.05} />
-        <ParamInput label="Y2 SaaS系数" value={global.factor_saas_y2} defaultVal={DEFAULT_GLOBAL.factor_saas_y2} onChange={v => onGlobalChange('factor_saas_y2', v)} step={0.1} />
-        <ParamInput label="Y3 SaaS系数" value={global.factor_saas_y3} defaultVal={DEFAULT_GLOBAL.factor_saas_y3} onChange={v => onGlobalChange('factor_saas_y3', v)} step={0.1} />
-        <ParamInput label="Y4 SaaS系数" value={global.factor_saas_y4} defaultVal={DEFAULT_GLOBAL.factor_saas_y4} onChange={v => onGlobalChange('factor_saas_y4', v)} step={0.1} />
-        <ParamInput label="Y5 SaaS系数" value={global.factor_saas_y5} defaultVal={DEFAULT_GLOBAL.factor_saas_y5} onChange={v => onGlobalChange('factor_saas_y5', v)} step={0.1} />
       </div>
 
-      <h3 className="text-sm font-semibold text-blue-600 mb-2">COGS降本</h3>
-      <div className="grid grid-cols-3 gap-3 mb-4">
-        <div className="flex items-center gap-2">
-          <label className="text-xs text-gray-600">共享Edge Hub</label>
-          <input
-            type="checkbox"
-            checked={global.use_shared_hub === 1}
-            onChange={e => onGlobalChange('use_shared_hub', e.target.checked ? 1 : 0)}
-            className="accent-blue-600"
-          />
-        </div>
-        <ParamInput label="供应商折扣" value={global.supplier_discount} defaultVal={DEFAULT_GLOBAL.supplier_discount} onChange={v => onGlobalChange('supplier_discount', v)} step={0.01} />
-        <ParamInput label="良率改善" value={global.yield_improvement} defaultVal={DEFAULT_GLOBAL.yield_improvement} onChange={v => onGlobalChange('yield_improvement', v)} step={0.01} />
+      {/* Baxter Channel */}
+      <h3 className="text-sm font-semibold text-purple-600 mb-2">Baxter渠道参数</h3>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <ParamInput label="硬件分成比例" value={global.baxter_hw_commission} defaultVal={DEFAULT_GLOBAL.baxter_hw_commission} onChange={v => onGlobalChange('baxter_hw_commission', v)} step={0.01} />
+        <ParamInput label="SaaS分成比例" value={global.baxter_saas_commission} defaultVal={DEFAULT_GLOBAL.baxter_saas_commission} onChange={v => onGlobalChange('baxter_saas_commission', v)} step={0.01} />
+        <ParamInput label="C2价值锚(元/年)" value={global.value_anchor_c2} defaultVal={DEFAULT_GLOBAL.value_anchor_c2} onChange={v => onGlobalChange('value_anchor_c2', v)} />
+        <ParamInput label="C3价值锚(元/年)" value={global.value_anchor_c3} defaultVal={DEFAULT_GLOBAL.value_anchor_c3} onChange={v => onGlobalChange('value_anchor_c3', v)} />
       </div>
 
       {/* Yearly Inputs */}
@@ -77,11 +69,14 @@ export default function ParameterPanel({ global, yearly, onGlobalChange, onYearl
             </tr>
           </thead>
           <tbody>
-            <YearlyRow label="新增二类床位" values={yearly.new_c2_beds} defaults={DEFAULT_YEARLY.new_c2_beds} onChange={(i, v) => onYearlyChange('new_c2_beds', i, v)} />
-            <YearlyRow label="新增三类床位" values={yearly.new_c3_beds} defaults={DEFAULT_YEARLY.new_c3_beds} onChange={(i, v) => onYearlyChange('new_c3_beds', i, v)} />
-            <YearlyRow label="计划升级床位" values={yearly.planned_upgrade} defaults={DEFAULT_YEARLY.planned_upgrade} onChange={(i, v) => onYearlyChange('planned_upgrade', i, v)} />
+            <YearlyRow label="直销 C2 床位" values={yearly.direct_c2} defaults={DEFAULT_YEARLY.direct_c2} onChange={(i, v) => onYearlyChange('direct_c2', i, v)} />
+            <YearlyRow label="直销 C3 床位" values={yearly.direct_c3} defaults={DEFAULT_YEARLY.direct_c3} onChange={(i, v) => onYearlyChange('direct_c3', i, v)} />
+            <YearlyRow label="Baxter C2" values={yearly.baxter_c2} defaults={DEFAULT_YEARLY.baxter_c2} onChange={(i, v) => onYearlyChange('baxter_c2', i, v)} />
+            <YearlyRow label="Baxter C3" values={yearly.baxter_c3} defaults={DEFAULT_YEARLY.baxter_c3} onChange={(i, v) => onYearlyChange('baxter_c3', i, v)} />
+            <YearlyRow label="计划升级" values={yearly.planned_upgrade} defaults={DEFAULT_YEARLY.planned_upgrade} onChange={(i, v) => onYearlyChange('planned_upgrade', i, v)} />
+            <YearlyRow label="授权金(万元)" values={yearly.baxter_license.map(v => v / 10000)} defaults={DEFAULT_YEARLY.baxter_license.map(v => v / 10000)} onChange={(i, v) => onYearlyChange('baxter_license', i, v * 10000)} />
             <YearlyRow label="OpEx(万元)" values={yearly.opex.map(v => v / 10000)} defaults={DEFAULT_YEARLY.opex.map(v => v / 10000)} onChange={(i, v) => onYearlyChange('opex', i, v * 10000)} />
-            <YearlyRow label="折旧摊销(万元)" values={yearly.depreciation.map(v => v / 10000)} defaults={DEFAULT_YEARLY.depreciation.map(v => v / 10000)} onChange={(i, v) => onYearlyChange('depreciation', i, v * 10000)} />
+            <YearlyRow label="折旧(万元)" values={yearly.depreciation.map(v => v / 10000)} defaults={DEFAULT_YEARLY.depreciation.map(v => v / 10000)} onChange={(i, v) => onYearlyChange('depreciation', i, v * 10000)} />
           </tbody>
         </table>
       </div>

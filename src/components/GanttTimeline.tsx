@@ -3,8 +3,8 @@ interface Props { scenario: string; }
 export default function GanttTimeline({ scenario }: Props) {
   const isDelayed = scenario === 'delayed';
   const delay = isDelayed ? 3 : 0; // months
-  const c2Month = 18 + delay;
-  const c3Month = 36 + delay;
+  const c2Month = 15 + delay;  // BP: M14-15 (was M18)
+  const c3Month = 31 + delay;  // BP: M28-31 (was M36)
 
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
@@ -87,15 +87,14 @@ const ganttRows = [
   { label: '算法验证', bars: [{ left: '10%', width: '10%', text: 'M7–12', cls: 'bg-gradient-to-r from-blue-600 to-blue-400' }] },
   { label: '种子轮融资', bars: [{ left: '0%', width: '5%', text: 'M1–3', cls: 'bg-gradient-to-r from-amber-500 to-amber-400' }] },
   { label: 'ISO13485联调', bars: [{ left: '13%', width: '5%', text: 'M9–12', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
-  { label: 'Pre-A融资', bars: [{ left: '20%', width: '5%', text: 'M13–15', cls: 'bg-gradient-to-r from-amber-500 to-amber-400' }] },
-  { label: '二类审评', bars: [{ left: '20%', width: '10%', text: 'M13–18', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
-  { label: '★ 二类获批', bars: [], milestone: '29%' },
-  { label: '二类商业化', bars: [{ left: '30%', width: '10%', text: 'M19–24', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
-  { label: 'A轮融资', bars: [{ left: '40%', width: '10%', text: 'M25–30', cls: 'bg-gradient-to-r from-amber-500 to-amber-400' }] },
-  { label: '三类审评+二类扩张', bars: [{ left: '40%', width: '20%', text: 'M25–36', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
-  { label: '★ 三类获批', bars: [], milestone: '59%' },
-  { label: '三类首年扩张', bars: [{ left: '60%', width: '20%', text: 'M37–48', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
-  { label: '三类规模化', bars: [{ left: '80%', width: '20%', text: 'M49–60', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '二类审评', bars: [{ left: '18%', width: '7%', text: 'M11–15', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
+  { label: '★ 二类获批(M15)', bars: [], milestone: '24%' },
+  { label: 'Baxter授权签约', bars: [{ left: '20%', width: '5%', text: 'M13–15', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '二类商业化', bars: [{ left: '25%', width: '15%', text: 'M16–24', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '三类审评', bars: [{ left: '38%', width: '14%', text: 'M24–31', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
+  { label: '★ 三类获批(M31)', bars: [], milestone: '51%' },
+  { label: '三类首年+升级', bars: [{ left: '52%', width: '28%', text: 'M32–48', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '全面扩张', bars: [{ left: '80%', width: '20%', text: 'M49–60', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
 ];
 
 const milestones = [
@@ -103,13 +102,14 @@ const milestones = [
   { month: 'M1–M3', desc: '种子轮融资完成', kpi: '¥400–600万到账', type: '🟡 融资', typeCls: 'bg-amber-100 text-amber-800', bold: false },
   { month: 'M7–M12', desc: '算法训练与测试', kpi: 'AUROC≥0.78', type: '🔵 研发', typeCls: 'bg-blue-100 text-blue-800', bold: false },
   { month: 'M9–M12', desc: 'ISO13485质量体系联调', kpi: '体系审核通过', type: '🟣 注册', typeCls: 'bg-purple-100 text-purple-800', bold: false },
-  { month: 'M13–M15', desc: 'Pre-A轮融资完成', kpi: '¥800–1,200万到账', type: '🟡 融资', typeCls: 'bg-amber-100 text-amber-800', bold: false },
-  { month: 'M18', desc: '★ 二类医疗器械证获批', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-purple-100 text-purple-800', bold: true },
-  { month: 'M19–M24', desc: '100床二类商业化+RWD收集', kpi: '部署率≥90%', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
-  { month: 'M25–M30', desc: 'A轮融资完成', kpi: '¥2,000–3,000万到账', type: '🟡 融资', typeCls: 'bg-amber-100 text-amber-800', bold: false },
-  { month: 'M36', desc: '★ 三类注册证获批', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-purple-100 text-purple-800', bold: true },
-  { month: 'M37–M48', desc: '三类首年100床新增+131床升级', kpi: '累计300床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
-  { month: 'M49–M60', desc: '三类扩张200床新增', kpi: '累计500床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M13–M15', desc: 'Baxter渠道授权签约', kpi: '授权金¥300万到账', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: true },
+  { month: 'M14–M15', desc: '★ 二类医疗器械证获批', kpi: '注册证到手 · 创新通道', type: '🟣 注册', typeCls: 'bg-purple-100 text-purple-800', bold: true },
+  { month: 'M16–M24', desc: '110床C2商业化(直销80+Baxter30)', kpi: '部署率≥90%', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M25–M27', desc: 'Baxter里程碑¥200万', kpi: '里程碑付款', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M28–M31', desc: '★ 三类注册证获批', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-purple-100 text-purple-800', bold: true },
+  { month: 'M25–M36', desc: 'C3商业化 · 140床新增+40升级', kpi: '累计290床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M37–M48', desc: '规模放量 · 180 C3新增+50升级', kpi: '累计520床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M49–M60', desc: '全面扩张 · 260 C3新增', kpi: '累计780床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
 ];
 
 // Delayed scenario: +3 months shift on key milestones
@@ -118,15 +118,14 @@ const ganttRowsDelayed = [
   { label: '算法验证', bars: [{ left: '10%', width: '10%', text: 'M7–12', cls: 'bg-gradient-to-r from-blue-600 to-blue-400' }] },
   { label: '种子轮融资', bars: [{ left: '0%', width: '5%', text: 'M1–3', cls: 'bg-gradient-to-r from-amber-500 to-amber-400' }] },
   { label: 'ISO13485联调', bars: [{ left: '13%', width: '5%', text: 'M9–12', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
-  { label: 'Pre-A融资', bars: [{ left: '20%', width: '5%', text: 'M13–15', cls: 'bg-gradient-to-r from-amber-500 to-amber-400' }] },
-  { label: '二类审评(延迟)', bars: [{ left: '20%', width: '15%', text: 'M13–21', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
-  { label: '★ 二类获批(M21)', bars: [], milestone: '34%' },
-  { label: '二类商业化', bars: [{ left: '35%', width: '10%', text: 'M22–27', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
-  { label: 'A轮融资', bars: [{ left: '45%', width: '10%', text: 'M28–33', cls: 'bg-gradient-to-r from-amber-500 to-amber-400' }] },
-  { label: '三类审评(延迟)', bars: [{ left: '45%', width: '20%', text: 'M28–39', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
-  { label: '★ 三类获批(M39)', bars: [], milestone: '64%' },
-  { label: '三类首年扩张', bars: [{ left: '65%', width: '18%', text: 'M40–48', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
-  { label: '三类规模化', bars: [{ left: '80%', width: '20%', text: 'M49–60', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '二类审评(延迟)', bars: [{ left: '18%', width: '12%', text: 'M11–18', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
+  { label: '★ 二类获批(M18)', bars: [], milestone: '29%' },
+  { label: 'Baxter授权签约', bars: [{ left: '25%', width: '5%', text: 'M16–18', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '二类商业化', bars: [{ left: '30%', width: '15%', text: 'M19–27', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '三类审评(延迟)', bars: [{ left: '43%', width: '17%', text: 'M27–34', cls: 'bg-gradient-to-r from-purple-600 to-purple-400' }] },
+  { label: '★ 三类获批(M34)', bars: [], milestone: '56%' },
+  { label: '三类首年+升级', bars: [{ left: '57%', width: '23%', text: 'M35–48', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
+  { label: '全面扩张', bars: [{ left: '80%', width: '20%', text: 'M49–60', cls: 'bg-gradient-to-r from-green-600 to-green-400' }] },
 ];
 
 const milestonesDelayed = [
@@ -134,11 +133,11 @@ const milestonesDelayed = [
   { month: 'M1–M3', desc: '种子轮融资完成', kpi: '¥400–600万到账', type: '🟡 融资', typeCls: 'bg-amber-100 text-amber-800', bold: false },
   { month: 'M7–M12', desc: '算法训练与测试', kpi: 'AUROC≥0.78', type: '🔵 研发', typeCls: 'bg-blue-100 text-blue-800', bold: false },
   { month: 'M9–M12', desc: 'ISO13485质量体系联调', kpi: '体系审核通过', type: '🟣 注册', typeCls: 'bg-purple-100 text-purple-800', bold: false },
-  { month: 'M13–M15', desc: 'Pre-A轮融资完成', kpi: '¥800–1,200万到账', type: '🟡 融资', typeCls: 'bg-amber-100 text-amber-800', bold: false },
-  { month: 'M21 ⚠️', desc: '★ 二类获批(延迟+3个月)', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-orange-100 text-orange-800', bold: true },
-  { month: 'M22–M27', desc: '100床二类商业化+RWD收集', kpi: '部署率≥90%', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
-  { month: 'M28–M33', desc: 'A轮融资完成', kpi: '¥2,000–3,000万到账', type: '🟡 融资', typeCls: 'bg-amber-100 text-amber-800', bold: false },
-  { month: 'M39 ⚠️', desc: '★ 三类获批(延迟+3个月)', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-orange-100 text-orange-800', bold: true },
-  { month: 'M40–M48', desc: '三类首年100床新增+131床升级', kpi: '累计300床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
-  { month: 'M49–M60', desc: '三类扩张200床新增', kpi: '累计500床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M16–M18', desc: 'Baxter渠道授权签约(延迟)', kpi: '授权金¥300万到账', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: true },
+  { month: 'M18 ⚠️', desc: '★ 二类获批(延迟+3个月)', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-orange-100 text-orange-800', bold: true },
+  { month: 'M19–M27', desc: '110床C2商业化(延迟)', kpi: '部署率≥90%', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M25–M27', desc: 'Baxter里程碑¥200万', kpi: '里程碑付款', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M34 ⚠️', desc: '★ 三类获批(延迟+3个月)', kpi: '注册证到手', type: '🟣 注册', typeCls: 'bg-orange-100 text-orange-800', bold: true },
+  { month: 'M35–M48', desc: 'C3商业化+升级(延迟)', kpi: '累计520床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
+  { month: 'M49–M60', desc: '全面扩张 · 260 C3新增', kpi: '累计780床', type: '🟢 商业化', typeCls: 'bg-green-100 text-green-800', bold: false },
 ];

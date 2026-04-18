@@ -58,14 +58,12 @@ export default function Home() {
 
   const handleScenario = useCallback((s: string) => {
     setScenario(s);
-    const base = { ...DEFAULT_GLOBAL };
     switch (s) {
-      case 'optimistic': base.rr_base = 0.85; break;
-      case 'conservative': base.rr_base = 0.60; break;
-      case 'delayed': base.rr_base = 0.75; break;
-      default: base.rr_base = 0.75;
+      case 'optimistic': setGlobal(prev => ({ ...prev, rr_base: 0.85 })); break;
+      case 'conservative': setGlobal(prev => ({ ...prev, rr_base: 0.55 })); break;
+      case 'delayed': setGlobal(prev => ({ ...prev, rr_base: 0.70 })); break;
+      default: setGlobal(prev => ({ ...prev, rr_base: 0.70 })); break;
     }
-    setGlobal(prev => ({ ...prev, rr_base: base.rr_base }));
   }, []);
 
   if (!mounted) {
@@ -108,7 +106,7 @@ export default function Home() {
         <Assumptions scenario={scenario} global={global} result={result} />
 
         <footer className="text-center py-8 border-t border-gray-200 mt-8 text-xs text-gray-500">
-          <div>ARIA 财务模型模拟器 v2.0 | 基于商业计划书 2026年4月版 | 升级按活跃存量封顶</div>
+          <div>ARIA 财务模型模拟器 v3.0 | 基于商业计划书 BPcc 2026年4月版 | 直销+Baxter渠道双引擎</div>
           <div className="text-orange-500 font-medium mt-1">
             ⚠️ 所有预测均为推算，非已确认事实。项目当前处于原型开发阶段，无外部融资，无已授权专利。
           </div>
