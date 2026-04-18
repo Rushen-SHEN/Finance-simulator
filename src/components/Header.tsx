@@ -1,9 +1,13 @@
 'use client';
 
+import { useState } from 'react';
+
 interface HeaderProps {
   scenario: string;
   onScenario: (s: string) => void;
   onToggleParams: () => void;
+  onExportPDF?: () => Promise<void>;
+  onExportPNG?: () => Promise<void>;
 }
 
 const scenarios = [
@@ -13,7 +17,16 @@ const scenarios = [
   { key: 'delayed', label: '延迟', icon: '◇' },
 ];
 
-export default function Header({ scenario, onScenario, onToggleParams }: HeaderProps) {
+export default function Header({ scenario, onScenario, onToggleParams, onExportPDF, onExportPNG }: HeaderProps) {
+  const [exporting, setExporting] = useState<'pdf' | 'png' | null>(null);
+
+  const handleExport = async (type: 'pdf' | 'png') => {
+    const fn = type === 'pdf' ? onExportPDF : onExportPNG;
+    if (!fn) return;
+    setExporting(type);
+    try { await fn(); } finally { setExporting(null); }
+  };
+
   return (
     <div className="bg-gradient-to-r from-[#0B0F1A] via-[#111827] to-[#0B0F1A] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg shadow-black/20">
       <div className="max-w-[1200px] mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
@@ -56,6 +69,23 @@ export default function Header({ scenario, onScenario, onToggleParams }: HeaderP
           >
             ⚙ 参数面板
           </button>
+
+          <div className="flex rounded-lg overflow-hidden border border-slate-700/60 bg-slate-900/50">
+            <button
+              onClick={() => handleExport('pdf')}
+              disabled={exporting !== null}
+              className="px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40 border-r border-slate-700/40"
+            >
+              {exporting === 'pdf' ? '⏳' : '📄'} PDF
+            </button>
+            <button
+              onClick={() => handleExport('png')}
+              disabled={exporting !== null}
+              className="px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40"
+            >
+              {exporting === 'png' ? '⏳' : '🖼️'} PNG
+            </button>
+          </div>
         </div>
       </div>
     </div>

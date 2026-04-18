@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL } from '@/lib/defaults';
 import { loadModel, saveModel, clearModel } from '@/lib/storage';
+import { exportPDF, exportPNG } from '@/lib/exportUtils';
 import Header from '@/components/Header';
 import StatusStrip from '@/components/StatusStrip';
 import PhaseOverview from '@/components/PhaseOverview';
@@ -22,6 +23,7 @@ export default function Home() {
   const [showParams, setShowParams] = useState(false);
   const [scenario, setScenario] = useState<string>('neutral');
   const [mounted, setMounted] = useState(false);
+  const printRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setModel(loadModel());
@@ -56,6 +58,16 @@ export default function Home() {
     });
   }, []);
 
+  const handleExportPDF = useCallback(async () => {
+    if (!printRef.current) return;
+    await exportPDF(printRef.current, `ARIA-BP-${scenario}`);
+  }, [scenario]);
+
+  const handleExportPNG = useCallback(async () => {
+    if (!printRef.current) return;
+    await exportPNG(printRef.current, `ARIA-BP-${scenario}`);
+  }, [scenario]);
+
   if (!mounted) {
     return (
       <div className="min-h-screen bg-[#0B0F1A] flex items-center justify-center">
@@ -70,19 +82,23 @@ export default function Home() {
         scenario={scenario}
         onScenario={handleScenario}
         onToggleParams={() => setShowParams(p => !p)}
+        onExportPDF={handleExportPDF}
+        onExportPNG={handleExportPNG}
       />
 
-      <div className="max-w-[1200px] mx-auto px-6 pb-12">
+      <div ref={printRef} className="max-w-[1200px] mx-auto px-6 pb-12">
         <StatusStrip />
         <PhaseOverview milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
 
         {showParams && (
-          <ParameterPanel
-            model={model}
-            onModelChange={handleModelChange}
-            onReset={handleReset}
-            onClose={() => setShowParams(false)}
-          />
+          <div data-no-export>
+            <ParameterPanel
+              model={model}
+              onModelChange={handleModelChange}
+              onReset={handleReset}
+              onClose={() => setShowParams(false)}
+            />
+          </div>
         )}
 
         <MarketSection />
