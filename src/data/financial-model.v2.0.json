@@ -1,0 +1,122 @@
+{
+  "modelVersion": "2.0",
+  "sourcePlanVersion": "ARIA_Financial_Plan.md v2.0",
+  "lastSyncDate": "2026-04-19T00:00:00Z",
+  "samBaseline": 2750,
+  "mappingBlocks": [
+    {
+      "blockId": "M-01",
+      "label": "Core Financial Indicators",
+      "bpSection": "BP §1.5 Financial Summary",
+      "content": "Y2/Y5/Y10 revenue, EBITDA, ARR and SOM headline metrics.",
+      "updateTriggers": ["Any core KPI change", "Scenario refresh", "Plan version sync"],
+      "affectedMetrics": ["revenue", "ebitda", "arr", "somPenetration", "netProfit"]
+    },
+    {
+      "blockId": "M-02",
+      "label": "Channel Economics",
+      "bpSection": "BP §5.3 Channel Strategy",
+      "content": "License fee, milestone fee, hardware share and SaaS share assumptions.",
+      "updateTriggers": ["Partner commercial terms changed", "Baxter share updated"],
+      "affectedMetrics": ["revenue", "grossProfit", "ebitda"]
+    },
+    {
+      "blockId": "M-03",
+      "label": "Commercial Bed Curve",
+      "bpSection": "BP §5.4 SOM Ramp",
+      "content": "Cumulative deployed beds, active paying beds and SOM penetration path.",
+      "updateTriggers": ["Deployment curve changed", "Go-to-market speed changed"],
+      "affectedMetrics": ["beds", "activeBeds", "somPenetration", "revenue"]
+    },
+    {
+      "blockId": "M-04",
+      "label": "EBITDA Break-Even",
+      "bpSection": "BP §9 Funding and Break-Even",
+      "content": "Annual EBITDA trajectory and financing window assumptions.",
+      "updateTriggers": ["One-off payment timing moved", "Operating leverage changed"],
+      "affectedMetrics": ["ebitda", "netProfit"]
+    },
+    {
+      "blockId": "M-05",
+      "label": "Milestone Logic",
+      "bpSection": "BP §11 Annual Milestones",
+      "content": "Regulatory and commercialization milestone timing dependencies.",
+      "updateTriggers": ["Milestone year changed", "Launch year changed"],
+      "affectedMetrics": ["revenue", "beds"]
+    },
+    {
+      "blockId": "M-06",
+      "label": "Growth Assumptions",
+      "bpSection": "BP §1.5 Growth Ramp",
+      "content": "Y6-Y10 declining growth profile tied to bed expansion.",
+      "updateTriggers": ["Long-range growth assumptions changed"],
+      "affectedMetrics": ["revenue", "yoyGrowthRate", "somPenetration"]
+    },
+    {
+      "blockId": "M-07",
+      "label": "ARR and Renewal",
+      "bpSection": "BP §1.5 ARR Summary",
+      "content": "ARR formula driven by active paying beds and renewal quality.",
+      "updateTriggers": ["Renewal rate changed", "SaaS share changed"],
+      "affectedMetrics": ["arr", "revenue", "ebitda", "activeBeds"]
+    }
+  ],
+  "baselineMetrics": {
+    "years": ["Y1", "Y2", "Y3", "Y4", "Y5", "Y6", "Y7", "Y8", "Y9", "Y10"],
+    "revenue": [0, 932, 1259, 1398, 1665, 2495, 3490, 4715, 6130, 7670],
+    "cogs": [0, 352, 498, 527, 559, 840, 1176, 1587, 2064, 2576],
+    "grossProfit": [0, 580, 761, 871, 1106, 1655, 2314, 3128, 4066, 5094],
+    "opex": [480, 361, 464, 504, 566, 755, 940, 1170, 1420, 1730],
+    "ebitda": [-480, 219, 297, 367, 540, 900, 1374, 1958, 2646, 3364],
+    "netProfit": [-500, 194, 272, 337, 510, 820, 1220, 1720, 2280, 2860],
+    "arr": [0, 54, 142, 255, 383, 588, 833, 1078, 1274, 1470],
+    "beds": [0, 110, 290, 520, 780, 1200, 1700, 2200, 2600, 3000],
+    "activeBeds": [0, 77, 203, 364, 546, 840, 1190, 1540, 1820, 2100],
+    "somPenetration": [0, 0.34, 0.46, 0.51, 0.61, 0.91, 1.27, 1.72, 2.23, 2.79],
+    "yoyGrowthRate": [null, null, 35.1, 11, 19.1, 49.8, 39.9, 35.1, 30, 25]
+  },
+  "scenarioSnapshots": {
+    "baseline": {
+      "label": "Baseline v2.0",
+      "description": "Coordinated plan keeping Y2 EBITDA break-even and extending Y6-Y10 growth.",
+      "parameters": {
+        "licenseFeeYear": 2,
+        "licenseFeeAmount": 300,
+        "milestonePaymentYear": 3,
+        "milestonePaymentAmount": 200,
+        "hwRevenueShare": 0.15,
+        "saasRevenueShare": 0.35,
+        "renewalRate": 0.7,
+        "bedDeploymentCurve": [0, 110, 290, 520, 780, 1200, 1700, 2200, 2600, 3000]
+      }
+    },
+    "scenarioSlowBreakEven": {
+      "label": "Slow Break-Even",
+      "description": "License fee moves to Y3 and early deployment slows.",
+      "parameters": {
+        "licenseFeeYear": 3,
+        "licenseFeeAmount": 300,
+        "milestonePaymentYear": 4,
+        "milestonePaymentAmount": 200,
+        "hwRevenueShare": 0.15,
+        "saasRevenueShare": 0.35,
+        "renewalRate": 0.7,
+        "bedDeploymentCurve": [0, 80, 250, 500, 750, 1150, 1650, 2150, 2550, 2950]
+      }
+    },
+    "scenarioWeakRenewal": {
+      "label": "Weak Renewal",
+      "description": "Renewal rate slips from 70% to 55% while deployment stays constant.",
+      "parameters": {
+        "licenseFeeYear": 2,
+        "licenseFeeAmount": 300,
+        "milestonePaymentYear": 3,
+        "milestonePaymentAmount": 200,
+        "hwRevenueShare": 0.15,
+        "saasRevenueShare": 0.35,
+        "renewalRate": 0.55,
+        "bedDeploymentCurve": [0, 110, 290, 520, 780, 1200, 1700, 2200, 2600, 3000]
+      }
+    }
+  }
+}
