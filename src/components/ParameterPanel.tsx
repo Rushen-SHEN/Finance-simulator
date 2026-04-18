@@ -58,9 +58,13 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
   }, [model, onModelChange]);
 
   const [msCase, setMsCase] = useState<'best' | 'base'>('best');
+  const [dragIdx, setDragIdx] = useState<number | null>(null);
+  const [dropIdx, setDropIdx] = useState<number | null>(null);
 
   const currentMs = msCase === 'best' ? model.milestones_best : model.milestones_base;
+  const otherMs = msCase === 'best' ? model.milestones_base : model.milestones_best;
   const msKey = msCase === 'best' ? 'milestones_best' : 'milestones_base';
+  const otherLabel = msCase === 'best' ? 'Base' : 'Best';
 
   const setMilestone = useCallback((idx: number, field: keyof MilestoneItem, val: string | boolean | number) => {
     let next = currentMs.map((m, i) => {
@@ -94,6 +98,14 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
     if (target < 0 || target >= currentMs.length) return;
     const next = [...currentMs];
     [next[idx], next[target]] = [next[target], next[idx]];
+    onModelChange({ ...model, [msKey]: next });
+  }, [model, onModelChange, currentMs, msKey]);
+
+  const handleDragDrop = useCallback((fromIdx: number, toIdx: number) => {
+    if (fromIdx === toIdx) return;
+    const next = [...currentMs];
+    const [moved] = next.splice(fromIdx, 1);
+    next.splice(toIdx, 0, moved);
     onModelChange({ ...model, [msKey]: next });
   }, [model, onModelChange, currentMs, msKey]);
 
@@ -310,11 +322,15 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
             </div>
             <NoteBar text={model.annotations.milestones} annotationKey="milestones" onChange={setAnnotation} />
 
-            <p className="text-[11px] text-slate-500">设置前置活动后，该活动的开始月份 = 前置活动结束月份 + Lag + 1。修改前置活动时所有依赖链自动重算。</p>
+            <p className="text-[11px] text-slate-500">设置前置活动后，该活动的开始月份 = 前置活动结束月份 + Lag + 1。修改前置活动时所有依赖链自动重算。拖拽卡片可调整顺序。</p>
 
             {/* Resolved preview */}
             {(() => {
               const resolved = resolveMilestones(currentMs);
+              const otherResolved = resolveMilestones(otherMs);
+              // Build a lookup for cross-reference by ID
+              const otherMap = new Map(otherResolved.map(m => [m.id, m]));
+
               return (
                 <div className="space-y-2">
                   {currentMs.map((m, i) => {
@@ -322,14 +338,48 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
                     const duration = m.endM - m.startM + 1;
                     const resolvedDuration = rm.endM - rm.startM + 1;
                     const isAutoShifted = !m.manualStart && m.predecessorId && (rm.startM !== m.startM);
+                    const otherRef = otherMap.get(m.id);
+                    const isDragOver = dropIdx === i && dragIdx !== null && dragIdx !== i;
 
                     return (
-                      <div key={m.id} className={`rounded-xl bg-slate-800/50 border p-3 space-y-2 ${m.bold ? 'border-cyan-500/40' : 'border-slate-700/50'}`}>
-                        {/* Row 1: Move + ID + Description + KPI + Type + Bold + Delete */}
+                      <div
+                        key={m.id}
+                        draggable
+                        onDragStart={e => {
+                          setDragIdx(i);
+                          e.dataTransfer.effectAllowed = 'move';
+                          if (e.currentTarget instanceof HTMLElement) {
+                            e.currentTarget.style.opacity = '0.5';
+                          }
+                        }}
+                        onDragEnd={e => {
+                          if (e.currentTarget instanceof HTMLElement) {
+                            e.currentTarget.style.opacity = '1';
+                          }
+                          if (dragIdx !== null && dropIdx !== null && dragIdx !== dropIdx) {
+                            handleDragDrop(dragIdx, dropIdx);
+                          }
+                          setDragIdx(null);
+                          setDropIdx(null);
+                        }}
+                        onDragOver={e => {
+                          e.preventDefault();
+                          e.dataTransfer.dropEffect = 'move';
+                          setDropIdx(i);
+                        }}
+                        onDragLeave={() => { if (dropIdx === i) setDropIdx(null); }}
+                        className={`rounded-xl bg-slate-800/50 border p-3 space-y-2 cursor-grab active:cursor-grabbing transition-all ${
+                          m.bold ? 'border-cyan-500/40' : 'border-slate-700/50'
+                        } ${isDragOver ? 'border-cyan-400/70 bg-cyan-500/5 shadow-lg shadow-cyan-500/10' : ''}`}
+                      >
+                        {/* Row 1: Drag handle + ID + Description + KPI + Type + Bold + Delete */}
                         <div className="flex gap-2 items-center flex-wrap">
-                          <div className="flex flex-col gap-0.5">
-                            <button onClick={() => moveMilestone(i, -1)} disabled={i === 0} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▲</button>
-                            <button onClick={() => moveMilestone(i, 1)} disabled={i === currentMs.length - 1} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▼</button>
+                          <div className="flex items-center gap-1">
+                            <span className="text-slate-600 cursor-grab text-sm select-none" title="拖拽排序">⠿</span>
+                            <div className="flex flex-col gap-0.5">
+                              <button onClick={() => moveMilestone(i, -1)} disabled={i === 0} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▲</button>
+                              <button onClick={() => moveMilestone(i, 1)} disabled={i === currentMs.length - 1} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▼</button>
+                            </div>
                           </div>
                           <input value={m.id} onChange={e => setMilestone(i, 'id', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-[10px] text-cyan-400 font-mono outline-none focus:border-cyan-500/50" placeholder="id" />
                           <input value={m.desc} onChange={e => setMilestone(i, 'desc', e.target.value)} className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 min-w-[180px]" placeholder="活动描述" />
@@ -383,6 +433,25 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
                             <span className="text-amber-400 text-[10px] ml-1">→ 实际M{rm.startM}–M{rm.endM} ({resolvedDuration}月)</span>
                           )}
                         </div>
+
+                        {/* Row 3: Cross-scenario reference */}
+                        {otherRef && (
+                          <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-700/20 border border-slate-700/30">
+                            <span className="text-[10px] text-slate-500 flex-shrink-0">{msCase === 'best' ? '📊' : '🚀'} {otherLabel}参考:</span>
+                            <span className="text-[10px] font-mono text-slate-400">
+                              M{otherRef.startM}–M{otherRef.endM}
+                              <span className="text-slate-600 ml-1">({otherRef.endM - otherRef.startM + 1}月)</span>
+                            </span>
+                            {otherRef.startM !== rm.startM || otherRef.endM !== rm.endM ? (
+                              <span className="text-[10px] text-amber-400/70 ml-1">
+                                Δ{otherRef.startM - rm.startM >= 0 ? '+' : ''}{otherRef.startM - rm.startM}月开始
+                                {otherRef.endM !== rm.endM && (<>, Δ{otherRef.endM - rm.endM >= 0 ? '+' : ''}{otherRef.endM - rm.endM}月结束</>)}
+                              </span>
+                            ) : (
+                              <span className="text-[10px] text-green-400/60 ml-1">✓ 一致</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
