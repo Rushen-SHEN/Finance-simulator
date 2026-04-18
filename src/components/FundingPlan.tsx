@@ -1,11 +1,29 @@
-export default function FundingPlan() {
+import { CalcResult } from '@/lib/calculator';
+
+function wan(n: number) {
+  const v = n / 10000;
+  return (v >= 0 ? '' : '−') + '¥' + Math.abs(v).toFixed(0) + '万';
+}
+
+interface Props { result: CalcResult; scenario: string; }
+
+export default function FundingPlan({ result, scenario }: Props) {
+  const y = result.years;
+  // Cumulative loss Y1-Y3
+  const cumLossY1Y3 = y.slice(0, 3).reduce((s, v) => s + v.net_profit, 0);
+  // Five year cumulative net profit
+  const cumTotal = result.cumulative_net_profit;
+  // Find first year with EBITDA > 0
+  const ebitdaPositiveYear = y.findIndex(v => v.ebitda > 0);
+  const ebitdaLabel = ebitdaPositiveYear >= 0 ? `Year ${ebitdaPositiveYear + 1}` : '未转正';
+
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
-        <h2 className="text-[22px] font-bold text-gray-800">融资规划 — 三轮覆盖至EBITDA转正</h2>
+        <h2 className="text-[22px] font-bold text-gray-800">融资规划 — 三轮覆盖至EBITDA{ebitdaLabel === '未转正' ? ebitdaLabel : `${ebitdaLabel}转正`}</h2>
         <span className="text-[11px] bg-blue-50 text-blue-600 px-3 py-0.5 rounded-full font-medium">投资人关注</span>
       </div>
-      <p className="text-[13px] text-gray-500 mb-6">累计¥3,200–4,800万 | 三轮后创始团队持股~56% | Y4 EBITDA转正后现金流自给</p>
+      <p className="text-[13px] text-gray-500 mb-6">累计¥3,200–4,800万 | 三轮后创始团队持股~56% | {ebitdaLabel}后现金流自给 · 当前: {scenario === 'neutral' ? '中性' : scenario === 'optimistic' ? '乐观' : scenario === 'conservative' ? '保守' : '延迟'}情景</p>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <FundCard
@@ -31,8 +49,8 @@ export default function FundingPlan() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mt-4">
         <SummaryCard label="三轮累计融资" value="¥3,200–4,800万" color="text-blue-600" />
         <SummaryCard label="创始团队持股(三轮后)" value="~56%" color="text-orange-500" detail="(1−17.5%)³ ≈ 56.1%" />
-        <SummaryCard label="Y1–3累计亏损" value="−¥642万" color="text-red-600" detail="由融资覆盖" />
-        <SummaryCard label="五年累计净利润" value="¥652万" color="text-green-600" detail="修正后(升级按存量封顶)" />
+        <SummaryCard label="Y1–3累计亏损" value={wan(cumLossY1Y3)} color={cumLossY1Y3 < 0 ? 'text-red-600' : 'text-green-600'} detail="由融资覆盖" />
+        <SummaryCard label="五年累计净利润" value={wan(cumTotal)} color={cumTotal >= 0 ? 'text-green-600' : 'text-red-600'} detail={`EBITDA ${ebitdaLabel}${ebitdaLabel === '未转正' ? '' : '转正'}`} />
       </div>
     </section>
   );

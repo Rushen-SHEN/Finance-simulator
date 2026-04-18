@@ -12,21 +12,30 @@ function pct(n: number | null) {
   return (n * 100).toFixed(1) + '%';
 }
 
-interface Props { result: CalcResult; }
+const SCENARIO_NAMES: Record<string, string> = {
+  neutral: '中性情景',
+  optimistic: '乐观情景',
+  conservative: '保守情景',
+  delayed: '延迟情景',
+};
 
-export default function FinancialTable({ result }: Props) {
+interface Props { result: CalcResult; scenario: string; }
+
+export default function FinancialTable({ result, scenario }: Props) {
   const y = result.years;
   const cumNetProfits: number[] = [];
   let acc = 0;
   y.forEach(yr => { acc += yr.net_profit; cumNetProfits.push(acc); });
 
+  const scenarioLabel = SCENARIO_NAMES[scenario] || '中性情景';
+
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
-        <h2 className="text-[22px] font-bold text-gray-800">五年财务预测 — 中性情景</h2>
+        <h2 className="text-[22px] font-bold text-gray-800">五年财务预测 — {scenarioLabel}</h2>
         <span className="text-[11px] bg-blue-50 text-blue-600 px-3 py-0.5 rounded-full font-medium">投资人关注</span>
       </div>
-      <p className="text-[13px] text-gray-500 mb-6">升级按活跃存量封顶 | SaaS按75%续约率逐年衰减 | M1=2026年7月</p>
+      <p className="text-[13px] text-gray-500 mb-6">升级按活跃存量封顶 | SaaS按续约率逐年衰减 | M1=2026年7月</p>
 
       <div className="rounded-lg p-3 px-4 mb-3.5 text-[13px] flex items-start gap-2 bg-blue-50 border border-blue-300 text-blue-800 leading-relaxed">
         ℹ️ Y4计划升级{y[3]?.planned_upgrade || 0}床，按续约率衰减后实际可升级{y[3]?.actual_upgrade || 0}床。Y5无二类存量可升级。

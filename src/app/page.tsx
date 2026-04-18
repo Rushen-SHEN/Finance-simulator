@@ -100,12 +100,12 @@ export default function Home() {
 
         <MarketSection />
         <BusinessModel global={global} result={result} />
-        <FinancialTable result={result} />
+        <FinancialTable result={result} scenario={scenario} />
         <RevenueCharts result={result} />
         <ProfitCharts result={result} />
-        <FundingPlan />
-        <GanttTimeline />
-        <Assumptions />
+        <FundingPlan result={result} scenario={scenario} />
+        <GanttTimeline scenario={scenario} />
+        <Assumptions scenario={scenario} global={global} result={result} />
 
         <footer className="text-center py-8 border-t border-gray-200 mt-8 text-xs text-gray-500">
           <div>ARIA 财务模型模拟器 v2.0 | 基于商业计划书 2026年4月版 | 升级按活跃存量封顶</div>
