@@ -55,7 +55,8 @@ export default function Home() {
     }
   }, [code]);
 
-  const result: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best);
+  const resultBest: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best);
+  const resultBase: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_base);
 
   const handleModelChange = useCallback((m: ModelInputs) => {
     setModel(m);
@@ -164,13 +165,13 @@ export default function Home() {
         </div>
 
         <div data-export-module><MarketSection /></div>
-        <div data-export-module><BusinessModel global={model.global} result={result} /></div>
-        <div data-export-module><FinancialTable result={result} scenario={scenario} /></div>
-        <div data-export-module><RevenueCharts result={result} /></div>
-        <div data-export-module><ProfitCharts result={result} /></div>
-        <div data-export-module><FundingPlan result={result} scenario={scenario} funding={model.funding} /></div>
+        <div data-export-module><BusinessModel global={model.global} result={resultBest} /></div>
+        <FinancialTable resultBest={resultBest} resultBase={resultBase} scenario={scenario} />
+        <div data-export-module><RevenueCharts result={resultBest} /></div>
+        <div data-export-module><ProfitCharts result={resultBest} /></div>
+        <div data-export-module><FundingPlan result={resultBest} scenario={scenario} funding={model.funding} /></div>
         <div data-export-module><GanttTimeline scenario={scenario} milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} /></div>
-        <div data-export-module><Assumptions scenario={scenario} global={model.global} result={result} /></div>
+        <div data-export-module><Assumptions scenario={scenario} global={model.global} result={resultBest} /></div>
 
         <footer className="text-center py-8 border-t border-slate-600/50 mt-8 text-xs text-slate-300">
           <div>ARIA 财务模型模拟器 v3.2 | BPcc 2026-04 | 直销+合作经销商双引擎 | 全参数可调+存档</div>
