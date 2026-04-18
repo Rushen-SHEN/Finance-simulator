@@ -21,12 +21,12 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
   const founderPct = ((1 - f.seed_dilution) * (1 - f.preA_dilution) * (1 - f.seriesA_dilution) * 100).toFixed(0);
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">融资规划 — ¥{totalMin.toFixed(0)}–{totalMax.toFixed(0)}万轻量融资</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-[13px] text-gray-500 mb-6">2–3轮 · Baxter授权金可替代Pre-A · {ebitdaLabel}后现金流自给 · 当前: {scenarioLabel}情景</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">2–3轮 · Baxter授权金可替代Pre-A · {ebitdaLabel}后现金流自给 · 当前: {scenarioLabel}情景</p>
 
       <div className="rounded-lg p-3 px-4 mb-5 text-[13px] flex items-start gap-2 bg-green-50 border border-green-300 text-green-800 leading-relaxed">
         💡 <b>关键优势</b>：Baxter授权金+里程碑=¥500万，可部分或完全替代Pre-A轮融资，大幅降低稀释。EBITDA {ebitdaLabel}转正后无需A轮。
@@ -74,10 +74,10 @@ function FundCard({ round, amount, timing, use, valuation, color, amountColor }:
 }) {
   return (
     <div className={`bg-white border border-gray-200 rounded-xl p-5 shadow-sm border-t-4 ${color}`}>
-      <div className="text-[11px] text-gray-500 uppercase tracking-wider font-semibold">{round}</div>
+      <div className="text-xs text-gray-600 uppercase tracking-wider font-semibold">{round}</div>
       <div className={`text-2xl font-extrabold my-2 ${amountColor}`}>{amount}</div>
       <div className="text-xs text-orange-500 font-medium">{timing}</div>
-      <div className="text-xs text-gray-500 mt-2.5 leading-relaxed">
+      <div className="text-xs text-gray-600 mt-2.5 leading-relaxed">
         {use.split(' / ').map((l, i) => <span key={i}>{l}<br /></span>)}
       </div>
       <div className="text-xs text-purple-600 mt-2">{valuation}</div>
@@ -88,9 +88,9 @@ function FundCard({ round, amount, timing, use, valuation, color, amountColor }:
 function SummaryCard({ label, value, color, detail }: { label: string; value: string; color: string; detail?: string }) {
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 text-center shadow-sm">
-      <div className="text-xs text-gray-500 mb-1">{label}</div>
+      <div className="text-xs text-gray-600 mb-1">{label}</div>
       <div className={`text-[22px] font-extrabold ${color}`}>{value}</div>
-      {detail && <div className="text-[11px] text-gray-500 mt-1">{detail}</div>}
+      {detail && <div className="text-xs text-gray-500 mt-1">{detail}</div>}
     </div>
   );
 }

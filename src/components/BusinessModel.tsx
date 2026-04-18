@@ -30,12 +30,12 @@ export default function BusinessModel({ global, result }: Props) {
   const upgROI = (global.value_anchor_c3 - upgAnnualCost) / upgAnnualCost;
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">商业模式 — 直销+Baxter双渠道</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-[13px] text-gray-500 mb-6">硬件+SaaS双引擎 | Baxter渠道HW 15%/SaaS 35% | 授权金¥200万+里程碑¥300万</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">硬件+SaaS双引擎 | Baxter渠道HW 15%/SaaS 35% | 授权金¥200万+里程碑¥300万</p>
 
       {/* Pricing Table */}
       <div className="overflow-x-auto rounded-xl border border-gray-200 mb-5">
@@ -63,7 +63,7 @@ export default function BusinessModel({ global, result }: Props) {
       </div>
 
       {/* ROI Cards — dual anchors */}
-      <h3 className="text-[15px] text-gray-500 font-semibold mb-3.5">医院ROI — 双锚定价 | C2创造价值 {fmt(global.value_anchor_c2)}/床/年 · C3创造价值 {fmt(global.value_anchor_c3)}/床/年</h3>
+      <h3 className="text-[15px] text-gray-600 font-semibold mb-3.5">医院ROI — 双锚定价 | C2创造价值 {fmt(global.value_anchor_c2)}/床/年 · C3创造价值 {fmt(global.value_anchor_c3)}/床/年</h3>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <ROICard title="二类 · 新购" roi={c2ROI} cost={c2AnnualCost} valuePerBed={global.value_anchor_c2} />
         <ROICard title="三类 · 新购" roi={c3ROI} cost={c3AnnualCost} valuePerBed={global.value_anchor_c3} />
@@ -80,11 +80,11 @@ export default function BusinessModel({ global, result }: Props) {
 function ROICard({ title, roi, cost, valuePerBed }: { title: string; roi: number; cost: number; valuePerBed: number }) {
   return (
     <div className={`bg-white border-2 rounded-xl p-5 text-center shadow-sm ${roi >= 0 ? 'border-green-400' : 'border-red-500'}`}>
-      <div className="text-[13px] text-gray-500 mb-2.5 font-semibold">{title}</div>
+      <div className="text-[13px] text-gray-600 mb-2.5 font-semibold">{title}</div>
       <div className={`text-4xl font-extrabold ${roi >= 0 ? 'text-green-600' : 'text-red-600'}`}>
         {roi >= 0 ? '+' : ''}{pct(roi)}
       </div>
-      <div className="text-xs text-gray-500 mt-2.5 leading-relaxed">
+      <div className="text-xs text-gray-600 mt-2.5 leading-relaxed">
         年化费用 {fmt(cost)}/床<br />
         创造价值 {fmt(valuePerBed)}/床/年<br />
         {roi >= 0 ? `回收期 ~${Math.round(12 / (1 + roi))}个月` : <b>ROI为负</b>}

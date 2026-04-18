@@ -49,7 +49,7 @@ export default function RevenueCharts({ result }: Props) {
   };
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <h2 className="text-[22px] font-bold text-gray-800 mb-6">收入增长与渠道结构</h2>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         <ChartBox title="收入构成 6条线（万元）">

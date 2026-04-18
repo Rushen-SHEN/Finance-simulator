@@ -86,7 +86,7 @@ export default function Home() {
         onExportPNG={handleExportPNG}
       />
 
-      <div ref={printRef} className="max-w-[1200px] mx-auto px-6 pb-12">
+      <div ref={printRef} className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-12">
         <StatusStrip />
         <PhaseOverview milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
 
@@ -110,9 +110,9 @@ export default function Home() {
         <GanttTimeline scenario={scenario} milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
         <Assumptions scenario={scenario} global={model.global} result={result} />
 
-        <footer className="text-center py-8 border-t border-slate-700/40 mt-8 text-xs text-slate-500">
+        <footer className="text-center py-8 border-t border-slate-600/50 mt-8 text-xs text-slate-300">
           <div>ARIA 财务模型模拟器 v3.2 | BPcc 2026-04 | 直销+Baxter双引擎 | 全参数可调+存档</div>
-          <div className="text-amber-400/70 font-medium mt-1">
+          <div className="text-amber-300 font-medium mt-1">
             ⚠️ 所有预测均为推算，非已确认事实。项目当前处于原型开发阶段，无外部融资，无已授权专利。
           </div>
         </footer>

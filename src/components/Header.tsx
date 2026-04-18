@@ -29,7 +29,7 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
 
   return (
     <div className="bg-gradient-to-r from-[#0B0F1A] via-[#111827] to-[#0B0F1A] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg shadow-black/20">
-      <div className="max-w-[1200px] mx-auto px-6 py-3 flex items-center justify-between flex-wrap gap-3">
+      <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="relative">
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-500/20">
@@ -40,48 +40,48 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
           <div>
             <div className="flex items-baseline gap-2">
               <b className="text-lg text-white tracking-wider font-black">ARIA</b>
-              <span className="text-[10px] text-cyan-400/60 font-mono tracking-widest">v3.2</span>
+              <span className="text-[11px] text-cyan-400 font-mono tracking-widest">v3.2</span>
             </div>
-            <span className="text-[10px] text-slate-500 tracking-wide">ICU谵妄预警 · 财务模型模拟器</span>
+            <span className="text-[11px] text-slate-300 tracking-wide hidden sm:inline">ICU谵妄预警 · 财务模型模拟器</span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="flex rounded-lg overflow-hidden border border-slate-700/60 bg-slate-900/50 backdrop-blur-sm">
+        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <div className="flex rounded-lg overflow-hidden border border-slate-600 bg-slate-900/50 backdrop-blur-sm">
             {scenarios.map(s => (
               <button
                 key={s.key}
                 onClick={() => onScenario(s.key)}
-                className={`px-3.5 py-1.5 text-[11px] font-medium transition-all ${
+                className={`px-2.5 sm:px-3.5 py-1.5 text-xs font-medium transition-all ${
                   scenario === s.key
-                    ? 'bg-gradient-to-b from-cyan-500/20 to-cyan-600/10 text-cyan-400 shadow-inner shadow-cyan-500/10'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800/50'
+                    ? 'bg-gradient-to-b from-cyan-500/20 to-cyan-600/10 text-cyan-300 shadow-inner shadow-cyan-500/10'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-800/50'
                 }`}
               >
-                <span className="text-[9px] mr-1">{s.icon}</span>{s.label}
+                {s.label}
               </button>
             ))}
           </div>
 
           <button
             onClick={onToggleParams}
-            className="px-3.5 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/5 text-cyan-400 text-[11px] font-medium hover:bg-cyan-500/15 hover:border-cyan-500/50 transition-all shadow-sm shadow-cyan-500/5"
+            className="px-3 sm:px-3.5 py-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/5 text-cyan-300 text-xs font-medium hover:bg-cyan-500/15 hover:border-cyan-500/50 transition-all shadow-sm shadow-cyan-500/5"
           >
-            ⚙ 参数面板
+            ⚙ 参数
           </button>
 
-          <div className="flex rounded-lg overflow-hidden border border-slate-700/60 bg-slate-900/50">
+          <div className="flex rounded-lg overflow-hidden border border-slate-600 bg-slate-900/50">
             <button
               onClick={() => handleExport('pdf')}
               disabled={exporting !== null}
-              className="px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40 border-r border-slate-700/40"
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40 border-r border-slate-600"
             >
               {exporting === 'pdf' ? '⏳' : '📄'} PDF
             </button>
             <button
               onClick={() => handleExport('png')}
               disabled={exporting !== null}
-              className="px-3 py-1.5 text-[11px] font-medium text-slate-400 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40"
+              className="px-2.5 sm:px-3 py-1.5 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-700/50 transition-all disabled:opacity-40"
             >
               {exporting === 'png' ? '⏳' : '🖼️'} PNG
             </button>

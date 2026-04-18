@@ -67,7 +67,7 @@ export default function ProfitCharts({ result }: Props) {
   const breakEvenYear = ebitda.findIndex(v => v > 0);
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <h2 className="text-[22px] font-bold text-gray-800 mb-1">
         盈利路径 — EBITDA {breakEvenYear >= 0 ? `Year ${breakEvenYear + 1}` : '未'}转正
       </h2>

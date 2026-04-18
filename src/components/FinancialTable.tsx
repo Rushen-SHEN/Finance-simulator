@@ -30,12 +30,12 @@ export default function FinancialTable({ result, scenario }: Props) {
   const scenarioLabel = SCENARIO_NAMES[scenario] || '中性情景';
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">五年财务预测 — {scenarioLabel}</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-[13px] text-gray-500 mb-6">直销+Baxter渠道 | SaaS续约率{(y.length > 1 ? (result.years[0].opex > 0 ? '70%' : '70%') : '70%')} | 授权金+里程碑 | M1=2026年7月</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">直销+Baxter渠道 | SaaS续约率{(y.length > 1 ? (result.years[0].opex > 0 ? '70%' : '70%') : '70%')} | 授权金+里程碑 | M1=2026年7月</p>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full border-collapse text-[13px]">
@@ -44,7 +44,7 @@ export default function FinancialTable({ result, scenario }: Props) {
               <th className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3.5 text-left border-b-2 border-blue-200 w-[180px]">项目</th>
               {YEAR_LABELS.map((l, i) => (
                 <th key={i} className="bg-blue-50 text-blue-600 font-semibold py-2.5 px-3.5 text-left border-b-2 border-blue-200">
-                  {l}<br /><small className="font-normal text-gray-400">{MONTH_LABELS[i]}</small>
+                  {l}<br /><small className="font-normal text-gray-500">{MONTH_LABELS[i]}</small>
                 </th>
               ))}
             </tr>
@@ -101,13 +101,13 @@ function Row({ label, values, bold, highlight, purple, green, colorize, faded }:
 }) {
   return (
     <tr className="even:bg-gray-50/50">
-      <td className={`py-2 px-3.5 border-b border-gray-100 ${bold ? 'font-semibold' : ''} ${faded ? 'text-gray-400 text-[11px]' : ''}`}>{label}</td>
+      <td className={`py-2 px-3.5 border-b border-gray-100 ${bold ? 'font-semibold' : ''} ${faded ? 'text-gray-500 text-xs' : ''}`}>{label}</td>
       {values.map((v, i) => {
         let cls = 'py-2 px-3.5 border-b border-gray-100 whitespace-nowrap';
         if (highlight) cls += ' text-blue-600 font-bold';
         if (purple) cls += ' text-purple-600 font-semibold';
         if (green) cls += ' text-green-600';
-        if (faded) cls += ' text-gray-400 text-[11px]';
+        if (faded) cls += ' text-gray-500 text-xs';
         if (colorize) {
           if (v.startsWith('−')) cls += ' text-red-600';
           else if (v !== '¥0' && v !== '—') cls += ' text-green-600';

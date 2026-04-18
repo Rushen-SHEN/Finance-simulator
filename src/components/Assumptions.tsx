@@ -30,19 +30,19 @@ export default function Assumptions({ scenario, global, result }: Props) {
   ];
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">关键假设与风险标记 — {scenarioLabel}情景</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-[13px] text-gray-500 mb-6">所有预测均为推算，非已确认事实 · 红色标记需优先关注 · 绿色为新增优势</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">所有预测均为推算，非已确认事实 · 红色标记需优先关注 · 绿色为新增优势</p>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {dynamicAssumptions.map((a, i) => (
           <div key={i} className="bg-white border border-gray-200 rounded-lg px-4 py-3 flex items-start gap-2.5 shadow-sm">
             <div className={`w-2.5 h-2.5 rounded-full flex-shrink-0 mt-1 ${dotColor[a.level]}`} />
             <div>
-              <div className="text-xs text-gray-500">{a.label}</div>
+              <div className="text-xs text-gray-600">{a.label}</div>
               <div className="text-[13px] font-semibold text-gray-800">{a.value}</div>
             </div>
           </div>

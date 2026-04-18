@@ -184,19 +184,19 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
   return (
     <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl p-0 my-5 relative overflow-hidden">
       {/* Glow effect */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-96 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-60" />
 
       {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-700/50">
+      <div className="flex items-center justify-between px-4 sm:px-6 py-4 border-b border-slate-700/50 flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-lg shadow-cyan-500/20">⚙</div>
           <div>
             <h2 className="text-lg font-bold text-white tracking-wide">参数控制台</h2>
-            <div className="flex items-center gap-2">
-              <p className="text-[11px] text-slate-400">实时调整 · 全量存档 · 投资人路演专属</p>
-              {isDirty && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-400">未保存</span>}
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className="text-xs text-slate-300">实时调整 · 全量存档 · 投资人路演专属</p>
+              {isDirty && <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300">未保存</span>}
               {lastAutoSave && (
-                <span className="text-[9px] text-slate-500">
+                <span className="text-[11px] text-slate-300">
                   自动保存 {new Date(lastAutoSave).toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
                   {autoSaveCount > 1 && ` (${autoSaveCount}次)`}
                 </span>
@@ -383,7 +383,7 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
             </div>
             <NoteBar text={model.annotations.milestones} annotationKey="milestones" onChange={setAnnotation} />
 
-            <p className="text-[11px] text-slate-500">设置前置活动后，该活动的开始月份 = 前置活动结束月份 + Lag + 1。修改前置活动时所有依赖链自动重算。拖拽卡片可调整顺序。</p>
+            <p className="text-xs text-slate-300">设置前置活动后，该活动的开始月份 = 前置活动结束月份 + Lag + 1。修改前置活动时所有依赖链自动重算。拖拽卡片可调整顺序。</p>
 
             {/* Resolved preview */}
             {(() => {
@@ -436,14 +436,14 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
                         {/* Row 1: Drag handle + ID + Description + KPI + Type + Bold + Delete */}
                         <div className="flex gap-2 items-center flex-wrap">
                           <div className="flex items-center gap-1">
-                            <span className="text-slate-600 cursor-grab text-sm select-none" title="拖拽排序">⠿</span>
+                            <span className="text-slate-400 cursor-grab text-sm select-none" title="拖拽排序">⠇</span>
                             <div className="flex flex-col gap-0.5">
-                              <button onClick={() => moveMilestone(i, -1)} disabled={i === 0} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▲</button>
-                              <button onClick={() => moveMilestone(i, 1)} disabled={i === currentMs.length - 1} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▼</button>
+                              <button onClick={() => moveMilestone(i, -1)} disabled={i === 0} className="text-slate-400 hover:text-cyan-400 disabled:opacity-20 text-xs leading-none px-0.5">▲</button>
+                              <button onClick={() => moveMilestone(i, 1)} disabled={i === currentMs.length - 1} className="text-slate-400 hover:text-cyan-400 disabled:opacity-20 text-xs leading-none px-0.5">▼</button>
                             </div>
                           </div>
-                          <input value={m.id} onChange={e => setMilestone(i, 'id', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-[10px] text-cyan-400 font-mono outline-none focus:border-cyan-500/50" placeholder="id" />
-                          <input value={m.desc} onChange={e => setMilestone(i, 'desc', e.target.value)} className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 min-w-[180px]" placeholder="活动描述" />
+                          <input value={m.id} onChange={e => setMilestone(i, 'id', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-cyan-300 font-mono outline-none focus:border-cyan-500/50" placeholder="id" />
+                          <input value={m.desc} onChange={e => setMilestone(i, 'desc', e.target.value)} className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 min-w-[120px] sm:min-w-[180px]" placeholder="活动描述" />
                           <input value={m.kpi} onChange={e => setMilestone(i, 'kpi', e.target.value)} className="w-36 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50" placeholder="KPI" />
                           <select value={m.type} onChange={e => setMilestone(i, 'type', e.target.value)} className="bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50">
                             <option value="研发">🔵 研发</option>
@@ -451,21 +451,21 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
                             <option value="融资">🟡 融资</option>
                             <option value="商业化">🟢 商业化</option>
                           </select>
-                          <label className="flex items-center gap-1 text-xs text-slate-400"><input type="checkbox" checked={m.bold} onChange={e => setMilestone(i, 'bold', e.target.checked)} className="accent-cyan-500" /> ★</label>
-                          <button onClick={() => removeMilestone(i)} className="text-red-400/60 hover:text-red-400 text-xs px-1.5">✕</button>
+                          <label className="flex items-center gap-1 text-xs text-slate-300"><input type="checkbox" checked={m.bold} onChange={e => setMilestone(i, 'bold', e.target.checked)} className="accent-cyan-500" /> ★</label>
+                          <button onClick={() => removeMilestone(i)} className="text-red-400 hover:text-red-300 text-xs px-1.5">✕</button>
                         </div>
 
                         {/* Row 2: Start/End/Duration + Predecessor + Lag */}
                         <div className="flex gap-2 items-center flex-wrap text-xs">
-                          <span className="text-slate-500 w-12">开始M</span>
+                          <span className="text-slate-300 w-12">开始M</span>
                           <input type="number" value={m.startM} min={1} max={60} onChange={e => { const v = parseInt(e.target.value) || 1; setMilestone(i, 'startM', v); }} className="w-16 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 text-center" />
-                          <span className="text-slate-500 w-12">结束M</span>
+                          <span className="text-slate-300 w-12">结束M</span>
                           <input type="number" value={m.endM} min={m.startM} max={60} onChange={e => { const v = parseInt(e.target.value) || m.startM; setMilestone(i, 'endM', v); }} className="w-16 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 text-center" />
-                          <span className="text-slate-500">工期: <span className="text-white font-semibold">{duration}月</span></span>
+                          <span className="text-slate-300">工期: <span className="text-white font-semibold">{duration}月</span></span>
 
-                          <span className="text-slate-600 mx-1">|</span>
+                          <span className="text-slate-500 mx-1">|</span>
 
-                          <span className="text-slate-500">前置:</span>
+                          <span className="text-slate-300">前置:</span>
                           <select
                             value={m.predecessorId || ''}
                             onChange={e => {
@@ -484,32 +484,32 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
 
                           {m.predecessorId && (
                             <>
-                              <span className="text-slate-500">Lag:</span>
+                              <span className="text-slate-300">Lag:</span>
                               <input type="number" value={m.lagMonths} onChange={e => setMilestone(i, 'lagMonths', parseInt(e.target.value) || 0)} className="w-14 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 text-center" />
-                              <span className="text-slate-500">月</span>
+                              <span className="text-slate-300">月</span>
                             </>
                           )}
 
                           {isAutoShifted && (
-                            <span className="text-amber-400 text-[10px] ml-1">→ 实际M{rm.startM}–M{rm.endM} ({resolvedDuration}月)</span>
+                            <span className="text-amber-300 text-xs ml-1">→ 实际M{rm.startM}–M{rm.endM} ({resolvedDuration}月)</span>
                           )}
                         </div>
 
                         {/* Row 3: Cross-scenario reference */}
                         {otherRef && (
                           <div className="flex items-center gap-2 px-2 py-1.5 rounded-lg bg-slate-700/20 border border-slate-700/30">
-                            <span className="text-[10px] text-slate-500 flex-shrink-0">{msCase === 'best' ? '📊' : '🚀'} {otherLabel}参考:</span>
-                            <span className="text-[10px] font-mono text-slate-400">
+                            <span className="text-xs text-slate-300 flex-shrink-0">{msCase === 'best' ? '📊' : '🚀'} {otherLabel}参考:</span>
+                            <span className="text-xs font-mono text-slate-200">
                               M{otherRef.startM}–M{otherRef.endM}
-                              <span className="text-slate-600 ml-1">({otherRef.endM - otherRef.startM + 1}月)</span>
+                              <span className="text-slate-400 ml-1">({otherRef.endM - otherRef.startM + 1}月)</span>
                             </span>
                             {otherRef.startM !== rm.startM || otherRef.endM !== rm.endM ? (
-                              <span className="text-[10px] text-amber-400/70 ml-1">
+                              <span className="text-xs text-amber-300 ml-1">
                                 Δ{otherRef.startM - rm.startM >= 0 ? '+' : ''}{otherRef.startM - rm.startM}月开始
                                 {otherRef.endM !== rm.endM && (<>, Δ{otherRef.endM - rm.endM >= 0 ? '+' : ''}{otherRef.endM - rm.endM}月结束</>)}
                               </span>
                             ) : (
-                              <span className="text-[10px] text-green-400/60 ml-1">✓ 一致</span>
+                              <span className="text-xs text-green-300 ml-1">✓ 一致</span>
                             )}
                           </div>
                         )}
@@ -526,7 +526,7 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
         {tab === 'notes' && (
           <div className="space-y-4">
             <SectionTitle>假设与依据注释 (路演答疑用)</SectionTitle>
-            <p className="text-[11px] text-slate-500">每条注释对应一个模块。投资人提问时可引用。修改后自动存档。</p>
+            <p className="text-xs text-slate-300">每条注释对应一个模块。投资人提问时可引用。修改后自动存档。</p>
             {Object.keys(DEFAULT_ANNOTATIONS).map(key => (
               <div key={key} className="space-y-1">
                 <label className="text-xs text-cyan-400 font-semibold uppercase tracking-wider">{key}</label>
@@ -545,7 +545,7 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
         {tab === 'profiles' && (
           <div className="space-y-4">
             <SectionTitle>参数存档管理</SectionTitle>
-            <p className="text-[11px] text-slate-500">命名保存当前全部参数，随时加载回复。支持多套方案对比。</p>
+            <p className="text-xs text-slate-300">命名保存当前全部参数，随时加载回复。支持多套方案对比。</p>
 
             <div className="flex gap-2">
               <input
@@ -568,7 +568,7 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
                   <div key={p.name} className="flex items-center justify-between bg-slate-800/50 border border-slate-700/50 rounded-xl px-4 py-3">
                     <div>
                       <div className="text-sm text-white font-semibold">{p.name}</div>
-                      <div className="text-[10px] text-slate-500">{new Date(p.timestamp).toLocaleString('zh-CN')}</div>
+                      <div className="text-xs text-slate-400">{new Date(p.timestamp).toLocaleString('zh-CN')}</div>
                     </div>
                     <div className="flex gap-2">
                       <button onClick={() => handleLoadProfile(p.name)} className="px-3 py-1.5 text-xs rounded-lg bg-cyan-500/10 border border-cyan-500/30 text-cyan-400 hover:bg-cyan-500/20 transition-all">加载</button>
@@ -647,7 +647,7 @@ function DarkInput({ label, value, def, onChange, step = 1000 }: {
   const modified = value !== def;
   return (
     <div>
-      <label className="text-[10px] text-slate-500 block mb-0.5 uppercase tracking-wider">{label}</label>
+      <label className="text-xs text-slate-400 block mb-0.5 uppercase tracking-wider">{label}</label>
       <input
         type="number"
         value={value}

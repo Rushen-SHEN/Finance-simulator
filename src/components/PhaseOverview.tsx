@@ -100,24 +100,24 @@ function getPhaseRange(milestones: MilestoneItem[], ids: string[]): { start: num
 
 export default function PhaseOverview({ milestonesBest, milestonesBase }: Props) {
   return (
-    <section className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 my-5 relative overflow-hidden">
+    <section className="bg-white rounded-2xl border border-slate-200 shadow-lg p-5 sm:p-8 my-5 relative overflow-hidden">
       {/* Accent lines */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-0.5 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-96 h-0.5 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-0.5 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
 
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
         <div>
-          <h2 className="text-[22px] font-bold text-slate-800 tracking-wide">项目阶段总览</h2>
-          <p className="text-[13px] text-slate-500 mt-1">5个Phase · M1=2026年7月 · 从发现验证到规模化增长</p>
+          <h2 className="text-xl sm:text-[22px] font-bold text-slate-800 tracking-wide">项目阶段总览</h2>
+          <p className="text-xs sm:text-[13px] text-slate-600 mt-1">5个Phase · M1=2026年7月 · 从发现验证到规模化增长</p>
         </div>
-        <div className="flex gap-3 text-[11px]">
+        <div className="flex gap-3 text-xs">
           <span className="flex items-center gap-1.5 text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" /> Best Case</span>
           <span className="flex items-center gap-1.5 text-blue-600"><span className="w-2 h-2 rounded-full bg-blue-500" /> Base Case</span>
         </div>
       </div>
 
       {/* Phase Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
         {PHASES.map((phase, idx) => {
           const best = getPhaseRange(milestonesBest, phase.bestIds);
           const base = getPhaseRange(milestonesBase, phase.baseIds);
@@ -131,15 +131,15 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
 
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">{phase.icon}</span>
-                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider leading-tight">{phase.name}</span>
+                <span className="text-xs font-bold text-slate-700 uppercase tracking-wider leading-tight">{phase.name}</span>
               </div>
 
               {/* Timing badges */}
               <div className="flex gap-1.5 mb-3">
-                <span className="px-2 py-0.5 rounded-md bg-green-500/15 text-green-400 text-[10px] font-mono font-semibold border border-green-500/20">
+                <span className="px-2 py-0.5 rounded-md bg-green-500/15 text-green-700 text-[11px] font-mono font-semibold border border-green-500/25">
                   M{best.start}–{best.end}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-400 text-[10px] font-mono font-semibold border border-blue-500/20">
+                <span className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-700 text-[11px] font-mono font-semibold border border-blue-500/25">
                   M{base.start}–{base.end}
                 </span>
               </div>
@@ -147,7 +147,7 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
               {/* Key activities */}
               <div className="space-y-1 mb-3">
                 {phase.activities.map((a, i) => (
-                  <div key={i} className={`text-[10px] leading-relaxed ${a.startsWith('★') ? 'text-cyan-600 font-semibold' : 'text-slate-500'}`}>
+                  <div key={i} className={`text-[11px] leading-relaxed ${a.startsWith('★') ? 'text-cyan-700 font-semibold' : 'text-slate-600'}`}>
                     {a.startsWith('★') ? '' : '·'} {a}
                   </div>
                 ))}
@@ -155,14 +155,14 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
 
               {/* Funding & Deployment */}
               <div className="border-t border-slate-300/60 pt-2 space-y-1">
-                <div className="text-[10px] text-amber-600">💰 {phase.funding}</div>
-                <div className="text-[10px] text-green-600">🛏️ {phase.deployment}</div>
+                <div className="text-[11px] text-amber-700">💰 {phase.funding}</div>
+                <div className="text-[11px] text-green-700">🛏️ {phase.deployment}</div>
               </div>
 
               {/* Key milestone */}
               <div className="mt-2 px-2 py-1 rounded-md bg-slate-100 border border-slate-200">
-                <div className="text-[9px] text-slate-400 uppercase tracking-wider">关键交付</div>
-                <div className="text-[10px] text-slate-700 font-medium">{phase.keyMilestone}</div>
+                <div className="text-[10px] text-slate-500 uppercase tracking-wider">关键交付</div>
+                <div className="text-[11px] text-slate-700 font-medium">{phase.keyMilestone}</div>
               </div>
             </div>
           );
@@ -176,20 +176,20 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
         </div>
         <div className="flex justify-between mt-1">
           {['M1', 'M12', 'M24', 'M36', 'M48', 'M60'].map(m => (
-            <span key={m} className="text-[9px] text-slate-400 font-mono">{m}</span>
+            <span key={m} className="text-[11px] text-slate-500 font-mono">{m}</span>
           ))}
         </div>
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-x-5 gap-y-1 text-[10px] text-slate-400 leading-relaxed">
-        <span className="font-semibold text-slate-500">图例：</span>
-        <span><b className="text-slate-600">M</b> = 月份（Month）</span>
-        <span><b className="text-slate-600">M1</b> = 2026年7月，种子轮融资启动</span>
-        <span><b className="text-slate-600">M12</b> = 2027年6月，首年结束</span>
-        <span><b className="text-slate-600">M24</b> = 2028年6月</span>
-        <span><b className="text-slate-600">M36</b> = 2029年6月</span>
-        <span><b className="text-slate-600">M60</b> = 2031年6月，五年规划终点</span>
+      <div className="mt-4 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-slate-500 leading-relaxed">
+        <span className="font-semibold text-slate-600">图例：</span>
+        <span><b className="text-slate-700">M</b> = 月份（Month）</span>
+        <span><b className="text-slate-700">M1</b> = 2026年7月，种子轮融资启动</span>
+        <span><b className="text-slate-700">M12</b> = 2027年6月，首年结束</span>
+        <span><b className="text-slate-700">M24</b> = 2028年6月</span>
+        <span><b className="text-slate-700">M36</b> = 2029年6月</span>
+        <span><b className="text-slate-700">M60</b> = 2031年6月，五年规划终点</span>
         <span className="text-slate-300">|</span>
         <span>🟢 Best = 最乐观进度</span>
         <span>🔵 Base = 保守基准进度</span>

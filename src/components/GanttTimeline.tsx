@@ -34,15 +34,15 @@ function GanttChart({ items, label }: { items: MilestoneItem[]; label: string })
 
   return (
     <div>
-      <p className="text-[13px] text-gray-500 mb-4">
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-4">
         {label} · M1=2026年7月 · ★ 关键里程碑: 二类获批M{c2End} / 三类获批M{c3End}
       </p>
 
       <div className="overflow-x-auto">
         {/* Year headers */}
-        <div className="flex" style={{ paddingLeft: 200 }}>
-          {['Year 1 (M1–12)', 'Year 2 (M13–24)', 'Year 3 (M25–36)', 'Year 4 (M37–48)', 'Year 5 (M49–60)'].map((lbl, i) => (
-            <div key={i} className={`flex-1 text-center text-xs text-gray-500 font-semibold py-1 ${i > 0 ? 'border-l-2 border-dashed border-gray-200' : ''}`}>
+        <div className="flex pl-[120px] sm:pl-[200px]">
+          {['Y1 (M1–12)', 'Y2 (M13–24)', 'Y3 (M25–36)', 'Y4 (M37–48)', 'Y5 (M49–60)'].map((lbl, i) => (
+            <div key={i} className={`flex-1 text-center text-[11px] sm:text-xs text-gray-600 font-semibold py-1 ${i > 0 ? 'border-l-2 border-dashed border-gray-200' : ''}`}>
               {lbl}
             </div>
           ))}
@@ -58,7 +58,7 @@ function GanttChart({ items, label }: { items: MilestoneItem[]; label: string })
 
           return (
             <div key={m.id + '-' + i} className="flex items-center my-0.5" style={{ minHeight: 26 }}>
-              <div className="w-[200px] flex-shrink-0 text-xs text-gray-800 pr-2.5 text-right font-medium truncate" title={m.desc}>
+              <div className="w-[120px] sm:w-[200px] flex-shrink-0 text-[11px] sm:text-xs text-gray-800 pr-2 sm:pr-2.5 text-right font-medium truncate" title={m.desc}>
                 {m.desc.substring(0, 18)}
               </div>
               <div className="flex-1 relative h-[22px]">
@@ -69,7 +69,7 @@ function GanttChart({ items, label }: { items: MilestoneItem[]; label: string })
                   />
                 ) : (
                   <div
-                    className={`absolute h-[18px] rounded-md top-[2px] flex items-center justify-center text-white text-[10px] font-semibold shadow-sm ${BAR_CLS[m.type] || BAR_CLS['商业化']}`}
+                    className={`absolute h-[18px] rounded-md top-[2px] flex items-center justify-center text-white text-[11px] font-semibold shadow-sm ${BAR_CLS[m.type] || BAR_CLS['商业化']}`}
                     style={{ left, width, minWidth: 30 }}
                   >
                     M{m.startM}–{m.endM} ({duration}月)
@@ -81,28 +81,28 @@ function GanttChart({ items, label }: { items: MilestoneItem[]; label: string })
         })}
 
         {/* Legend */}
-        <div className="flex gap-4 text-xs text-gray-500 mt-3.5" style={{ paddingLeft: 200 }}>
+        <div className="flex flex-wrap gap-3 sm:gap-4 text-xs text-gray-600 mt-3.5 pl-0 sm:pl-[200px]">
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-blue-600" /> 研发</span>
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-purple-600" /> 注册</span>
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-amber-500" /> 融资</span>
           <span className="flex items-center gap-1"><i className="inline-block w-3 h-3 rounded-sm bg-green-600" /> 商业化</span>
           <span className="flex items-center gap-1"><i className="inline-block w-2.5 h-2.5 bg-green-600 rotate-45 rounded-sm" /> ★关键里程碑</span>
         </div>
-        <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-[10px] text-gray-400 mt-2" style={{ paddingLeft: 200 }}>
-          <span><b className="text-gray-500">M</b> = 月份</span>
-          <span><b className="text-gray-500">M1</b> = 2026.07 种子轮启动</span>
-          <span><b className="text-gray-500">M12</b> = 2027.06</span>
-          <span><b className="text-gray-500">M24</b> = 2028.06</span>
-          <span><b className="text-gray-500">M36</b> = 2029.06</span>
-          <span><b className="text-gray-500">M48</b> = 2030.06</span>
-          <span><b className="text-gray-500">M60</b> = 2031.06</span>
+        <div className="flex flex-wrap gap-x-3 sm:gap-x-4 gap-y-0.5 text-[11px] text-gray-500 mt-2 pl-0 sm:pl-[200px]">
+          <span><b className="text-gray-700">M</b> = 月份</span>
+          <span><b className="text-gray-700">M1</b> = 2026.07 种子轮启动</span>
+          <span><b className="text-gray-700">M12</b> = 2027.06</span>
+          <span><b className="text-gray-700">M24</b> = 2028.06</span>
+          <span><b className="text-gray-700">M36</b> = 2029.06</span>
+          <span><b className="text-gray-700">M48</b> = 2030.06</span>
+          <span><b className="text-gray-700">M60</b> = 2031.06</span>
           <span className="text-gray-300">|</span>
           <span>Lag = 前置活动结束后的等待月数</span>
         </div>
       </div>
 
       {/* Milestone Table */}
-      <h3 className="text-[15px] text-gray-500 font-semibold mt-6 mb-3">里程碑明细表</h3>
+      <h3 className="text-[15px] text-gray-600 font-semibold mt-6 mb-3">里程碑明细表</h3>
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full border-collapse text-[13px]">
           <thead>
@@ -122,12 +122,12 @@ function GanttChart({ items, label }: { items: MilestoneItem[]; label: string })
               const predLabel = m.predecessorId ? `${m.predecessorId}${m.lagMonths >= 0 ? '+' : ''}${m.lagMonths}月` : '—';
               return (
                 <tr key={m.id + '-' + i} className={`${m.bold ? 'font-bold' : ''} even:bg-gray-50/50`}>
-                  <td className="py-2 px-3 border-b border-gray-100 text-gray-400 font-mono text-[11px]">{m.id}</td>
+                  <td className="py-2 px-3 border-b border-gray-100 text-gray-500 font-mono text-xs">{m.id}</td>
                   <td className="py-2 px-3 border-b border-gray-100">M{m.startM}–M{m.endM}</td>
                   <td className="py-2 px-3 border-b border-gray-100 text-center">{duration}月</td>
                   <td className="py-2 px-3 border-b border-gray-100">{m.desc}</td>
                   <td className="py-2 px-3 border-b border-gray-100">{m.kpi}</td>
-                  <td className="py-2 px-3 border-b border-gray-100 text-[11px] text-gray-500">{predLabel}</td>
+                  <td className="py-2 px-3 border-b border-gray-100 text-xs text-gray-600">{predLabel}</td>
                   <td className="py-2 px-3 border-b border-gray-100">
                     <span className={`inline-block px-2 py-0.5 rounded-xl text-[11px] font-semibold ${TYPE_CLS[m.type] || 'bg-gray-100 text-gray-800'}`}>
                       {TYPE_ICONS[m.type] || ''} {m.type}
@@ -148,7 +148,7 @@ export default function GanttTimeline({ scenario, milestonesBest, milestonesBase
   const isDelayed = scenario === 'delayed';
 
   return (
-    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
+    <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1">
         <h2 className="text-[22px] font-bold text-gray-800">
           里程碑时间表 — M1至M60{isDelayed ? ' ⚠️延迟情景' : ''}
