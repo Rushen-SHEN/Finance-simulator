@@ -1,4 +1,20 @@
-export default function MarketSection() {
+import { CalcResult } from '@/lib/calculator';
+
+interface Props { resultBest: CalcResult; resultBase: CalcResult; }
+
+export default function MarketSection({ resultBest, resultBase }: Props) {
+  const y5best = resultBest.years[4];
+  const y5base = resultBase.years[4];
+  // Year 8 projection: Year 5 revenue × CAGR from Year 3→5
+  const y3best = resultBest.years[2];
+  const cagrBest = y3best.total_revenue > 0 ? Math.pow(y5best.total_revenue / y3best.total_revenue, 1 / 2) : 1.3;
+  const y8revBest = y5best.total_revenue * Math.pow(cagrBest, 3);
+  const y3base = resultBase.years[2];
+  const cagrBase = y3base.total_revenue > 0 ? Math.pow(y5base.total_revenue / y3base.total_revenue, 1 / 2) : 1.25;
+  const y8revBase = y5base.total_revenue * Math.pow(cagrBase, 3);
+
+  const fmtWan = (n: number) => { const v = n / 10000; return v >= 10000 ? `¥${(v / 10000).toFixed(1)}亿` : `¥${Math.round(v)}万`; };
+
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
@@ -15,15 +31,28 @@ export default function MarketSection() {
             <div className="text-[22px] font-extrabold text-blue-600 my-1">¥54–150亿/年</div>
             <div className="text-xs text-gray-600 leading-relaxed">15–25万张ICU床位 × 年化收入（硬件摊销+SaaS）</div>
           </div>
-          <div className="rounded-xl px-5 py-4 border-l-4 border-purple-600 bg-gradient-to-r from-purple-50 to-white w-[78%]">
+          <div className="rounded-xl px-5 py-4 border-l-4 border-purple-600 bg-gradient-to-r from-purple-50 to-white w-[85%]">
             <div className="text-xs text-gray-600">SAM · 三级医院ICU</div>
             <div className="text-[22px] font-extrabold text-purple-600 my-1">¥15–40亿/年</div>
-            <div className="text-xs text-gray-600 leading-relaxed">修正: 支付能力60% × 数据基硰70% × 临床成熟度50–80%</div>
+            <div className="text-xs text-gray-600 leading-relaxed">修正: 支付能力60% × 数据基础70% × 临床成熟度50–80%</div>
           </div>
-          <div className="rounded-xl px-5 py-4 border-l-4 border-green-600 bg-gradient-to-r from-green-50 to-white w-[42%]">
-            <div className="text-xs text-gray-600">SOM · Year 2首年</div>
-            <div className="text-[22px] font-extrabold text-green-600 my-1">¥932万</div>
-            <div className="text-xs text-gray-600 leading-relaxed">110床(直销80+经销商30) · 二类获批后商业化</div>
+          <div className="rounded-xl px-5 py-4 border-l-4 border-green-600 bg-gradient-to-r from-green-50 to-white w-[58%]">
+            <div className="text-xs text-gray-600">SOM · Year 5</div>
+            <div className="flex items-baseline gap-2 my-1">
+              <span className="text-[20px] font-extrabold text-green-600">🚀 {fmtWan(y5best.total_revenue)}</span>
+              <span className="text-[13px] text-gray-400">/</span>
+              <span className="text-[16px] font-bold text-blue-500">📊 {fmtWan(y5base.total_revenue)}</span>
+            </div>
+            <div className="text-xs text-gray-600 leading-relaxed">{y5best.cumulative_beds}床(Best) / {y5base.cumulative_beds}床(Base) · 三类获批+规模放量</div>
+          </div>
+          <div className="rounded-xl px-5 py-4 border-l-4 border-orange-500 bg-gradient-to-r from-orange-50 to-white w-[42%]">
+            <div className="text-xs text-gray-600">SOM · Year 8 (外推)</div>
+            <div className="flex items-baseline gap-2 my-1">
+              <span className="text-[20px] font-extrabold text-orange-600">🚀 {fmtWan(y8revBest)}</span>
+              <span className="text-[13px] text-gray-400">/</span>
+              <span className="text-[16px] font-bold text-blue-500">📊 {fmtWan(y8revBase)}</span>
+            </div>
+            <div className="text-xs text-gray-600 leading-relaxed">基于Y3→Y5 CAGR外推 · 全国多省份扩张</div>
           </div>
         </div>
 

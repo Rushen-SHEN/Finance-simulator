@@ -164,7 +164,7 @@ export default function Home() {
           <PhaseTimeline milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
         </div>
 
-        <div data-export-module><MarketSection /></div>
+        <div data-export-module><MarketSection resultBest={resultBest} resultBase={resultBase} /></div>
         <div data-export-module><BusinessModel global={model.global} result={resultBest} /></div>
         <FinancialTable resultBest={resultBest} resultBase={resultBase} scenario={scenario} />
         <div data-export-module><RevenueCharts result={resultBest} /></div>
