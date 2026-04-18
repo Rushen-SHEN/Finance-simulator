@@ -100,19 +100,19 @@ function getPhaseRange(milestones: MilestoneItem[], ids: string[]): { start: num
 
 export default function PhaseOverview({ milestonesBest, milestonesBase }: Props) {
   return (
-    <section className="bg-gradient-to-br from-[#0B0F1A] via-[#0F1629] to-[#0B0F1A] rounded-2xl border border-slate-700/50 shadow-2xl p-8 my-5 relative overflow-hidden">
-      {/* Glow accents */}
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-0.5 bg-gradient-to-r from-transparent via-purple-400/40 to-transparent" />
+    <section className="bg-white rounded-2xl border border-slate-200 shadow-lg p-8 my-5 relative overflow-hidden">
+      {/* Accent lines */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-0.5 bg-gradient-to-r from-transparent via-cyan-500/40 to-transparent" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-0.5 bg-gradient-to-r from-transparent via-purple-400/30 to-transparent" />
 
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-[22px] font-bold text-white tracking-wide">项目阶段总览</h2>
-          <p className="text-[13px] text-slate-400 mt-1">5个Phase · M1=2026年7月 · 从发现验证到规模化增长</p>
+          <h2 className="text-[22px] font-bold text-slate-800 tracking-wide">项目阶段总览</h2>
+          <p className="text-[13px] text-slate-500 mt-1">5个Phase · M1=2026年7月 · 从发现验证到规模化增长</p>
         </div>
         <div className="flex gap-3 text-[11px]">
-          <span className="flex items-center gap-1.5 text-green-400"><span className="w-2 h-2 rounded-full bg-green-400" /> Best Case</span>
-          <span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-400" /> Base Case</span>
+          <span className="flex items-center gap-1.5 text-green-600"><span className="w-2 h-2 rounded-full bg-green-500" /> Best Case</span>
+          <span className="flex items-center gap-1.5 text-blue-600"><span className="w-2 h-2 rounded-full bg-blue-500" /> Base Case</span>
         </div>
       </div>
 
@@ -126,12 +126,12 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
             <div key={phase.id} className={`relative rounded-xl bg-gradient-to-br ${phase.color} border ${phase.borderColor} p-4 backdrop-blur-sm`}>
               {/* Phase number connector */}
               {idx < PHASES.length - 1 && (
-                <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-0.5 bg-slate-600 z-10" />
+                <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-0.5 bg-slate-300 z-10" />
               )}
 
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-lg">{phase.icon}</span>
-                <span className="text-[11px] font-bold text-slate-200 uppercase tracking-wider leading-tight">{phase.name}</span>
+                <span className="text-[11px] font-bold text-slate-700 uppercase tracking-wider leading-tight">{phase.name}</span>
               </div>
 
               {/* Timing badges */}
@@ -147,22 +147,22 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
               {/* Key activities */}
               <div className="space-y-1 mb-3">
                 {phase.activities.map((a, i) => (
-                  <div key={i} className={`text-[10px] leading-relaxed ${a.startsWith('★') ? 'text-cyan-300 font-semibold' : 'text-slate-400'}`}>
+                  <div key={i} className={`text-[10px] leading-relaxed ${a.startsWith('★') ? 'text-cyan-600 font-semibold' : 'text-slate-500'}`}>
                     {a.startsWith('★') ? '' : '·'} {a}
                   </div>
                 ))}
               </div>
 
               {/* Funding & Deployment */}
-              <div className="border-t border-slate-700/50 pt-2 space-y-1">
-                <div className="text-[10px] text-amber-400/80">💰 {phase.funding}</div>
-                <div className="text-[10px] text-green-400/80">🛏️ {phase.deployment}</div>
+              <div className="border-t border-slate-300/60 pt-2 space-y-1">
+                <div className="text-[10px] text-amber-600">💰 {phase.funding}</div>
+                <div className="text-[10px] text-green-600">🛏️ {phase.deployment}</div>
               </div>
 
               {/* Key milestone */}
-              <div className="mt-2 px-2 py-1 rounded-md bg-slate-800/60 border border-slate-700/40">
-                <div className="text-[9px] text-slate-500 uppercase tracking-wider">关键交付</div>
-                <div className="text-[10px] text-slate-300 font-medium">{phase.keyMilestone}</div>
+              <div className="mt-2 px-2 py-1 rounded-md bg-slate-100 border border-slate-200">
+                <div className="text-[9px] text-slate-400 uppercase tracking-wider">关键交付</div>
+                <div className="text-[10px] text-slate-700 font-medium">{phase.keyMilestone}</div>
               </div>
             </div>
           );
@@ -171,12 +171,12 @@ export default function PhaseOverview({ milestonesBest, milestonesBase }: Props)
 
       {/* Timeline bar */}
       <div className="mt-6 relative">
-        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
-          <div className="h-full bg-gradient-to-r from-slate-500 via-cyan-500 to-purple-500 rounded-full" style={{ width: '100%' }} />
+        <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-slate-400 via-cyan-500 to-purple-500 rounded-full" style={{ width: '100%' }} />
         </div>
         <div className="flex justify-between mt-1">
           {['M1', 'M12', 'M24', 'M36', 'M48', 'M60'].map(m => (
-            <span key={m} className="text-[9px] text-slate-600 font-mono">{m}</span>
+            <span key={m} className="text-[9px] text-slate-400 font-mono">{m}</span>
           ))}
         </div>
       </div>
