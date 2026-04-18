@@ -24,6 +24,7 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   baxter_saas_commission: 0.35,
   value_anchor_c2: 62500,
   value_anchor_c3: 80000,
+  post_class3_growth: 0.30,
 };
 
 export const DEFAULT_YEARLY: YearlyInputs = {

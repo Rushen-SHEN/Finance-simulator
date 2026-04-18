@@ -277,6 +277,7 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
               <DarkInput label="SaaS续约率" value={g.rr_base} def={DEFAULT_MODEL.global.rr_base} onChange={v => setG('rr_base', v)} step={0.05} />
               <DarkInput label="经销商 HW分成" value={g.baxter_hw_commission} def={DEFAULT_MODEL.global.baxter_hw_commission} onChange={v => setG('baxter_hw_commission', v)} step={0.01} />
               <DarkInput label="经销商 SaaS分成" value={g.baxter_saas_commission} def={DEFAULT_MODEL.global.baxter_saas_commission} onChange={v => setG('baxter_saas_commission', v)} step={0.01} />
+              <DarkInput label="三类后年增长率" value={g.post_class3_growth} def={DEFAULT_MODEL.global.post_class3_growth} onChange={v => setG('post_class3_growth', v)} step={0.05} />
             </div>
             <SectionTitle>ROI价值锚点 (元/床/年)</SectionTitle>
             <NoteBar text={model.annotations.roi} annotationKey="roi" onChange={setAnnotation} />

@@ -30,6 +30,8 @@ export interface GlobalInputs {
   // ROI value anchors
   value_anchor_c2: number;
   value_anchor_c3: number;
+  // Post-Class-III annual revenue growth rate (e.g. 0.30 = 30%)
+  post_class3_growth: number;
 }
 
 export interface OpExDetail {
