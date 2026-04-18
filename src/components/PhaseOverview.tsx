@@ -1,0 +1,185 @@
+'use client';
+import { MilestoneItem, resolveMilestones } from '@/lib/calculator';
+
+interface Props {
+  milestonesBest: MilestoneItem[];
+  milestonesBase: MilestoneItem[];
+}
+
+interface PhaseInfo {
+  id: string;
+  name: string;
+  icon: string;
+  color: string;        // gradient from
+  borderColor: string;
+  activities: string[];
+  funding: string;
+  deployment: string;
+  keyMilestone: string;
+  bestIds: string[];     // milestone ids that define this phase's timing
+  baseIds: string[];
+}
+
+const PHASES: PhaseInfo[] = [
+  {
+    id: 'discovery',
+    name: 'Phase 0 · 发现与验证',
+    icon: '🔬',
+    color: 'from-slate-600/20 to-slate-700/10',
+    borderColor: 'border-slate-500/40',
+    activities: ['CDMO签约', '功能原型开发', '40床科研部署', '三模态数据采集'],
+    funding: '种子轮 ¥400–600万',
+    deployment: '40床科研(非商业)',
+    keyMilestone: '原型验收 + 数据采集通过',
+    bestIds: ['seed', 'cdmo', 'pilot'],
+    baseIds: ['seed', 'cdmo', 'pilot'],
+  },
+  {
+    id: 'development',
+    name: 'Phase 1 · 研发与注册',
+    icon: '⚙️',
+    color: 'from-blue-600/20 to-indigo-600/10',
+    borderColor: 'border-blue-500/40',
+    activities: ['算法训练 AUROC≥0.78', 'ISO13485体系审核', '二类注册审评', 'Baxter渠道签约'],
+    funding: '—',
+    deployment: '—',
+    keyMilestone: '★ 二类医疗器械证获批',
+    bestIds: ['algo', 'iso', 'c2_reg', 'baxter_sign'],
+    baseIds: ['algo', 'iso', 'c2_reg', 'baxter_sign'],
+  },
+  {
+    id: 'launch',
+    name: 'Phase 2 · 首轮商业化',
+    icon: '🚀',
+    color: 'from-green-600/20 to-emerald-600/10',
+    borderColor: 'border-green-500/40',
+    activities: ['C2商业化部署', '直销+Baxter双渠道', 'Baxter里程碑付款', '三类注册审评启动'],
+    funding: 'Baxter授权金 ¥300万',
+    deployment: '110床(Best) / 90床(Base)',
+    keyMilestone: '部署率≥90% + 三类注册提交',
+    bestIds: ['c2_deploy', 'baxter_m2'],
+    baseIds: ['c2_deploy', 'baxter_m2'],
+  },
+  {
+    id: 'expansion',
+    name: 'Phase 3 · C3上市与扩张',
+    icon: '📈',
+    color: 'from-purple-600/20 to-violet-600/10',
+    borderColor: 'border-purple-500/40',
+    activities: ['★ 三类证获批', 'C3商业化 + C2→C3升级', 'Baxter渠道放量', 'Baxter里程碑 ¥200万'],
+    funding: 'Baxter里程碑 ¥200万',
+    deployment: '140床+40升级(Best) / 120+30(Base)',
+    keyMilestone: '★ 三类注册证获批',
+    bestIds: ['c3_reg', 'c3_deploy1'],
+    baseIds: ['c3_reg', 'c3_deploy1'],
+  },
+  {
+    id: 'scale',
+    name: 'Phase 4 · 规模化增长',
+    icon: '🏭',
+    color: 'from-amber-600/20 to-orange-600/10',
+    borderColor: 'border-amber-500/40',
+    activities: ['Baxter大规模分销', 'C3产线扩产', '全国重点城市覆盖', 'EBITDA持续为正'],
+    funding: 'A轮(可选，如需)',
+    deployment: '180+50升级→260新增',
+    keyMilestone: '累计520–780床',
+    bestIds: ['c3_scale', 'c3_expand'],
+    baseIds: ['c3_scale', 'c3_expand'],
+  },
+];
+
+function getPhaseRange(milestones: MilestoneItem[], ids: string[]): { start: number; end: number } {
+  const resolved = resolveMilestones(milestones);
+  const matched = resolved.filter(m => ids.includes(m.id));
+  if (matched.length === 0) return { start: 0, end: 0 };
+  return {
+    start: Math.min(...matched.map(m => m.startM)),
+    end: Math.max(...matched.map(m => m.endM)),
+  };
+}
+
+export default function PhaseOverview({ milestonesBest, milestonesBase }: Props) {
+  return (
+    <section className="bg-gradient-to-br from-[#0B0F1A] via-[#0F1629] to-[#0B0F1A] rounded-2xl border border-slate-700/50 shadow-2xl p-8 my-5 relative overflow-hidden">
+      {/* Glow accents */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-0.5 bg-gradient-to-r from-transparent via-cyan-400/60 to-transparent" />
+      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-64 h-0.5 bg-gradient-to-r from-transparent via-purple-400/40 to-transparent" />
+
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-[22px] font-bold text-white tracking-wide">项目阶段总览</h2>
+          <p className="text-[13px] text-slate-400 mt-1">5个Phase · M1=2026年7月 · 从发现验证到规模化增长</p>
+        </div>
+        <div className="flex gap-3 text-[11px]">
+          <span className="flex items-center gap-1.5 text-green-400"><span className="w-2 h-2 rounded-full bg-green-400" /> Best Case</span>
+          <span className="flex items-center gap-1.5 text-blue-400"><span className="w-2 h-2 rounded-full bg-blue-400" /> Base Case</span>
+        </div>
+      </div>
+
+      {/* Phase Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-3">
+        {PHASES.map((phase, idx) => {
+          const best = getPhaseRange(milestonesBest, phase.bestIds);
+          const base = getPhaseRange(milestonesBase, phase.baseIds);
+
+          return (
+            <div key={phase.id} className={`relative rounded-xl bg-gradient-to-br ${phase.color} border ${phase.borderColor} p-4 backdrop-blur-sm`}>
+              {/* Phase number connector */}
+              {idx < PHASES.length - 1 && (
+                <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 w-4 h-0.5 bg-slate-600 z-10" />
+              )}
+
+              <div className="flex items-center gap-2 mb-3">
+                <span className="text-lg">{phase.icon}</span>
+                <span className="text-[11px] font-bold text-slate-200 uppercase tracking-wider leading-tight">{phase.name}</span>
+              </div>
+
+              {/* Timing badges */}
+              <div className="flex gap-1.5 mb-3">
+                <span className="px-2 py-0.5 rounded-md bg-green-500/15 text-green-400 text-[10px] font-mono font-semibold border border-green-500/20">
+                  M{best.start}–{best.end}
+                </span>
+                <span className="px-2 py-0.5 rounded-md bg-blue-500/15 text-blue-400 text-[10px] font-mono font-semibold border border-blue-500/20">
+                  M{base.start}–{base.end}
+                </span>
+              </div>
+
+              {/* Key activities */}
+              <div className="space-y-1 mb-3">
+                {phase.activities.map((a, i) => (
+                  <div key={i} className={`text-[10px] leading-relaxed ${a.startsWith('★') ? 'text-cyan-300 font-semibold' : 'text-slate-400'}`}>
+                    {a.startsWith('★') ? '' : '·'} {a}
+                  </div>
+                ))}
+              </div>
+
+              {/* Funding & Deployment */}
+              <div className="border-t border-slate-700/50 pt-2 space-y-1">
+                <div className="text-[10px] text-amber-400/80">💰 {phase.funding}</div>
+                <div className="text-[10px] text-green-400/80">🛏️ {phase.deployment}</div>
+              </div>
+
+              {/* Key milestone */}
+              <div className="mt-2 px-2 py-1 rounded-md bg-slate-800/60 border border-slate-700/40">
+                <div className="text-[9px] text-slate-500 uppercase tracking-wider">关键交付</div>
+                <div className="text-[10px] text-slate-300 font-medium">{phase.keyMilestone}</div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Timeline bar */}
+      <div className="mt-6 relative">
+        <div className="h-1 bg-slate-800 rounded-full overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-slate-500 via-cyan-500 to-purple-500 rounded-full" style={{ width: '100%' }} />
+        </div>
+        <div className="flex justify-between mt-1">
+          {['M1', 'M12', 'M24', 'M36', 'M48', 'M60'].map(m => (
+            <span key={m} className="text-[9px] text-slate-600 font-mono">{m}</span>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}

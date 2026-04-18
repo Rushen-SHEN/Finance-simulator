@@ -33,7 +33,7 @@ export default function FinancialTable({ result, scenario }: Props) {
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">五年财务预测 — {scenarioLabel}</h2>
-        <span className="text-[11px] bg-red-50 text-red-600 px-3 py-0.5 rounded-full font-medium">🔥 红杉关注</span>
+        <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
       <p className="text-[13px] text-gray-500 mb-6">直销+Baxter渠道 | SaaS续约率{(y.length > 1 ? (result.years[0].opex > 0 ? '70%' : '70%') : '70%')} | 授权金+里程碑 | M1=2026年7月</p>
 

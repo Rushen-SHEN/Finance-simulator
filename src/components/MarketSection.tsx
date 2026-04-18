@@ -3,7 +3,7 @@ export default function MarketSection() {
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">市场机会 — 中国ICU谵妄监测</h2>
-        <span className="text-[11px] bg-blue-50 text-blue-600 px-3 py-0.5 rounded-full font-medium">投资人关注</span>
+        <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
       <p className="text-[13px] text-gray-500 mb-6">TAM → SAM → SOM 漏斗 | 基于中国ICU广义床位口径15–25万张</p>
 

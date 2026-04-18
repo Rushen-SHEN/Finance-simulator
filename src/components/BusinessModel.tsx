@@ -33,7 +33,7 @@ export default function BusinessModel({ global, result }: Props) {
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">商业模式 — 直销+Baxter双渠道</h2>
-        <span className="text-[11px] bg-red-50 text-red-600 px-3 py-0.5 rounded-full font-medium">🔥 红杉关注</span>
+        <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
       <p className="text-[13px] text-gray-500 mb-6">硬件+SaaS双引擎 | Baxter渠道HW 15%/SaaS 35% | 授权金¥200万+里程碑¥300万</p>
 

@@ -83,10 +83,17 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
 
   const removeMilestone = useCallback((idx: number) => {
     const removedId = currentMs[idx].id;
-    // Clear predecessor references to deleted item
     const next = currentMs.filter((_, i) => i !== idx).map(m =>
       m.predecessorId === removedId ? { ...m, predecessorId: null, manualStart: true } : m
     );
+    onModelChange({ ...model, [msKey]: next });
+  }, [model, onModelChange, currentMs, msKey]);
+
+  const moveMilestone = useCallback((idx: number, dir: -1 | 1) => {
+    const target = idx + dir;
+    if (target < 0 || target >= currentMs.length) return;
+    const next = [...currentMs];
+    [next[idx], next[target]] = [next[target], next[idx]];
     onModelChange({ ...model, [msKey]: next });
   }, [model, onModelChange, currentMs, msKey]);
 
@@ -318,8 +325,12 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
 
                     return (
                       <div key={m.id} className={`rounded-xl bg-slate-800/50 border p-3 space-y-2 ${m.bold ? 'border-cyan-500/40' : 'border-slate-700/50'}`}>
-                        {/* Row 1: ID + Description + KPI + Type + Bold + Delete */}
+                        {/* Row 1: Move + ID + Description + KPI + Type + Bold + Delete */}
                         <div className="flex gap-2 items-center flex-wrap">
+                          <div className="flex flex-col gap-0.5">
+                            <button onClick={() => moveMilestone(i, -1)} disabled={i === 0} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▲</button>
+                            <button onClick={() => moveMilestone(i, 1)} disabled={i === currentMs.length - 1} className="text-slate-500 hover:text-cyan-400 disabled:opacity-20 text-[10px] leading-none px-0.5">▼</button>
+                          </div>
                           <input value={m.id} onChange={e => setMilestone(i, 'id', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-[10px] text-cyan-400 font-mono outline-none focus:border-cyan-500/50" placeholder="id" />
                           <input value={m.desc} onChange={e => setMilestone(i, 'desc', e.target.value)} className="flex-1 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 min-w-[180px]" placeholder="活动描述" />
                           <input value={m.kpi} onChange={e => setMilestone(i, 'kpi', e.target.value)} className="w-36 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50" placeholder="KPI" />
@@ -410,7 +421,7 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
               <input
                 value={profileName}
                 onChange={e => setProfileName(e.target.value)}
-                placeholder="输入存档名称（如：红杉路演版、保守测算）"
+                placeholder="输入存档名称（如：路演版、保守测算）"
                 className="flex-1 bg-slate-800/50 border border-slate-700/50 rounded-lg px-3 py-2 text-xs text-white outline-none focus:border-cyan-500/50"
                 onKeyDown={e => e.key === 'Enter' && handleSaveProfile()}
               />

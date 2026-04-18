@@ -24,7 +24,7 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
         <h2 className="text-[22px] font-bold text-gray-800">融资规划 — ¥{totalMin.toFixed(0)}–{totalMax.toFixed(0)}万轻量融资</h2>
-        <span className="text-[11px] bg-red-50 text-red-600 px-3 py-0.5 rounded-full font-medium">🔥 红杉关注</span>
+        <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
       <p className="text-[13px] text-gray-500 mb-6">2–3轮 · Baxter授权金可替代Pre-A · {ebitdaLabel}后现金流自给 · 当前: {scenarioLabel}情景</p>
 
