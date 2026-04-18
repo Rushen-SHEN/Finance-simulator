@@ -150,6 +150,8 @@ export default function Home() {
           <div data-no-export>
             <ParameterPanel
               model={model}
+              resultBest={resultBest}
+              resultBase={resultBase}
               onModelChange={handleModelChange}
               onReset={handleReset}
               onClose={() => setShowParams(false)}

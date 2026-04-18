@@ -5,10 +5,13 @@ interface Props { resultBest: CalcResult; resultBase: CalcResult; global: Global
 export default function MarketSection({ resultBest, resultBase, global: g }: Props) {
   const y5best = resultBest.years[4];
   const y5base = resultBase.years[4];
-  // Year 8 projection: Year 5 revenue × (1 + post_class3_growth)^3
-  const growthRate = g.post_class3_growth;
-  const y8revBest = y5best.total_revenue * Math.pow(1 + growthRate, 3);
-  const y8revBase = y5base.total_revenue * Math.pow(1 + growthRate, 3);
+  // Year 6-8 projection using per-year growth rates
+  const y6revBest = y5best.total_revenue * (1 + g.growth_y6);
+  const y7revBest = y6revBest * (1 + g.growth_y7);
+  const y8revBest = y7revBest * (1 + g.growth_y8);
+  const y6revBase = y5base.total_revenue * (1 + g.growth_y6);
+  const y7revBase = y6revBase * (1 + g.growth_y7);
+  const y8revBase = y7revBase * (1 + g.growth_y8);
 
   const fmtWan = (n: number) => { const v = n / 10000; return v >= 10000 ? `¥${(v / 10000).toFixed(1)}亿` : `¥${Math.round(v)}万`; };
 
@@ -49,7 +52,7 @@ export default function MarketSection({ resultBest, resultBase, global: g }: Pro
               <span className="text-[13px] text-gray-400">/</span>
               <span className="text-[16px] font-bold text-blue-500">📊 {fmtWan(y8revBase)}</span>
             </div>
-            <div className="text-xs text-gray-600 leading-relaxed">基于Y5后年增长{(growthRate * 100).toFixed(0)}%外推 · 全国多省份扩张</div>
+            <div className="text-xs text-gray-600 leading-relaxed">Y6 +{(g.growth_y6 * 100).toFixed(0)}% → Y7 +{(g.growth_y7 * 100).toFixed(0)}% → Y8 +{(g.growth_y8 * 100).toFixed(0)}% · 全国扩张</div>
           </div>
         </div>
 

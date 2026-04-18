@@ -32,6 +32,10 @@ export interface GlobalInputs {
   value_anchor_c3: number;
   // Post-Class-III annual revenue growth rate (e.g. 0.30 = 30%)
   post_class3_growth: number;
+  // Per-year growth rates for Y6, Y7, Y8 projection (default all = post_class3_growth)
+  growth_y6: number;
+  growth_y7: number;
+  growth_y8: number;
 }
 
 export interface OpExDetail {

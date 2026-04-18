@@ -1,18 +1,20 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, resolveMilestones } from '@/lib/calculator';
+import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, CalcResult, resolveMilestones } from '@/lib/calculator';
 import { DEFAULT_MODEL, YEAR_LABELS, OPEX_LABELS, COGS_LABELS, DEFAULT_ANNOTATIONS } from '@/lib/defaults';
 import { listProfiles, saveProfile, loadProfile, deleteProfile, ProfileEntry, saveModel } from '@/lib/storage';
 
 interface Props {
   model: ModelInputs;
+  resultBest: CalcResult;
+  resultBase: CalcResult;
   onModelChange: (m: ModelInputs) => void;
   onReset: () => void;
   onClose: () => void;
 }
 
-type TabKey = 'pricing' | 'cogs' | 'deploy' | 'opex' | 'funding' | 'milestones' | 'notes' | 'profiles';
+type TabKey = 'pricing' | 'cogs' | 'deploy' | 'opex' | 'funding' | 'milestones' | 'projection' | 'notes' | 'profiles';
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'pricing', label: '定价', icon: '💰' },
@@ -21,11 +23,12 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'opex', label: 'OpEx', icon: '📊' },
   { key: 'funding', label: '融资', icon: '🏦' },
   { key: 'milestones', label: '里程碑', icon: '🎯' },
+  { key: 'projection', label: '测算', icon: '📈' },
   { key: 'notes', label: '注释', icon: '📝' },
   { key: 'profiles', label: '存档', icon: '💾' },
 ];
 
-export default function ParameterPanel({ model, onModelChange, onReset, onClose }: Props) {
+export default function ParameterPanel({ model, resultBest, resultBase, onModelChange, onReset, onClose }: Props) {
   const [tab, setTab] = useState<TabKey>('pricing');
   const [profiles, setProfiles] = useState<ProfileEntry[]>([]);
   const [profileName, setProfileName] = useState('');
@@ -543,6 +546,110 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
             })()}
           </div>
         )}
+
+        {/* ===== PROJECTION ===== */}
+        {tab === 'projection' && (() => {
+          const fmtWan = (n: number) => { const v = n / 10000; return v >= 10000 ? `${(v / 10000).toFixed(2)}亿` : `${Math.round(v)}万`; };
+          const growthRates = [g.growth_y6, g.growth_y7, g.growth_y8];
+
+          // Build 8-year revenue arrays for Best and Base
+          const buildProjection = (result: CalcResult) => {
+            const revs: number[] = result.years.map(yr => yr.total_revenue);
+            for (let i = 0; i < 3; i++) {
+              revs.push(revs[4 + i] * (1 + growthRates[i]));
+            }
+            return revs;
+          };
+          const bestRevs = buildProjection(resultBest);
+          const baseRevs = buildProjection(resultBase);
+
+          return (
+            <div className="space-y-4">
+              <SectionTitle>1–8年销售额测算</SectionTitle>
+              <p className="text-xs text-slate-300">Year 1–5 由模型自动计算 · Year 6–8 基于 Year 5 按年增长率复合外推</p>
+
+              <SectionTitle>年增长率设置 (Y6–Y8)</SectionTitle>
+              <div className="grid grid-cols-3 gap-3">
+                <DarkInput label="Y6 增长率" value={g.growth_y6} def={DEFAULT_MODEL.global.growth_y6} onChange={v => setG('growth_y6', v)} step={0.05} />
+                <DarkInput label="Y7 增长率" value={g.growth_y7} def={DEFAULT_MODEL.global.growth_y7} onChange={v => setG('growth_y7', v)} step={0.05} />
+                <DarkInput label="Y8 增长率" value={g.growth_y8} def={DEFAULT_MODEL.global.growth_y8} onChange={v => setG('growth_y8', v)} step={0.05} />
+              </div>
+
+              <SectionTitle>8年销售额预览 (Best Case 🚀)</SectionTitle>
+              <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-slate-800/80">
+                      <th className="text-left px-3 py-2 text-cyan-400 font-semibold">Year</th>
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
+                          Y{i + 1}{i >= 5 ? ' ⬆' : ''}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">收入 (万)</td>
+                      {bestRevs.map((r, i) => (
+                        <td key={i} className={`text-right px-2 py-2 font-mono ${i < 5 ? 'text-slate-200' : 'text-orange-300'}`}>
+                          {fmtWan(r)}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">YoY</td>
+                      {bestRevs.map((r, i) => (
+                        <td key={i} className="text-right px-2 py-2 text-slate-400 font-mono">
+                          {i === 0 ? '—' : bestRevs[i - 1] === 0 ? '—' : `${((r / bestRevs[i - 1] - 1) * 100).toFixed(0)}%`}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <SectionTitle>8年销售额预览 (Base Case 📊)</SectionTitle>
+              <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-slate-800/80">
+                      <th className="text-left px-3 py-2 text-cyan-400 font-semibold">Year</th>
+                      {Array.from({ length: 8 }, (_, i) => (
+                        <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
+                          Y{i + 1}{i >= 5 ? ' ⬆' : ''}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">收入 (万)</td>
+                      {baseRevs.map((r, i) => (
+                        <td key={i} className={`text-right px-2 py-2 font-mono ${i < 5 ? 'text-slate-200' : 'text-orange-300'}`}>
+                          {fmtWan(r)}
+                        </td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">YoY</td>
+                      {baseRevs.map((r, i) => (
+                        <td key={i} className="text-right px-2 py-2 text-slate-400 font-mono">
+                          {i === 0 ? '—' : baseRevs[i - 1] === 0 ? '—' : `${((r / baseRevs[i - 1] - 1) * 100).toFixed(0)}%`}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-xs text-slate-400 leading-relaxed">
+                💡 Y1–Y5 收入由部署数量×定价×SaaS续约模型自动计算，不可手动覆盖。Y6–Y8 基于 Y5 收入按上方增长率逐年复合得出。
+                调整增长率后，MarketSection 中 Year 8 SOM 会同步更新。
+              </div>
+            </div>
+          );
+        })()}
 
         {/* ===== NOTES ===== */}
         {tab === 'notes' && (

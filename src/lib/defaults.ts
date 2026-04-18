@@ -25,6 +25,9 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   value_anchor_c2: 62500,
   value_anchor_c3: 80000,
   post_class3_growth: 0.30,
+  growth_y6: 0.30,
+  growth_y7: 0.30,
+  growth_y8: 0.30,
 };
 
 export const DEFAULT_YEARLY: YearlyInputs = {
