@@ -207,6 +207,52 @@ export function deriveFirstYearFactor(milestones: MilestoneItem[]): number[] {
   return factors;
 }
 
+/**
+ * Derive deployment gating from milestone schedule.
+ * Returns the fraction of planned deployments that can actually happen each year,
+ * based on when C2 and C3 approvals occur.
+ * C2 beds can only deploy after C2 approval. C3 beds can only deploy after C3 approval.
+ */
+export function deriveDeploymentGating(milestones: MilestoneItem[]): { c2Gate: number[]; c3Gate: number[] } {
+  const resolved = resolveMilestones(milestones);
+  const c2Gate = [0, 1, 1, 1, 1]; // Y1 always 0, Y2-5 default open
+  const c3Gate = [0, 0, 1, 1, 1]; // Y1-2 always 0, Y3-5 default open
+
+  const c2Reg = resolved.find(m => m.id === 'c2_reg');
+  if (c2Reg) {
+    const deployStartM = c2Reg.endM + 1;
+    for (let yr = 0; yr < 5; yr++) {
+      const yStart = yr * 12 + 1;
+      const yEnd = (yr + 1) * 12;
+      if (deployStartM > yEnd) {
+        c2Gate[yr] = 0; // not approved yet
+      } else if (deployStartM <= yStart) {
+        c2Gate[yr] = 1; // full year
+      } else {
+        c2Gate[yr] = (yEnd - deployStartM + 1) / 12; // fraction of year
+      }
+    }
+  }
+
+  const c3Reg = resolved.find(m => m.id === 'c3_reg');
+  if (c3Reg) {
+    const deployStartM = c3Reg.endM + 1;
+    for (let yr = 0; yr < 5; yr++) {
+      const yStart = yr * 12 + 1;
+      const yEnd = (yr + 1) * 12;
+      if (deployStartM > yEnd) {
+        c3Gate[yr] = 0; // not approved yet
+      } else if (deployStartM <= yStart) {
+        c3Gate[yr] = 1; // full year
+      } else {
+        c3Gate[yr] = (yEnd - deployStartM + 1) / 12; // fraction of year
+      }
+    }
+  }
+
+  return { c2Gate, c3Gate };
+}
+
 export function computeBOM(g: GlobalInputs) {
   const base = g.bom_sensor + g.bom_edge_compute + g.bom_housing + g.bom_cable_pcb + g.bom_assembly + g.bom_packaging;
   return {
@@ -224,12 +270,16 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
   const baxterCohorts: { c2: number; c3: number }[] = [];
   let cumBeds = 0;
   const fyFactors = milestones ? deriveFirstYearFactor(milestones) : DEFAULT_FIRST_YEAR_FACTOR;
+  const gating = milestones ? deriveDeploymentGating(milestones) : { c2Gate: [0, 1, 1, 1, 1], c3Gate: [0, 0, 1, 1, 1] };
 
   for (let i = 0; i < 5; i++) {
-    const dC2 = y.direct_c2[i] || 0;
-    const dC3 = y.direct_c3[i] || 0;
-    const bC2 = y.baxter_c2[i] || 0;
-    const bC3 = y.baxter_c3[i] || 0;
+    // Gate deployments by approval timing
+    const c2g = gating.c2Gate[i];
+    const c3g = gating.c3Gate[i];
+    const dC2 = Math.round((y.direct_c2[i] || 0) * c2g);
+    const dC3 = Math.round((y.direct_c3[i] || 0) * c3g);
+    const bC2 = Math.round((y.baxter_c2[i] || 0) * c2g);
+    const bC3 = Math.round((y.baxter_c3[i] || 0) * c3g);
     const totalNew = dC2 + dC3 + bC2 + bC3;
 
     const plannedUpg = y.planned_upgrade[i] || 0;

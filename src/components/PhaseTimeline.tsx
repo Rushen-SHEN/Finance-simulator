@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { MilestoneItem, resolveMilestones } from '@/lib/calculator';
 
 const MAX_M = 60;
@@ -48,23 +49,30 @@ function assignRows(items: MilestoneItem[]): number[] {
 }
 
 export default function PhaseTimeline({ milestonesBest, milestonesBase }: Props) {
-  const resolvedBest = resolveMilestones(milestonesBest);
-  const resolvedBase = resolveMilestones(milestonesBase);
+  const [activeCase, setActiveCase] = useState<'best' | 'base'>('best');
+  const milestones = activeCase === 'best' ? milestonesBest : milestonesBase;
+  const resolved = resolveMilestones(milestones);
 
   return (
     <section className="bg-white rounded-2xl border border-slate-200 shadow-lg p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
         <div>
           <h2 className="text-xl sm:text-[22px] font-bold text-slate-800 tracking-wide">项目阶段时间轴</h2>
-          <p className="text-xs sm:text-[13px] text-slate-600 mt-1">5个Phase · 关键活动/交付物/融资节点 · Best/Base双轨对照</p>
+          <p className="text-xs sm:text-[13px] text-slate-600 mt-1">5个Phase · 关键活动/交付物/融资节点</p>
         </div>
-        <div className="flex gap-3 text-xs">
-          <span className="flex items-center gap-1.5 text-green-600">
-            <span className="w-2 h-2 rounded-full bg-green-500" /> Best
-          </span>
-          <span className="flex items-center gap-1.5 text-blue-600">
-            <span className="w-2 h-2 rounded-full bg-blue-500" /> Base
-          </span>
+        <div className="flex rounded-lg overflow-hidden border border-gray-300">
+          <button
+            onClick={() => setActiveCase('best')}
+            className={`px-3 py-1 text-xs font-semibold transition-all ${activeCase === 'best' ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            🚀 Best
+          </button>
+          <button
+            onClick={() => setActiveCase('base')}
+            className={`px-3 py-1 text-xs font-semibold transition-all ${activeCase === 'base' ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50'}`}
+          >
+            📊 Base
+          </button>
         </div>
       </div>
 
@@ -85,10 +93,10 @@ export default function PhaseTimeline({ milestonesBest, milestonesBase }: Props)
 
           {/* Phase swim lanes */}
           {PHASES.map((phase, phaseIdx) => {
-            const bestRange = getRange(resolvedBest, phase.bestIds);
-            const baseRange = getRange(resolvedBase, phase.baseIds);
-            const bestMs = resolvedBest.filter(m => phase.bestIds.includes(m.id));
-            const rows = assignRows(bestMs);
+            const phaseIds = activeCase === 'best' ? phase.bestIds : phase.baseIds;
+            const range = getRange(resolved, phaseIds);
+            const phaseMs = resolved.filter(m => phaseIds.includes(m.id));
+            const rows = assignRows(phaseMs);
             const maxRow = rows.length > 0 ? Math.max(...rows) + 1 : 1;
 
             return (
@@ -109,51 +117,41 @@ export default function PhaseTimeline({ milestonesBest, milestonesBase }: Props)
                 </div>
 
                 {/* Timeline area */}
-                <div className="flex-1 relative py-2" style={{ minHeight: 56 + maxRow * 18 + 24 }}>
+                <div className="flex-1 relative py-2" style={{ minHeight: 40 + maxRow * 18 + 24 }}>
                   {/* Year grid lines */}
                   {[1, 2, 3, 4].map(i => (
                     <div key={i} className="absolute top-0 bottom-0 border-l border-dashed border-gray-100"
                          style={{ left: `${(i * 12) / MAX_M * 100}%` }} />
                   ))}
 
-                  {/* Best case phase bar */}
-                  {bestRange.start > 0 && (
+                  {/* Phase range bar */}
+                  {range.start > 0 && (
                     <div
-                      className="absolute h-[18px] rounded-md bg-green-500/15 border border-green-500/30 flex items-center px-1.5 overflow-hidden"
+                      className={`absolute h-[18px] rounded-md flex items-center px-1.5 overflow-hidden ${
+                        activeCase === 'best'
+                          ? 'bg-green-500/15 border border-green-500/30'
+                          : 'bg-blue-500/15 border border-blue-500/30'
+                      }`}
                       style={{
-                        left: `${(bestRange.start - 1) / MAX_M * 100}%`,
-                        width: `${Math.max(3, (bestRange.end - bestRange.start + 1) / MAX_M * 100)}%`,
+                        left: `${(range.start - 1) / MAX_M * 100}%`,
+                        width: `${Math.max(3, (range.end - range.start + 1) / MAX_M * 100)}%`,
                         top: 8,
                       }}
                     >
-                      <span className="text-[9px] sm:text-[10px] text-green-700 font-mono font-semibold whitespace-nowrap">
-                        Best M{bestRange.start}–{bestRange.end}
-                      </span>
-                    </div>
-                  )}
-
-                  {/* Base case phase bar */}
-                  {baseRange.start > 0 && (
-                    <div
-                      className="absolute h-[18px] rounded-md bg-blue-500/15 border border-blue-500/30 flex items-center px-1.5 overflow-hidden"
-                      style={{
-                        left: `${(baseRange.start - 1) / MAX_M * 100}%`,
-                        width: `${Math.max(3, (baseRange.end - baseRange.start + 1) / MAX_M * 100)}%`,
-                        top: 30,
-                      }}
-                    >
-                      <span className="text-[9px] sm:text-[10px] text-blue-700 font-mono font-semibold whitespace-nowrap">
-                        Base M{baseRange.start}–{baseRange.end}
+                      <span className={`text-[9px] sm:text-[10px] font-mono font-semibold whitespace-nowrap ${
+                        activeCase === 'best' ? 'text-green-700' : 'text-blue-700'
+                      }`}>
+                        M{range.start}–{range.end}
                       </span>
                     </div>
                   )}
 
                   {/* Individual milestone bars */}
-                  {bestMs.map((m, i) => {
+                  {phaseMs.map((m, i) => {
                     const left = (m.startM - 1) / MAX_M * 100;
                     const width = Math.max(2, (m.endM - m.startM + 1) / MAX_M * 100);
                     const row = rows[i];
-                    const top = 54 + row * 18;
+                    const top = 34 + row * 18;
                     const barColor = TYPE_BAR[m.type] || 'bg-gray-500';
                     const isFunding = m.type === '融资';
                     const isKey = m.bold;
@@ -176,8 +174,8 @@ export default function PhaseTimeline({ milestonesBest, milestonesBase }: Props)
 
                   {/* Milestone labels below bars */}
                   <div className="absolute left-0 right-0 flex flex-wrap gap-x-2 gap-y-0 px-1"
-                       style={{ top: 56 + maxRow * 18 }}>
-                    {bestMs.map(m => {
+                       style={{ top: 36 + maxRow * 18 }}>
+                    {phaseMs.map(m => {
                       const isFunding = m.type === '融资';
                       const isKey = m.bold;
                       const label = m.desc.replace('★ ', '');
