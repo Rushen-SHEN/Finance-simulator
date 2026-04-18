@@ -8,6 +8,7 @@ import { exportPDF, exportPNG } from '@/lib/exportUtils';
 import Header from '@/components/Header';
 import StatusStrip from '@/components/StatusStrip';
 import PhaseOverview from '@/components/PhaseOverview';
+import PhaseTimeline from '@/components/PhaseTimeline';
 import MarketSection from '@/components/MarketSection';
 import BusinessModel from '@/components/BusinessModel';
 import FinancialTable from '@/components/FinancialTable';
@@ -88,7 +89,12 @@ export default function Home() {
 
       <div ref={printRef} className="max-w-[1200px] mx-auto px-4 sm:px-6 pb-12">
         <StatusStrip />
-        <PhaseOverview milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
+        <div data-export-module>
+          <PhaseOverview milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
+        </div>
+        <div data-export-module>
+          <PhaseTimeline milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
+        </div>
 
         {showParams && (
           <div data-no-export>
@@ -101,14 +107,14 @@ export default function Home() {
           </div>
         )}
 
-        <MarketSection />
-        <BusinessModel global={model.global} result={result} />
-        <FinancialTable result={result} scenario={scenario} />
-        <RevenueCharts result={result} />
-        <ProfitCharts result={result} />
-        <FundingPlan result={result} scenario={scenario} funding={model.funding} />
-        <GanttTimeline scenario={scenario} milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
-        <Assumptions scenario={scenario} global={model.global} result={result} />
+        <div data-export-module><MarketSection /></div>
+        <div data-export-module><BusinessModel global={model.global} result={result} /></div>
+        <div data-export-module><FinancialTable result={result} scenario={scenario} /></div>
+        <div data-export-module><RevenueCharts result={result} /></div>
+        <div data-export-module><ProfitCharts result={result} /></div>
+        <div data-export-module><FundingPlan result={result} scenario={scenario} funding={model.funding} /></div>
+        <div data-export-module><GanttTimeline scenario={scenario} milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} /></div>
+        <div data-export-module><Assumptions scenario={scenario} global={model.global} result={result} /></div>
 
         <footer className="text-center py-8 border-t border-slate-600/50 mt-8 text-xs text-slate-300">
           <div>ARIA 财务模型模拟器 v3.2 | BPcc 2026-04 | 直销+Baxter双引擎 | 全参数可调+存档</div>
