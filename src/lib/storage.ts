@@ -1,5 +1,5 @@
 // Storage with named profile support
-import { ModelInputs } from './calculator';
+import { ModelInputs, YearlyInputs } from './calculator';
 import { DEFAULT_MODEL } from './defaults';
 
 const KEY_ACTIVE = 'aria-model-v3';
@@ -80,17 +80,22 @@ export function deleteProfile(name: string) {
 
 function mergeWithDefaults(partial: Partial<ModelInputs>): ModelInputs {
   const d = structuredClone(DEFAULT_MODEL);
+  const mergeYearly = (src?: Partial<YearlyInputs>, def?: YearlyInputs): YearlyInputs => {
+    const base = def || d.yearly;
+    return {
+      direct_c2: src?.direct_c2 || [...base.direct_c2],
+      direct_c3: src?.direct_c3 || [...base.direct_c3],
+      baxter_c2: src?.baxter_c2 || [...base.baxter_c2],
+      baxter_c3: src?.baxter_c3 || [...base.baxter_c3],
+      planned_upgrade: src?.planned_upgrade || [...base.planned_upgrade],
+      depreciation: src?.depreciation || [...base.depreciation],
+      baxter_license: src?.baxter_license || [...base.baxter_license],
+    };
+  };
   return {
     global: { ...d.global, ...(partial.global || {}) },
-    yearly: {
-      direct_c2: partial.yearly?.direct_c2 || [...d.yearly.direct_c2],
-      direct_c3: partial.yearly?.direct_c3 || [...d.yearly.direct_c3],
-      baxter_c2: partial.yearly?.baxter_c2 || [...d.yearly.baxter_c2],
-      baxter_c3: partial.yearly?.baxter_c3 || [...d.yearly.baxter_c3],
-      planned_upgrade: partial.yearly?.planned_upgrade || [...d.yearly.planned_upgrade],
-      depreciation: partial.yearly?.depreciation || [...d.yearly.depreciation],
-      baxter_license: partial.yearly?.baxter_license || [...d.yearly.baxter_license],
-    },
+    yearly: mergeYearly(partial.yearly, d.yearly),
+    yearly_base: mergeYearly(partial.yearly_base, d.yearly_base),
     opex: {
       salary: partial.opex?.salary || [...d.opex.salary],
       cdmo_nre: partial.opex?.cdmo_nre || [...d.opex.cdmo_nre],

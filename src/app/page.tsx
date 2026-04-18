@@ -56,7 +56,7 @@ export default function Home() {
   }, [code]);
 
   const resultBest: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best);
-  const resultBase: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_base);
+  const resultBase: CalcResult = calculate(model.global, model.yearly_base, model.opex, model.milestones_base);
 
   const handleModelChange = useCallback((m: ModelInputs) => {
     setModel(m);

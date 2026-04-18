@@ -81,6 +81,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
 
   const g = model.global;
   const y = model.yearly;
+  const yb = model.yearly_base;
   const ox = model.opex;
   const f = model.funding;
 
@@ -94,6 +95,12 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     onModelChange({ ...model, yearly: next });
   }, [model, onModelChange]);
 
+  const setYBase = useCallback((key: keyof YearlyInputs, idx: number, val: number) => {
+    const next = { ...model.yearly_base, [key]: [...model.yearly_base[key]] };
+    next[key][idx] = val;
+    onModelChange({ ...model, yearly_base: next });
+  }, [model, onModelChange]);
+
   const setOx = useCallback((key: keyof OpExDetail, idx: number, val: number) => {
     const next = { ...model.opex, [key]: [...model.opex[key]] };
     next[key][idx] = val;
@@ -104,6 +111,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     onModelChange({ ...model, funding: { ...model.funding, [key]: val } });
   }, [model, onModelChange]);
 
+  const [deployCase, setDeployCase] = useState<'best' | 'base'>('best');
   const [msCase, setMsCase] = useState<'best' | 'base'>('best');
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dropIdx, setDropIdx] = useState<number | null>(null);
@@ -323,15 +331,31 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
           <div className="space-y-4">
             <SectionTitle>年度部署计划 (床位数)</SectionTitle>
             <NoteBar text={model.annotations.deployment} annotationKey="deployment" onChange={setAnnotation} />
-            <DarkTable>
-              <DarkRow label="直销 C2" values={y.direct_c2} defaults={DEFAULT_MODEL.yearly.direct_c2} onChange={(i, v) => setY('direct_c2', i, v)} />
-              <DarkRow label="直销 C3" values={y.direct_c3} defaults={DEFAULT_MODEL.yearly.direct_c3} onChange={(i, v) => setY('direct_c3', i, v)} />
-              <DarkRow label="经销商 C2" values={y.baxter_c2} defaults={DEFAULT_MODEL.yearly.baxter_c2} onChange={(i, v) => setY('baxter_c2', i, v)} />
-              <DarkRow label="经销商 C3" values={y.baxter_c3} defaults={DEFAULT_MODEL.yearly.baxter_c3} onChange={(i, v) => setY('baxter_c3', i, v)} />
-              <DarkRow label="升级 C2→C3" values={y.planned_upgrade} defaults={DEFAULT_MODEL.yearly.planned_upgrade} onChange={(i, v) => setY('planned_upgrade', i, v)} />
-              <DarkRow label="授权金(万)" values={y.baxter_license.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.baxter_license.map(v => v / 10000)} onChange={(i, v) => setY('baxter_license', i, v * 10000)} />
-              <DarkRow label="折旧(万)" values={y.depreciation.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.depreciation.map(v => v / 10000)} onChange={(i, v) => setY('depreciation', i, v * 10000)} />
-            </DarkTable>
+            <div className="flex gap-2 mb-2">
+              <button onClick={() => setDeployCase('best')} className={`px-3 py-1 rounded text-xs font-bold transition ${deployCase === 'best' ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}>Best Case</button>
+              <button onClick={() => setDeployCase('base')} className={`px-3 py-1 rounded text-xs font-bold transition ${deployCase === 'base' ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}>Base Case</button>
+            </div>
+            {deployCase === 'best' ? (
+              <DarkTable>
+                <DarkRow label="直销 C2" values={y.direct_c2} defaults={DEFAULT_MODEL.yearly.direct_c2} onChange={(i, v) => setY('direct_c2', i, v)} />
+                <DarkRow label="直销 C3" values={y.direct_c3} defaults={DEFAULT_MODEL.yearly.direct_c3} onChange={(i, v) => setY('direct_c3', i, v)} />
+                <DarkRow label="经销商 C2" values={y.baxter_c2} defaults={DEFAULT_MODEL.yearly.baxter_c2} onChange={(i, v) => setY('baxter_c2', i, v)} />
+                <DarkRow label="经销商 C3" values={y.baxter_c3} defaults={DEFAULT_MODEL.yearly.baxter_c3} onChange={(i, v) => setY('baxter_c3', i, v)} />
+                <DarkRow label="升级 C2→C3" values={y.planned_upgrade} defaults={DEFAULT_MODEL.yearly.planned_upgrade} onChange={(i, v) => setY('planned_upgrade', i, v)} />
+                <DarkRow label="授权金(万)" values={y.baxter_license.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.baxter_license.map(v => v / 10000)} onChange={(i, v) => setY('baxter_license', i, v * 10000)} />
+                <DarkRow label="折旧(万)" values={y.depreciation.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.depreciation.map(v => v / 10000)} onChange={(i, v) => setY('depreciation', i, v * 10000)} />
+              </DarkTable>
+            ) : (
+              <DarkTable>
+                <DarkRow label="直销 C2" values={yb.direct_c2} defaults={DEFAULT_MODEL.yearly_base.direct_c2} onChange={(i, v) => setYBase('direct_c2', i, v)} />
+                <DarkRow label="直销 C3" values={yb.direct_c3} defaults={DEFAULT_MODEL.yearly_base.direct_c3} onChange={(i, v) => setYBase('direct_c3', i, v)} />
+                <DarkRow label="经销商 C2" values={yb.baxter_c2} defaults={DEFAULT_MODEL.yearly_base.baxter_c2} onChange={(i, v) => setYBase('baxter_c2', i, v)} />
+                <DarkRow label="经销商 C3" values={yb.baxter_c3} defaults={DEFAULT_MODEL.yearly_base.baxter_c3} onChange={(i, v) => setYBase('baxter_c3', i, v)} />
+                <DarkRow label="升级 C2→C3" values={yb.planned_upgrade} defaults={DEFAULT_MODEL.yearly_base.planned_upgrade} onChange={(i, v) => setYBase('planned_upgrade', i, v)} />
+                <DarkRow label="授权金(万)" values={yb.baxter_license.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly_base.baxter_license.map(v => v / 10000)} onChange={(i, v) => setYBase('baxter_license', i, v * 10000)} />
+                <DarkRow label="折旧(万)" values={yb.depreciation.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly_base.depreciation.map(v => v / 10000)} onChange={(i, v) => setYBase('depreciation', i, v * 10000)} />
+              </DarkTable>
+            )}
           </div>
         )}
 

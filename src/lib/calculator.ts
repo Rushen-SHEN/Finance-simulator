@@ -111,6 +111,7 @@ export interface YearlyInputs {
 export interface ModelInputs {
   global: GlobalInputs;
   yearly: YearlyInputs;
+  yearly_base: YearlyInputs;
   opex: OpExDetail;
   funding: FundingInputs;
   milestones_best: MilestoneItem[];
