@@ -148,7 +148,62 @@ export interface CalcResult {
   bom_upgrade: number;
 }
 
-const FIRST_YEAR_FACTOR = [0, 0.375, 0.5, 0.5, 0.5];
+const DEFAULT_FIRST_YEAR_FACTOR = [0, 0.375, 0.5, 0.5, 0.5];
+
+/**
+ * Derive FIRST_YEAR_FACTOR from milestone schedule.
+ * Key logic: C2 registration approval month determines when Y2 hardware revenue begins.
+ * C3 registration month determines when C3 deployment revenue begins.
+ * Each year = 12 months: Y1=M1-12, Y2=M13-24, Y3=M25-36, Y4=M37-48, Y5=M49-60
+ */
+export function deriveFirstYearFactor(milestones: MilestoneItem[]): number[] {
+  const resolved = resolveMilestones(milestones);
+  const factors = [0, 0, 0.5, 0.5, 0.5]; // defaults for Y3-Y5
+
+  // Y1: No commercial deployment (always 0)
+  factors[0] = 0;
+
+  // Y2 factor: based on C2 registration completion
+  const c2Reg = resolved.find(m => m.id === 'c2_reg');
+  if (c2Reg) {
+    // C2 reg endM determines when deployment can start
+    // Deployment starts the month after approval
+    const deployStartM = c2Reg.endM + 1;
+    // Y2 spans M13-M24. How many selling months in Y2?
+    const y2Start = 13;
+    const y2End = 24;
+    if (deployStartM > y2End) {
+      factors[1] = 0; // C2 not approved until after Y2
+    } else if (deployStartM <= y2Start) {
+      factors[1] = 0.5; // Full half-year selling
+    } else {
+      const sellingMonths = y2End - deployStartM + 1;
+      factors[1] = Math.max(0, sellingMonths / 12);
+    }
+  }
+
+  // Y3 factor: if C3 reg happens in Y3, adjust factor
+  const c3Reg = resolved.find(m => m.id === 'c3_reg');
+  if (c3Reg) {
+    const deployStartM = c3Reg.endM + 1;
+    const y3Start = 25;
+    const y3End = 36;
+    // C3 deployment only affects new C3 beds in that year
+    // We use a blended factor: existing C2 SaaS runs full year,
+    // but new C3 HW revenue starts after approval
+    if (deployStartM > y3End) {
+      // C3 not approved in Y3 — only C2 renewals, partial year for any new C2
+      factors[2] = 0.5;
+    } else if (deployStartM <= y3Start) {
+      factors[2] = 0.5;
+    } else {
+      const sellingMonths = y3End - deployStartM + 1;
+      factors[2] = Math.max(0.25, sellingMonths / 12); // at least 0.25 for existing SaaS
+    }
+  }
+
+  return factors;
+}
 
 export function computeBOM(g: GlobalInputs) {
   const base = g.bom_sensor + g.bom_edge_compute + g.bom_housing + g.bom_cable_pcb + g.bom_assembly + g.bom_packaging;
@@ -159,13 +214,14 @@ export function computeBOM(g: GlobalInputs) {
   };
 }
 
-export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail): CalcResult {
+export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, milestones?: MilestoneItem[]): CalcResult {
   const bom = computeBOM(g);
   const rr = g.rr_base;
   const years: YearlyCalc[] = [];
   const directCohorts: { c2: number; c3: number }[] = [];
   const baxterCohorts: { c2: number; c3: number }[] = [];
   let cumBeds = 0;
+  const fyFactors = milestones ? deriveFirstYearFactor(milestones) : DEFAULT_FIRST_YEAR_FACTOR;
 
   for (let i = 0; i < 5; i++) {
     const dC2 = y.direct_c2[i] || 0;
@@ -190,7 +246,7 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail): C
     const hwBaxter = (bC2 * g.price_hw_c2 + bC3 * g.price_hw_c3) * g.baxter_hw_commission;
     const upgradeRev = actualUpg * g.price_upgrade;
 
-    const fyf = FIRST_YEAR_FACTOR[i] || 0.5;
+    const fyf = fyFactors[i] ?? 0.5;
     let saasDirect = 0;
     let saasBaxter = 0;
 

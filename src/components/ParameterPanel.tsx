@@ -63,14 +63,15 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
   const msKey = msCase === 'best' ? 'milestones_best' : 'milestones_base';
 
   const setMilestone = useCallback((idx: number, field: keyof MilestoneItem, val: string | boolean | number) => {
-    const next = currentMs.map((m, i) => {
+    let next = currentMs.map((m, i) => {
       if (i !== idx) return m;
       const updated = { ...m, [field]: val };
       // If user manually sets startM or endM, mark as manual
       if (field === 'startM') updated.manualStart = true;
       return updated;
     });
-    // Resolve predecessor chains after edit
+    // Resolve predecessor chains and persist resolved values
+    next = resolveMilestones(next);
     onModelChange({ ...model, [msKey]: next });
   }, [model, onModelChange, currentMs, msKey]);
 
@@ -347,7 +348,8 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
                             value={m.predecessorId || ''}
                             onChange={e => {
                               const val = e.target.value || null;
-                              const next = currentMs.map((item, j) => j === i ? { ...item, predecessorId: val, manualStart: !val } : item);
+                              let next = currentMs.map((item, j) => j === i ? { ...item, predecessorId: val, manualStart: !val } : item);
+                              next = resolveMilestones(next);
                               onModelChange({ ...model, [msKey]: next });
                             }}
                             className="bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 max-w-[120px]"

@@ -27,7 +27,7 @@ export default function Home() {
     setMounted(true);
   }, []);
 
-  const result: CalcResult = calculate(model.global, model.yearly, model.opex);
+  const result: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best);
 
   const handleModelChange = useCallback((m: ModelInputs) => {
     setModel(m);
