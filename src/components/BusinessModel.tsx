@@ -32,10 +32,10 @@ export default function BusinessModel({ global, result }: Props) {
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
-        <h2 className="text-[22px] font-bold text-gray-800">商业模式 — 直销+Baxter双渠道</h2>
+        <h2 className="text-[22px] font-bold text-gray-800">商业模式 — 直销+合作经销商双渠道</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">硬件+SaaS双引擎 | Baxter渠道HW 15%/SaaS 35% | 授权金¥200万+里程碑¥300万</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">硬件+SaaS双引擎 | 合作经销商渠道HW 15%/SaaS 35% | 授权金¥200万+里程碑¥300万</p>
 
       {/* Pricing Table */}
       <div className="overflow-x-auto rounded-xl border border-gray-200 mb-5">
@@ -57,9 +57,9 @@ export default function BusinessModel({ global, result }: Props) {
         </table>
       </div>
 
-      {/* Baxter Channel Info */}
+      {/* 合作经销商渠道 Info */}
       <div className="rounded-lg p-3 px-4 mb-5 text-[13px] flex items-start gap-2 bg-purple-50 border border-purple-300 text-purple-800 leading-relaxed">
-        🤝 <b>Baxter渠道模式</b>：硬件分成15%({fmt(global.price_hw_c3 * global.baxter_hw_commission)}/床) · SaaS分成35%({fmt(global.price_saas_c3 * global.baxter_saas_commission)}/床/年) · 授权金+里程碑合计¥500万(Y2:¥300万 Y3:¥200万) · Baxter授权金可替代Pre-A轮融资
+        🤝 <b>合作经销商渠道模式</b>：硬件分成15%({fmt(global.price_hw_c3 * global.baxter_hw_commission)}/床) · SaaS分成35%({fmt(global.price_saas_c3 * global.baxter_saas_commission)}/床/年) · 授权金+里程碑合计¥500万(Y2:¥300万 Y3:¥200万) · 授权金可替代Pre-A轮融资
       </div>
 
       {/* ROI Cards — dual anchors */}

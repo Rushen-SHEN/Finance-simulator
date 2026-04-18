@@ -15,7 +15,7 @@ export default function Assumptions({ scenario, global, result }: Props) {
   const scenarioLabel = scenario === 'neutral' ? '中性' : scenario === 'optimistic' ? '乐观' : scenario === 'conservative' ? '保守' : '延迟';
 
   const dynamicAssumptions = [
-    { level: 'green', label: 'Baxter渠道', value: `授权金¥500万 · HW 15%/SaaS 35% · 可替代Pre-A轮` },
+    { level: 'green', label: '合作经销商渠道', value: `授权金¥500万 · HW 15%/SaaS 35% · 可替代Pre-A轮` },
     { level: ebitdaPositive <= 1 ? 'green' : 'yellow', label: 'EBITDA转正', value: `${ebitdaPositive >= 0 ? `Year ${ebitdaPositive + 1}` : '未转正'} · ${ebitdaPositive <= 1 ? '快速盈利' : '需密切关注'}` },
     { level: 'green', label: '融资需求', value: '¥800–1,600万 · 远低于旧方案¥3,200–4,800万' },
     { level: c2ROI > 0 && c3ROI > 0 ? 'green' : 'yellow', label: '全线ROI', value: `C2: +${pct(c2ROI)} · C3: +${pct(c3ROI)} · 三类独立锚点¥8万` },

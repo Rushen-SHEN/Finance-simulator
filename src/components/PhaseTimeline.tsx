@@ -6,8 +6,8 @@ const MAX_M = 60;
 const PHASES = [
   { id: 'discovery',   name: 'Phase 0', subtitle: '发现与验证',    icon: '🔬', bestIds: ['seed', 'cdmo', 'pilot'],                       baseIds: ['seed', 'cdmo', 'pilot'],                       funding: '种子轮 ¥400–600万', deliverable: '原型验收+数据采集' },
   { id: 'development', name: 'Phase 1', subtitle: '研发与注册',    icon: '⚙️', bestIds: ['algo', 'iso', 'c2_reg', 'baxter_sign'],       baseIds: ['algo', 'iso', 'c2_reg', 'baxter_sign'],       funding: '—',                 deliverable: '★ 二类证获批' },
-  { id: 'launch',      name: 'Phase 2', subtitle: '首轮商业化',    icon: '🚀', bestIds: ['c2_deploy', 'baxter_m2'],                     baseIds: ['c2_deploy', 'baxter_m2'],                     funding: 'Baxter ¥300万',     deliverable: '部署率≥90%' },
-  { id: 'expansion',   name: 'Phase 3', subtitle: 'C3上市与扩张',  icon: '📈', bestIds: ['c3_reg', 'c3_deploy1'],                       baseIds: ['c3_reg', 'c3_deploy1'],                       funding: 'Baxter ¥200万',     deliverable: '★ 三类证获批' },
+  { id: 'launch',      name: 'Phase 2', subtitle: '首轮商业化',    icon: '🚀', bestIds: ['c2_deploy', 'baxter_m2'],                     baseIds: ['c2_deploy', 'baxter_m2'],                     funding: '经销商 ¥300万',     deliverable: '部署率≥90%' },
+  { id: 'expansion',   name: 'Phase 3', subtitle: 'C3上市与扩张',  icon: '📈', bestIds: ['c3_reg', 'c3_deploy1'],                       baseIds: ['c3_reg', 'c3_deploy1'],                       funding: '经销商 ¥200万',     deliverable: '★ 三类证获批' },
   { id: 'scale',       name: 'Phase 4', subtitle: '规模化增长',    icon: '🏭', bestIds: ['c3_scale', 'c3_expand'],                      baseIds: ['c3_scale', 'c3_expand'],                      funding: 'A轮(可选)',         deliverable: '累计520–780床' },
 ];
 

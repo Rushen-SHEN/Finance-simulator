@@ -1,5 +1,5 @@
 // ARIA Financial Model Calculator — BPcc v3.1
-// Full breakdown: OpEx 8 items, COGS sub-items, Baxter channel, milestones, funding
+// Full breakdown: OpEx 8 items, COGS sub-items, distributor channel, milestones, funding
 
 export interface GlobalInputs {
   // Pricing (元/bed)

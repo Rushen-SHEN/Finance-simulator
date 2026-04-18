@@ -35,7 +35,7 @@ export default function FinancialTable({ result, scenario }: Props) {
         <h2 className="text-[22px] font-bold text-gray-800">五年财务预测 — {scenarioLabel}</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">直销+Baxter渠道 | SaaS续约率{(y.length > 1 ? (result.years[0].opex > 0 ? '70%' : '70%') : '70%')} | 授权金+里程碑 | M1=2026年7月</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">直销+合作经销商渠道 | SaaS续约率{(y.length > 1 ? (result.years[0].opex > 0 ? '70%' : '70%') : '70%')} | 授权金+里程碑 | M1=2026年7月</p>
 
       <div className="overflow-x-auto rounded-xl border border-gray-200">
         <table className="w-full border-collapse text-[13px]">
@@ -50,22 +50,22 @@ export default function FinancialTable({ result, scenario }: Props) {
             </tr>
           </thead>
           <tbody>
-            <SectionRow label="📋 部署 (直销+Baxter)" />
+            <SectionRow label="📋 部署 (直销+合作经销商)" />
             <Row label="阶段" values={PHASE_LABELS} bold />
             <Row label="直销 C2" values={y.map(v => v.direct_c2.toString())} />
             <Row label="直销 C3" values={y.map(v => v.direct_c3.toString())} />
-            <Row label="Baxter C2" values={y.map(v => v.baxter_c2.toString())} />
-            <Row label="Baxter C3" values={y.map(v => v.baxter_c3.toString())} highlight />
+            <Row label="经销商 C2" values={y.map(v => v.baxter_c2.toString())} />
+            <Row label="经销商 C3" values={y.map(v => v.baxter_c3.toString())} highlight />
             <Row label="升级 C2→C3" values={y.map(v => v.actual_upgrade.toString())} />
             <Row label="累计床位" values={y.map(v => v.cumulative_beds.toString())} bold />
             <Row label="活跃付费" values={y.map(v => '~' + v.active_paying)} />
 
             <SectionRow label="💰 收入明细 (6条线)" />
             <Row label="硬件直销" values={y.map(v => wan(v.hw_direct))} highlight />
-            <Row label="硬件Baxter(15%)" values={y.map(v => wan(v.hw_baxter))} />
+            <Row label="硬件经销商(15%)" values={y.map(v => wan(v.hw_baxter))} />
             <Row label="升级服务" values={y.map(v => wan(v.upgrade_revenue))} />
             <Row label="SaaS直销" values={y.map(v => wan(v.saas_direct))} purple />
-            <Row label="SaaS Baxter(35%)" values={y.map(v => wan(v.saas_baxter))} purple />
+            <Row label="SaaS 经销商(35%)" values={y.map(v => wan(v.saas_baxter))} purple />
             <Row label="授权金+里程碑" values={y.map(v => wan(v.baxter_license))} highlight />
             <TotalRow label="总收入" values={y.map(v => wan(v.total_revenue))} />
             <Row label="BP目标" values={BP_TARGETS.total_revenue.map(v => v ? `¥${v}万` : '—')} faded />

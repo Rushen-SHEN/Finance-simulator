@@ -250,12 +250,33 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
               <DarkInput label="三类SaaS/年" value={g.price_saas_c3} def={DEFAULT_MODEL.global.price_saas_c3} onChange={v => setG('price_saas_c3', v)} />
               <DarkInput label="大客户5年SaaS/年" value={g.price_saas_c3_bulk} def={DEFAULT_MODEL.global.price_saas_c3_bulk} onChange={v => setG('price_saas_c3_bulk', v)} />
             </div>
+            <SectionTitle>合作经销商</SectionTitle>
+            <NoteBar text={model.annotations.baxter} annotationKey="baxter" onChange={setAnnotation} />
+            <div className="grid grid-cols-3 gap-2">
+              {(['百特 (Baxter)', '迈瑞 (Mindray)', '其他'] as const).map(opt => {
+                const current = model.annotations.distributor || '百特 (Baxter)';
+                const isActive = current === opt;
+                return (
+                  <button
+                    key={opt}
+                    onClick={() => setAnnotation('distributor', opt)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
+                      isActive
+                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
+                        : 'bg-slate-800/50 border-slate-600/40 text-slate-400 hover:text-slate-200 hover:border-slate-500'
+                    }`}
+                  >
+                    {isActive ? '✓ ' : ''}{opt}
+                  </button>
+                );
+              })}
+            </div>
             <SectionTitle>关键比率</SectionTitle>
             <NoteBar text={model.annotations.renewal} annotationKey="renewal" onChange={setAnnotation} />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               <DarkInput label="SaaS续约率" value={g.rr_base} def={DEFAULT_MODEL.global.rr_base} onChange={v => setG('rr_base', v)} step={0.05} />
-              <DarkInput label="Baxter HW分成" value={g.baxter_hw_commission} def={DEFAULT_MODEL.global.baxter_hw_commission} onChange={v => setG('baxter_hw_commission', v)} step={0.01} />
-              <DarkInput label="Baxter SaaS分成" value={g.baxter_saas_commission} def={DEFAULT_MODEL.global.baxter_saas_commission} onChange={v => setG('baxter_saas_commission', v)} step={0.01} />
+              <DarkInput label="经销商 HW分成" value={g.baxter_hw_commission} def={DEFAULT_MODEL.global.baxter_hw_commission} onChange={v => setG('baxter_hw_commission', v)} step={0.01} />
+              <DarkInput label="经销商 SaaS分成" value={g.baxter_saas_commission} def={DEFAULT_MODEL.global.baxter_saas_commission} onChange={v => setG('baxter_saas_commission', v)} step={0.01} />
             </div>
             <SectionTitle>ROI价值锚点 (元/床/年)</SectionTitle>
             <NoteBar text={model.annotations.roi} annotationKey="roi" onChange={setAnnotation} />
@@ -301,8 +322,8 @@ export default function ParameterPanel({ model, onModelChange, onReset, onClose 
             <DarkTable>
               <DarkRow label="直销 C2" values={y.direct_c2} defaults={DEFAULT_MODEL.yearly.direct_c2} onChange={(i, v) => setY('direct_c2', i, v)} />
               <DarkRow label="直销 C3" values={y.direct_c3} defaults={DEFAULT_MODEL.yearly.direct_c3} onChange={(i, v) => setY('direct_c3', i, v)} />
-              <DarkRow label="Baxter C2" values={y.baxter_c2} defaults={DEFAULT_MODEL.yearly.baxter_c2} onChange={(i, v) => setY('baxter_c2', i, v)} />
-              <DarkRow label="Baxter C3" values={y.baxter_c3} defaults={DEFAULT_MODEL.yearly.baxter_c3} onChange={(i, v) => setY('baxter_c3', i, v)} />
+              <DarkRow label="经销商 C2" values={y.baxter_c2} defaults={DEFAULT_MODEL.yearly.baxter_c2} onChange={(i, v) => setY('baxter_c2', i, v)} />
+              <DarkRow label="经销商 C3" values={y.baxter_c3} defaults={DEFAULT_MODEL.yearly.baxter_c3} onChange={(i, v) => setY('baxter_c3', i, v)} />
               <DarkRow label="升级 C2→C3" values={y.planned_upgrade} defaults={DEFAULT_MODEL.yearly.planned_upgrade} onChange={(i, v) => setY('planned_upgrade', i, v)} />
               <DarkRow label="授权金(万)" values={y.baxter_license.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.baxter_license.map(v => v / 10000)} onChange={(i, v) => setY('baxter_license', i, v * 10000)} />
               <DarkRow label="折旧(万)" values={y.depreciation.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.depreciation.map(v => v / 10000)} onChange={(i, v) => setY('depreciation', i, v * 10000)} />

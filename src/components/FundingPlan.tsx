@@ -26,10 +26,10 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
         <h2 className="text-[22px] font-bold text-gray-800">融资规划 — ¥{totalMin.toFixed(0)}–{totalMax.toFixed(0)}万轻量融资</h2>
         <span className="text-[11px] bg-gradient-to-r from-amber-50 to-yellow-50 text-amber-600 px-3 py-0.5 rounded-full font-medium border border-amber-200/50">⭐ 重点</span>
       </div>
-      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">2–3轮 · Baxter授权金可替代Pre-A · {ebitdaLabel}后现金流自给 · 当前: {scenarioLabel}情景</p>
+      <p className="text-xs sm:text-[13px] text-gray-600 mb-6">2–3轮 · 合作经销商授权金可替代Pre-A · {ebitdaLabel}后现金流自给 · 当前: {scenarioLabel}情景</p>
 
       <div className="rounded-lg p-3 px-4 mb-5 text-[13px] flex items-start gap-2 bg-green-50 border border-green-300 text-green-800 leading-relaxed">
-        💡 <b>关键优势</b>：Baxter授权金+里程碑=¥500万，可部分或完全替代Pre-A轮融资，大幅降低稀释。EBITDA {ebitdaLabel}转正后无需A轮。
+        💡 <b>关键优势</b>：合作经销商授权金+里程碑=¥500万，可部分或完全替代Pre-A轮融资，大幅降低稀释。EBITDA {ebitdaLabel}转正后无需A轮。
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -42,11 +42,11 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
           color="border-blue-600" amountColor="text-blue-600"
         />
         <FundCard
-          round="PRE-A轮 (或Baxter替代)"
+          round="PRE-A轮 (或经销商替代)"
           amount={`¥${(f.preA_min / 10000).toFixed(0)}–${(f.preA_max / 10000).toFixed(0)}万`}
           timing="📅 M13–M15 (2027年7–9月)"
           use="注册审评(35%) · CMO备料(30%) / 质量体系(20%) · 运营(15%)"
-          valuation={`Baxter授权金可覆盖50–75% · 稀释 ${(f.preA_dilution * 100).toFixed(0)}%`}
+          valuation={`经销商授权金可覆盖50–75% · 稀释 ${(f.preA_dilution * 100).toFixed(0)}%`}
           color="border-purple-600" amountColor="text-purple-600"
         />
         <FundCard
@@ -61,7 +61,7 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5 mt-4">
         <SummaryCard label="总融资(最轻量)" value={`¥${totalMin.toFixed(0)}–${totalMax.toFixed(0)}万`} color="text-blue-600" />
-        <SummaryCard label="创始团队持股" value={`~${founderPct}%`} color="text-green-600" detail="Baxter替代Pre-A时最优" />
+        <SummaryCard label="创始团队持股" value={`~${founderPct}%`} color="text-green-600" detail="经销商替代Pre-A时最优" />
         <SummaryCard label="Y1亏损覆盖" value={wan(cumLossY1)} color={cumLossY1 < 0 ? 'text-red-600' : 'text-green-600'} detail="种子轮覆盖" />
         <SummaryCard label="五年累计净利润" value={wan(cumTotal)} color={cumTotal >= 0 ? 'text-green-600' : 'text-red-600'} detail={`EBITDA ${ebitdaLabel}${ebitdaLabel === '未转正' ? '' : '转正'}`} />
       </div>

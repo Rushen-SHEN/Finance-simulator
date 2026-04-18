@@ -23,7 +23,7 @@ export default function MarketSection() {
           <div className="rounded-xl px-5 py-4 border-l-4 border-green-600 bg-gradient-to-r from-green-50 to-white w-[42%]">
             <div className="text-xs text-gray-600">SOM · Year 2首年</div>
             <div className="text-[22px] font-extrabold text-green-600 my-1">¥932万</div>
-            <div className="text-xs text-gray-600 leading-relaxed">110床(直销80+Baxter30) · 二类获批后商业化</div>
+            <div className="text-xs text-gray-600 leading-relaxed">110床(直销80+经销商30) · 二类获批后商业化</div>
           </div>
         </div>
 

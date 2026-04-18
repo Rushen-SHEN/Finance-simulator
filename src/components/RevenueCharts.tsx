@@ -25,16 +25,16 @@ export default function RevenueCharts({ result }: Props) {
     labels: YEAR_LABELS,
     datasets: [
       { label: '硬件直销', data: hwDirect, backgroundColor: '#1A73E8', borderRadius: 6, stack: 's' },
-      { label: '硬件Baxter', data: hwBaxter, backgroundColor: '#60A5FA', borderRadius: 6, stack: 's' },
+      { label: '硬件经销商', data: hwBaxter, backgroundColor: '#60A5FA', borderRadius: 6, stack: 's' },
       { label: '升级', data: upg, backgroundColor: '#D97706', borderRadius: 6, stack: 's' },
       { label: 'SaaS直销', data: saasDirect, backgroundColor: '#7C3AED', borderRadius: 6, stack: 's' },
-      { label: 'SaaS Baxter', data: saasBaxter, backgroundColor: '#C084FC', borderRadius: 6, stack: 's' },
+      { label: 'SaaS 经销商', data: saasBaxter, backgroundColor: '#C084FC', borderRadius: 6, stack: 's' },
       { label: '授权金', data: license, backgroundColor: '#0D9F6E', borderRadius: 6, stack: 's' },
       { label: '总收入', data: total, type: 'line' as const, borderColor: '#374151', borderDash: [5, 5], borderWidth: 2, pointRadius: 4, pointBackgroundColor: '#374151', fill: false },
     ],
   };
 
-  // Revenue structure: Direct vs Baxter vs Licensing
+  // Revenue structure: Direct vs Distributor vs Licensing
   const directPct = y.map(v => v.total_revenue > 0 ? (v.hw_direct + v.saas_direct + v.upgrade_revenue) / v.total_revenue * 100 : 0);
   const baxterPct = y.map(v => v.total_revenue > 0 ? (v.hw_baxter + v.saas_baxter) / v.total_revenue * 100 : 0);
   const licensePct = y.map(v => v.total_revenue > 0 ? v.baxter_license / v.total_revenue * 100 : 0);
@@ -43,7 +43,7 @@ export default function RevenueCharts({ result }: Props) {
     labels: YEAR_LABELS,
     datasets: [
       { label: '直销%', data: directPct, backgroundColor: '#93C5FD', borderRadius: 6, stack: 's' },
-      { label: 'Baxter渠道%', data: baxterPct, backgroundColor: '#C4B5FD', borderRadius: 6, stack: 's' },
+      { label: '经销商渠道%', data: baxterPct, backgroundColor: '#C4B5FD', borderRadius: 6, stack: 's' },
       { label: '授权金%', data: licensePct, backgroundColor: '#6EE7B7', borderRadius: 6, stack: 's' },
     ],
   };
@@ -55,7 +55,7 @@ export default function RevenueCharts({ result }: Props) {
         <ChartBox title="收入构成 6条线（万元）">
           <Chart type="bar" data={revenueData} options={barOpts('万元')} />
         </ChartBox>
-        <ChartBox title="渠道结构占比（直销 vs Baxter vs 授权金）">
+        <ChartBox title="渠道结构占比（直销 vs 经销商 vs 授权金）">
           <Bar data={structData} options={{ ...barOpts('%'), scales: { ...barOpts('%').scales, y: { ...barOpts('%').scales!.y, max: 100 } } }} />
         </ChartBox>
       </div>
