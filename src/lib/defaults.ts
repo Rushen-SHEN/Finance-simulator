@@ -1,58 +1,100 @@
-// ARIA defaults — calibrated to BP §9.2/9.3/9.4 (April 2026)
-import { GlobalInputs, YearlyInputs } from './calculator';
+// ARIA defaults — BPcc v3.1 full breakdown (April 2026)
+import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs } from './calculator';
 
 export const DEFAULT_GLOBAL: GlobalInputs = {
-  // Pricing per BP §5.3
   price_hw_c2: 65000,
   price_hw_c3: 85000,
   price_upgrade: 25000,
   price_saas_c2: 25000,
   price_saas_c3: 40000,
-  price_saas_c3_bulk: 35000,   // 5-year large customer
-  // BOM — blended defaults calibrated to BP §9.2 COGS
-  bom_c2: 32000,               // small batch
-  bom_c3: 21500,               // mass production
+  price_saas_c3_bulk: 35000,
+  // COGS sub-items (C2 base BOM = 32000)
+  bom_sensor: 9600,        // 传感器模组 30%
+  bom_edge_compute: 8000,  // 边缘计算 25%
+  bom_housing: 4800,       // 外壳结构 15%
+  bom_cable_pcb: 4160,     // 线缆PCB 13%
+  bom_assembly: 3200,      // 组装测试 10%
+  bom_packaging: 2240,     // 包装物流 7%
+  bom_c2: 32000,
+  bom_c3: 21500,
   bom_upgrade: 28000,
-  // Rates
-  rr_base: 0.70,               // BP default (was 0.75)
-  // Baxter channel
+  bom_c3_premium: -10500,  // mass production saves; net C3 = base + premium
+  rr_base: 0.70,
   baxter_hw_commission: 0.15,
   baxter_saas_commission: 0.35,
-  // ROI value anchors
-  value_anchor_c2: 62500,      // ¥6.25万/bed/yr
-  value_anchor_c3: 80000,      // ¥8.0万/bed/yr
+  value_anchor_c2: 62500,
+  value_anchor_c3: 80000,
 };
 
-// BP §9.3 deployment plan
 export const DEFAULT_YEARLY: YearlyInputs = {
-  //                        Y1    Y2    Y3    Y4    Y5
-  direct_c2:              [  0,   80,   50,    0,    0],
-  direct_c3:              [  0,    0,   30,   60,   60],
-  baxter_c2:              [  0,   30,    0,    0,    0],
-  baxter_c3:              [  0,    0,   60,  120,  200],
-  planned_upgrade:        [  0,    0,   40,   50,    0],
-  // OpEx total per BP §9.4 (元)
-  opex:                   [4800000, 3610000, 4640000, 5040000, 5660000],
-  depreciation:           [ 200000,  250000,  250000,  300000,  300000],
-  // Baxter licensing+milestones (元) per BP §9.3
-  baxter_license:         [      0, 3000000, 2000000,       0,       0],
+  direct_c2:       [  0,  80,  50,   0,   0],
+  direct_c3:       [  0,   0,  30,  60,  60],
+  baxter_c2:       [  0,  30,   0,   0,   0],
+  baxter_c3:       [  0,   0,  60, 120, 200],
+  planned_upgrade: [  0,   0,  40,  50,   0],
+  depreciation:    [200000, 250000, 250000, 300000, 300000],
+  baxter_license:  [0, 3000000, 2000000, 0, 0],
 };
 
-// OpEx breakdown (read-only reference for display, per BP §9.4)
-export const OPEX_DETAIL = {
-  labels: ['薪资社保', 'CDMO NRE', '试产样机BOM', 'CRO/临床', '注册审评', '合规质量', '专利/咨询/AI', '差旅/运营/CMO'],
-  //              Y1       Y2       Y3       Y4       Y5
-  salary:   [1420000, 1730000, 2740000, 3620000, 4110000],
-  cdmo_nre: [ 800000,       0,       0,       0,       0],
-  pilot_bom:[1280000,       0,       0,       0,       0],
-  cro:      [ 300000,  800000,  400000,       0,       0],
-  reg:      [ 350000,  150000,  350000,  100000,   50000],
-  compliance:[ 200000, 150000,  200000,  250000,  300000],
-  patent_ai: [ 300000, 380000,  400000,  420000,  450000],
-  travel_ops:[ 150000, 400000,  550000,  650000,  750000],
+export const DEFAULT_OPEX: OpExDetail = {
+  salary:     [1420000, 1730000, 2740000, 3620000, 4110000],
+  cdmo_nre:   [ 800000,       0,       0,       0,       0],
+  pilot_bom:  [1280000,       0,       0,       0,       0],
+  cro:        [ 300000,  800000,  400000,       0,       0],
+  reg:        [ 350000,  150000,  350000,  100000,   50000],
+  compliance: [ 200000,  150000,  200000,  250000,  300000],
+  patent_ai:  [ 300000,  380000,  400000,  420000,  450000],
+  travel_ops: [ 150000,  400000,  550000,  650000,  750000],
 };
 
-// BP §9.2 target values for reference/validation (万元)
+export const DEFAULT_FUNDING: FundingInputs = {
+  seed_min: 4000000,
+  seed_max: 6000000,
+  seed_dilution: 0.175,
+  preA_min: 4000000,
+  preA_max: 6000000,
+  preA_dilution: 0.10,
+  seriesA_min: 0,
+  seriesA_max: 4000000,
+  seriesA_dilution: 0.10,
+};
+
+export const DEFAULT_MILESTONES: MilestoneItem[] = [
+  { month: 'M1–M6', desc: 'CDMO签约+功能原型+2家医院40床科研部署', kpi: '三模态数据采集通过', type: '研发', bold: false },
+  { month: 'M1–M3', desc: '种子轮融资完成', kpi: '¥400–600万到账', type: '融资', bold: false },
+  { month: 'M7–M12', desc: '算法训练与测试', kpi: 'AUROC≥0.78', type: '研发', bold: false },
+  { month: 'M9–M12', desc: 'ISO13485质量体系联调', kpi: '体系审核通过', type: '注册', bold: false },
+  { month: 'M13–M15', desc: 'Baxter渠道授权签约', kpi: '授权金¥300万到账', type: '商业化', bold: true },
+  { month: 'M14–M15', desc: '★ 二类医疗器械证获批', kpi: '注册证到手 · 创新通道', type: '注册', bold: true },
+  { month: 'M16–M24', desc: '110床C2商业化(直销80+Baxter30)', kpi: '部署率≥90%', type: '商业化', bold: false },
+  { month: 'M25–M27', desc: 'Baxter里程碑¥200万', kpi: '里程碑付款', type: '商业化', bold: false },
+  { month: 'M28–M31', desc: '★ 三类注册证获批', kpi: '注册证到手', type: '注册', bold: true },
+  { month: 'M25–M36', desc: 'C3商业化 · 140床新增+40升级', kpi: '累计290床', type: '商业化', bold: false },
+  { month: 'M37–M48', desc: '规模放量 · 180 C3新增+50升级', kpi: '累计520床', type: '商业化', bold: false },
+  { month: 'M49–M60', desc: '全面扩张 · 260 C3新增', kpi: '累计780床', type: '商业化', bold: false },
+];
+
+export const DEFAULT_ANNOTATIONS: Record<string, string> = {
+  'pricing': 'BP §5.3 价值定价法 · C2按ICU监测市场替代定价 · C3按预警诊断增值溢价 · 大客户5年期享¥3.5万折扣',
+  'bom': 'C2小批量BOM ¥3.2万 · C3量产BOM ¥2.15万(含传感器+边缘计算+外壳+PCB+组装+包装) · CDMO代工模式',
+  'renewal': 'BP §7.2 基准续约率70% · 中国医院SaaS付费培育期 · 乐观85% 保守55%',
+  'baxter': 'Baxter渠道: HW分成15% SaaS分成35% · 授权金¥200万+里程碑¥300万 · 可替代Pre-A轮融资',
+  'opex': 'BP §9.4 OpEx拆分 · Y1含CDMO NRE ¥80万+样机BOM ¥128万 · 薪资按研发6人→12人→18人→25人→30人规划',
+  'funding': '轻量融资策略 · Baxter授权金可覆盖50-75% Pre-A需求 · EBITDA Y2转正后无需A轮',
+  'milestones': 'C2 M14-15获批(创新通道) · C3 M28-31获批 · 比行业平均快30% · M1=2026年7月',
+  'deployment': 'Y2: 直销80+Baxter30=110 · Y3起Baxter C3大幅放量 · Y5 Baxter占比>75%',
+  'roi': 'C2 ¥6.25万/床/年(ICU平均减少1.2天住院+降低并发症) · C3 ¥8万/床/年(预警+诊断双重价值)',
+};
+
+export const DEFAULT_MODEL: ModelInputs = {
+  global: DEFAULT_GLOBAL,
+  yearly: DEFAULT_YEARLY,
+  opex: DEFAULT_OPEX,
+  funding: DEFAULT_FUNDING,
+  milestones: DEFAULT_MILESTONES,
+  annotations: DEFAULT_ANNOTATIONS,
+};
+
 export const BP_TARGETS = {
   total_revenue: [0, 932, 1259, 1398, 1665],
   total_cogs:    [0, 352,  498,  527,  559],
@@ -65,3 +107,24 @@ export const BP_TARGETS = {
 export const YEAR_LABELS = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
 export const MONTH_LABELS = ['M1–12', 'M13–24', 'M25–36', 'M37–48', 'M49–60'];
 export const PHASE_LABELS = ['原型+试点', '二类商业化', '三类商业化', '规模放量', '全面扩张'];
+
+export const OPEX_LABELS: Record<keyof OpExDetail, string> = {
+  salary: '薪资社保',
+  cdmo_nre: 'CDMO NRE',
+  pilot_bom: '试产样机BOM',
+  cro: 'CRO/临床',
+  reg: '注册审评',
+  compliance: '合规质量',
+  patent_ai: '专利/咨询/AI',
+  travel_ops: '差旅/运营/CMO',
+};
+
+export const COGS_LABELS: Record<string, string> = {
+  bom_sensor: '传感器模组',
+  bom_edge_compute: '边缘计算模块',
+  bom_housing: '外壳结构件',
+  bom_cable_pcb: '线缆/PCB',
+  bom_assembly: '组装测试',
+  bom_packaging: '包装物流',
+  bom_c3_premium: 'C3额外成本',
+};
