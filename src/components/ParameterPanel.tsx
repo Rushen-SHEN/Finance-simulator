@@ -451,18 +451,16 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                     return (
                       <>
                         <tr className="border-t border-slate-700/30">
-                          <td className="px-3 py-2 text-slate-400">C2 × ¥{(bom_c2/10000).toFixed(2)}万</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => {
-                            const c2Total = yr.direct_c2 + yr.baxter_c2;
-                            return <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(c2Total * bom_c2)}</td>;
-                          })}
+                          <td className="px-3 py-2 text-slate-400">直销C2 × ¥{(bom_c2/10000).toFixed(2)}万</td>
+                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                            <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.direct_c2 * bom_c2)}</td>
+                          ))}
                         </tr>
                         <tr className="border-t border-slate-700/30">
-                          <td className="px-3 py-2 text-slate-400">C3 × ¥{(bom_c3/10000).toFixed(2)}万</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => {
-                            const c3Total = yr.direct_c3 + yr.baxter_c3;
-                            return <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(c3Total * bom_c3)}</td>;
-                          })}
+                          <td className="px-3 py-2 text-slate-400">直销C3 × ¥{(bom_c3/10000).toFixed(2)}万</td>
+                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                            <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.direct_c3 * bom_c3)}</td>
+                          ))}
                         </tr>
                         <tr className="border-t border-slate-700/30">
                           <td className="px-3 py-2 text-slate-400">升级 × ¥{(bom_upg/10000).toFixed(2)}万</td>
@@ -500,7 +498,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               </table>
             </div>
             <div className="rounded-lg p-2 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500">
-              📐 COGS = Σ(C2床位×BOM_C2 + C3床位×BOM_C3 + 升级×BOM_升级) · COGS比率 = COGS÷总收入 · 毛利 = 总收入−COGS
+              📐 COGS = Σ(直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM_升级) · 经销商渠道=佣金模式,不计BOM · 毛利 = 总收入−COGS
             </div>
           </div>
         )}
@@ -997,16 +995,16 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                       ))}
                     </tr>
                     <tr className="border-t border-slate-700/30">
-                      <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ C2 COGS</td>
+                      <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ 直销C2</td>
                       {scenarioResult.years.map((yr, i) => {
-                        const v = i < 5 ? (yr.direct_c2 + yr.baxter_c2) * bom_c2 : yr.cogs * 0.4;
+                        const v = i < 5 ? yr.direct_c2 * bom_c2 : yr.cogs * 0.4;
                         return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{fmtWan(v)}</td>;
                       })}
                     </tr>
                     <tr className="border-t border-slate-700/20">
-                      <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ C3 COGS</td>
+                      <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ 直销C3</td>
                       {scenarioResult.years.map((yr, i) => {
-                        const v = i < 5 ? (yr.direct_c3 + yr.baxter_c3) * bom_c3 : yr.cogs * 0.4;
+                        const v = i < 5 ? yr.direct_c3 * bom_c3 : yr.cogs * 0.4;
                         return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{fmtWan(v)}</td>;
                       })}
                     </tr>
@@ -1050,7 +1048,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500 leading-relaxed space-y-1">
                 <div>📐 <strong>EBITDA</strong> = 总收入 − COGS − OpEx合计 （即 毛利 − 运营费用）</div>
                 <div>📐 <strong>COGS比率</strong> = COGS ÷ 总收入 × 100%</div>
-                <div>　　Y1-5: COGS = Σ(新增C2床位 × BOM_C2 + 新增C3 × BOM_C3 + 升级 × BOM_升级)</div>
+                <div>　　Y1-5: COGS = Σ(直销C2 × BOM_C2 + 直销C3 × BOM_C3 + 升级 × BOM_升级)  ⚠经销商渠道不计BOM</div>
                 <div>　　Y6-10: COGS = 总收入 × 目标COGS率 ({(so.cogs_rate_target * 100).toFixed(0)}%)</div>
                 <div>📐 <strong>薪资合计</strong> (Y1-5) = 团队人数 × 人均薪资 （OpEx tab 手动设置）</div>
                 <div>　　Y6-10: 薪资<sub>Yn</sub> = 薪资<sub>Yn-1</sub> × (1 + OpEx增速<sub>Yn</sub>)</div>

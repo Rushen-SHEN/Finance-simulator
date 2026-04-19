@@ -383,9 +383,11 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     const license = y.baxter_license[i] || 0;
     const totalRevenue = hwDirect + hwBaxter + upgradeRev + saasDirect + saasBaxter + license;
 
+    // COGS: only direct-sale beds bear ARIA's BOM cost.
+    // Baxter/distributor channel beds are manufactured by Baxter; ARIA receives commission only.
     const totalC2 = dC2 + bC2;
     const totalC3 = dC3 + bC3;
-    const cogs = totalC2 * bom.c2 + totalC3 * bom.c3 + actualUpg * bom.upgrade;
+    const cogs = dC2 * bom.c2 + dC3 * bom.c3 + actualUpg * bom.upgrade;
     const grossProfit = totalRevenue - cogs;
 
     // OpEx from detail breakdown
