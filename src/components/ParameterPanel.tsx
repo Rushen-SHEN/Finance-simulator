@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, CalcResult, resolveMilestones, PARAM_MAPPING, MAPPING_BLOCKS, validateModel } from '@/lib/calculator';
-import { DEFAULT_MODEL, YEAR_LABELS, OPEX_LABELS, COGS_LABELS, DEFAULT_ANNOTATIONS } from '@/lib/defaults';
+import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, CalcResult, resolveMilestones, PARAM_MAPPING, MAPPING_BLOCKS, validateModel, Scenario, Timeline, ScenarioOverrides, calculate, deriveLicenseArray } from '@/lib/calculator';
+import { DEFAULT_MODEL, YEAR_LABELS, OPEX_LABELS, COGS_LABELS, DEFAULT_ANNOTATIONS, DEFAULT_SCENARIO_OVERRIDES } from '@/lib/defaults';
 import { listProfiles, saveProfile, loadProfile, deleteProfile, ProfileEntry, saveModel } from '@/lib/storage';
+import { ArchiveEntry, listArchives, deleteArchive, downloadFile } from '@/lib/archiveStore';
 
 interface Props {
   model: ModelInputs;
@@ -12,18 +13,19 @@ interface Props {
   onModelChange: (m: ModelInputs) => void;
   onReset: () => void;
   onClose: () => void;
+  archiveVersion?: number;  // increment to trigger archive refresh
 }
 
 type TabKey = 'pricing' | 'cogs' | 'deploy' | 'opex' | 'funding' | 'milestones' | 'projection' | 'notes' | 'profiles';
 
 const TABS: { key: TabKey; label: string; icon: string }[] = [
-  { key: 'pricing', label: '定价', icon: '💰' },
+  { key: 'pricing', label: '定价/渠道', icon: '💰' },
   { key: 'cogs', label: 'BOM/COGS', icon: '🔧' },
-  { key: 'deploy', label: '部署', icon: '🏥' },
+  { key: 'deploy', label: '部署/SOM', icon: '🏥' },
   { key: 'opex', label: 'OpEx', icon: '📊' },
   { key: 'funding', label: '融资', icon: '🏦' },
   { key: 'milestones', label: '里程碑', icon: '🎯' },
-  { key: 'projection', label: '测算', icon: '📈' },
+  { key: 'projection', label: '测算/ARR', icon: '📈' },
   { key: 'notes', label: '注释', icon: '📝' },
   { key: 'profiles', label: '存档', icon: '💾' },
 ];
@@ -33,7 +35,7 @@ const TAB_PARAM_GROUP: Partial<Record<TabKey, string>> = {
   funding: 'funding', milestones: 'milestones', projection: 'growth',
 };
 
-export default function ParameterPanel({ model, resultBest, resultBase, onModelChange, onReset, onClose }: Props) {
+export default function ParameterPanel({ model, resultBest, resultBase, onModelChange, onReset, onClose, archiveVersion }: Props) {
   const [tab, setTab] = useState<TabKey>('pricing');
   const [profiles, setProfiles] = useState<ProfileEntry[]>([]);
   const [profileName, setProfileName] = useState('');
@@ -54,6 +56,21 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     setProfiles(listProfiles());
     setProfilesLoaded(true);
   }
+
+  // Archive sidebar state
+  const [showArchive, setShowArchive] = useState(false);
+  const [archives, setArchives] = useState<ArchiveEntry[]>([]);
+
+  const refreshArchives = useCallback(async () => {
+    try {
+      const all = await listArchives();
+      setArchives(all);
+    } catch { /* ignore */ }
+  }, []);
+
+  // Load archives when sidebar opens or archiveVersion changes
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { if (showArchive) refreshArchives(); }, [showArchive, archiveVersion, refreshArchives]);
 
   // Auto-save every 60s when dirty
   useEffect(() => {
@@ -97,6 +114,27 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
   const yb = model.yearly_base;
   const ox = model.opex;
   const f = model.funding;
+  const activeScenario = model.active_scenario || 'neutral';
+  const activeTimeline = model.active_timeline || 'aggressive';
+  const so = model.scenario_overrides?.[activeScenario] || DEFAULT_SCENARIO_OVERRIDES[activeScenario];
+
+  // Calculate results for current scenario + timeline combination
+  const currentYearly = activeTimeline === 'aggressive' ? model.yearly : model.yearly_base;
+  const currentMs = activeTimeline === 'aggressive' ? model.milestones_best : model.milestones_base;
+  const scenarioResult = calculate(model.global, currentYearly, model.opex, currentMs, so);
+
+  const setScenario = useCallback((s: Scenario) => {
+    onModelChange({ ...model, active_scenario: s });
+  }, [model, onModelChange]);
+
+  const setTimeline = useCallback((t: Timeline) => {
+    onModelChange({ ...model, active_timeline: t });
+  }, [model, onModelChange]);
+
+  const setSO = useCallback((key: keyof ScenarioOverrides, val: number) => {
+    const nextOverrides = { ...model.scenario_overrides, [activeScenario]: { ...so, [key]: val } };
+    onModelChange({ ...model, scenario_overrides: nextOverrides });
+  }, [model, onModelChange, activeScenario, so]);
 
   const setG = useCallback((key: keyof GlobalInputs, val: number) => {
     onModelChange({ ...model, global: { ...model.global, [key]: val } });
@@ -129,13 +167,13 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dropIdx, setDropIdx] = useState<number | null>(null);
 
-  const currentMs = msCase === 'best' ? model.milestones_best : model.milestones_base;
+  const editMs = msCase === 'best' ? model.milestones_best : model.milestones_base;
   const otherMs = msCase === 'best' ? model.milestones_base : model.milestones_best;
   const msKey = msCase === 'best' ? 'milestones_best' : 'milestones_base';
   const otherLabel = msCase === 'best' ? 'Base' : 'Best';
 
   const setMilestone = useCallback((idx: number, field: keyof MilestoneItem, val: string | boolean | number) => {
-    let next = currentMs.map((m, i) => {
+    let next = editMs.map((m, i) => {
       if (i !== idx) return m;
       const updated = { ...m, [field]: val };
       // If user manually sets startM or endM, mark as manual
@@ -145,37 +183,37 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     // Resolve predecessor chains and persist resolved values
     next = resolveMilestones(next);
     onModelChange({ ...model, [msKey]: next });
-  }, [model, onModelChange, currentMs, msKey]);
+  }, [model, onModelChange, editMs, msKey]);
 
   const addMilestone = useCallback(() => {
     const newId = 'ms_' + Date.now().toString(36);
     const item: MilestoneItem = { id: newId, desc: '新活动', kpi: '', type: '商业化', bold: false, startM: 1, endM: 3, predecessorId: null, lagMonths: 0, manualStart: true };
-    onModelChange({ ...model, [msKey]: [...currentMs, item] });
-  }, [model, onModelChange, currentMs, msKey]);
+    onModelChange({ ...model, [msKey]: [...editMs, item] });
+  }, [model, onModelChange, editMs, msKey]);
 
   const removeMilestone = useCallback((idx: number) => {
-    const removedId = currentMs[idx].id;
-    const next = currentMs.filter((_, i) => i !== idx).map(m =>
+    const removedId = editMs[idx].id;
+    const next = editMs.filter((_, i) => i !== idx).map(m =>
       m.predecessorId === removedId ? { ...m, predecessorId: null, manualStart: true } : m
     );
     onModelChange({ ...model, [msKey]: next });
-  }, [model, onModelChange, currentMs, msKey]);
+  }, [model, onModelChange, editMs, msKey]);
 
   const moveMilestone = useCallback((idx: number, dir: -1 | 1) => {
     const target = idx + dir;
-    if (target < 0 || target >= currentMs.length) return;
-    const next = [...currentMs];
+    if (target < 0 || target >= editMs.length) return;
+    const next = [...editMs];
     [next[idx], next[target]] = [next[target], next[idx]];
     onModelChange({ ...model, [msKey]: next });
-  }, [model, onModelChange, currentMs, msKey]);
+  }, [model, onModelChange, editMs, msKey]);
 
   const handleDragDrop = useCallback((fromIdx: number, toIdx: number) => {
     if (fromIdx === toIdx) return;
-    const next = [...currentMs];
+    const next = [...editMs];
     const [moved] = next.splice(fromIdx, 1);
     next.splice(toIdx, 0, moved);
     onModelChange({ ...model, [msKey]: next });
-  }, [model, onModelChange, currentMs, msKey]);
+  }, [model, onModelChange, editMs, msKey]);
 
   const setAnnotation = useCallback((key: string, val: string) => {
     onModelChange({ ...model, annotations: { ...model.annotations, [key]: val } });
@@ -227,6 +265,9 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
           </div>
         </div>
         <div className="flex gap-2">
+          <button onClick={() => setShowArchive(!showArchive)} className={`px-3 py-1.5 text-xs rounded-lg transition-all ${showArchive ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300' : 'bg-slate-700/50 border border-slate-600/50 text-slate-400 hover:bg-slate-600/50'}`}>
+            📚 存档历史
+          </button>
           <button onClick={() => { saveModel(model); openSnapshotRef.current = JSON.stringify(model); setLastAutoSave(Date.now()); }} className="px-3 py-1.5 text-xs rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 transition-all">
             💾 保存
           </button>
@@ -256,14 +297,47 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
         ))}
       </div>
 
-      {/* Content */}
-      <div className="px-6 py-5 min-h-[320px]">
+      {/* Scenario + Timeline selector strip */}
+      <div className="px-4 sm:px-6 py-3 border-b border-slate-700/50 flex flex-wrap gap-3 items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-400 font-medium">场景:</span>
+          <div className="flex rounded-lg overflow-hidden border border-slate-600/50">
+            {([['neutral', '中性', 'bg-blue-600/25 text-blue-300 border-blue-500/40'], ['optimistic', '乐观', 'bg-green-600/25 text-green-300 border-green-500/40'], ['conservative', '保守', 'bg-orange-600/25 text-orange-300 border-orange-500/40']] as const).map(([key, label, activeClass]) => (
+              <button key={key} onClick={() => setScenario(key as Scenario)}
+                className={`px-3 py-1.5 text-xs font-medium transition-all ${activeScenario === key ? activeClass : 'text-slate-400 hover:text-slate-200'}`}>
+                {label}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-slate-400 font-medium">时间线:</span>
+          <div className="flex rounded-lg overflow-hidden border border-slate-600/50">
+            <button onClick={() => setTimeline('aggressive')}
+              className={`px-3 py-1.5 text-xs font-medium transition-all ${activeTimeline === 'aggressive' ? 'bg-cyan-600/25 text-cyan-300' : 'text-slate-400 hover:text-slate-200'}`}>
+              🚀 激进
+            </button>
+            <button onClick={() => setTimeline('standard')}
+              className={`px-3 py-1.5 text-xs font-medium transition-all ${activeTimeline === 'standard' ? 'bg-amber-600/25 text-amber-300' : 'text-slate-400 hover:text-slate-200'}`}>
+              📊 标准
+            </button>
+          </div>
+        </div>
+        <div className="ml-auto text-[10px] text-slate-500">
+          场景=市场假设(增速/续约/部署) · 时间线=里程碑进度(激进=Best Case / 标准=Base Case)
+        </div>
+      </div>
+
+      {/* Content + Archive Sidebar */}
+      <div className="flex">
+      {/* Main Content */}
+      <div className={`px-6 py-5 min-h-[320px] ${showArchive ? 'flex-1 min-w-0' : 'w-full'}`}>
         <BPBadges tabKey={tab} />
 
         {/* ===== PRICING ===== */}
         {tab === 'pricing' && (
           <div className="space-y-4">
-            <SectionTitle>产品定价 (元/床)</SectionTitle>
+            <SectionTitle>产品定价 (元/床) — 共通参数</SectionTitle>
             <NoteBar text={model.annotations.pricing} annotationKey="pricing" onChange={setAnnotation} />
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               <DarkInput label="二类硬件" value={g.price_hw_c2} def={DEFAULT_MODEL.global.price_hw_c2} onChange={v => setG('price_hw_c2', v)} />
@@ -273,40 +347,62 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               <DarkInput label="三类SaaS/年" value={g.price_saas_c3} def={DEFAULT_MODEL.global.price_saas_c3} onChange={v => setG('price_saas_c3', v)} />
               <DarkInput label="大客户5年SaaS/年" value={g.price_saas_c3_bulk} def={DEFAULT_MODEL.global.price_saas_c3_bulk} onChange={v => setG('price_saas_c3_bulk', v)} />
             </div>
-            <SectionTitle>合作经销商</SectionTitle>
+
+            <SectionTitle>合作经销商渠道条款 (§3.1)</SectionTitle>
             <NoteBar text={model.annotations.baxter} annotationKey="baxter" onChange={setAnnotation} />
-            <div className="grid grid-cols-3 gap-2">
+            <div className="grid grid-cols-3 gap-2 mb-3">
               {(['百特 (Baxter)', '迈瑞 (Mindray)', '其他'] as const).map(opt => {
                 const current = model.annotations.distributor || '百特 (Baxter)';
                 const isActive = current === opt;
                 return (
-                  <button
-                    key={opt}
-                    onClick={() => setAnnotation('distributor', opt)}
-                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${
-                      isActive
-                        ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300'
-                        : 'bg-slate-800/50 border-slate-600/40 text-slate-400 hover:text-slate-200 hover:border-slate-500'
-                    }`}
-                  >
+                  <button key={opt} onClick={() => setAnnotation('distributor', opt)}
+                    className={`px-3 py-2 rounded-lg text-xs font-medium transition-all border ${isActive ? 'bg-cyan-500/20 border-cyan-500/50 text-cyan-300' : 'bg-slate-800/50 border-slate-600/40 text-slate-400 hover:text-slate-200 hover:border-slate-500'}`}>
                     {isActive ? '✓ ' : ''}{opt}
                   </button>
                 );
               })}
             </div>
-            <SectionTitle>关键比率</SectionTitle>
-            <NoteBar text={model.annotations.renewal} annotationKey="renewal" onChange={setAnnotation} />
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <DarkInput label="SaaS续约率" value={g.rr_base} def={DEFAULT_MODEL.global.rr_base} onChange={v => setG('rr_base', v)} step={0.05} />
               <DarkInput label="经销商 HW分成" value={g.baxter_hw_commission} def={DEFAULT_MODEL.global.baxter_hw_commission} onChange={v => setG('baxter_hw_commission', v)} step={0.01} />
               <DarkInput label="经销商 SaaS分成" value={g.baxter_saas_commission} def={DEFAULT_MODEL.global.baxter_saas_commission} onChange={v => setG('baxter_saas_commission', v)} step={0.01} />
-              <DarkInput label="三类后年增长率" value={g.post_class3_growth} def={DEFAULT_MODEL.global.post_class3_growth} onChange={v => setG('post_class3_growth', v)} step={0.05} />
             </div>
+
+            <SectionTitle>授权金 & 里程碑付款</SectionTitle>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <DarkInput label="前期授权金 (元)" value={g.license_amount} def={DEFAULT_MODEL.global.license_amount} onChange={v => setG('license_amount', v)} step={100000} />
+              <DarkInput label="授权金到账年 (Y)" value={g.license_year} def={DEFAULT_MODEL.global.license_year} onChange={v => setG('license_year', v)} step={1} />
+              <DarkInput label="里程碑付款 (元)" value={g.milestone_payment} def={DEFAULT_MODEL.global.milestone_payment} onChange={v => setG('milestone_payment', v)} step={100000} />
+              <DarkInput label="里程碑到账年 (Y)" value={g.milestone_year} def={DEFAULT_MODEL.global.milestone_year} onChange={v => setG('milestone_year', v)} step={1} />
+            </div>
+            <div className="rounded-lg bg-slate-800/40 border border-slate-700/30 p-3 text-[11px] text-slate-400">
+              {(() => { const la = deriveLicenseArray(g); return `推算: ${la.map((v, i) => `Y${i + 1}=¥${(v / 10000).toFixed(0)}万`).join(' · ')}`; })()}
+            </div>
+
+            <ScenarioBlock scenario={activeScenario} title="关键比率">
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <ScenarioDarkInput label="SaaS续约率" value={so.rr_base} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].rr_base} onChange={v => setSO('rr_base', v)} step={0.05} scenario={activeScenario} />
+                <DarkInput label="三类后年增长率" value={g.post_class3_growth} def={DEFAULT_MODEL.global.post_class3_growth} onChange={v => setG('post_class3_growth', v)} step={0.05} />
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">
+                {activeScenario === 'optimistic' ? '🟢 乐观: 续约率85% — 产品粘性强、SaaS价值锚点高' :
+                 activeScenario === 'conservative' ? '🟠 保守: 续约率55% — 中国医院SaaS付费培育期较长' :
+                 '🔵 中性: 续约率70% — BP基准假设'}
+              </div>
+            </ScenarioBlock>
+
             <SectionTitle>ROI价值锚点 (元/床/年)</SectionTitle>
             <NoteBar text={model.annotations.roi} annotationKey="roi" onChange={setAnnotation} />
             <div className="grid grid-cols-2 gap-3">
               <DarkInput label="C2创造价值" value={g.value_anchor_c2} def={DEFAULT_MODEL.global.value_anchor_c2} onChange={v => setG('value_anchor_c2', v)} />
               <DarkInput label="C3创造价值" value={g.value_anchor_c3} def={DEFAULT_MODEL.global.value_anchor_c3} onChange={v => setG('value_anchor_c3', v)} />
+            </div>
+            <SectionTitle>SOM / 敏感性参数</SectionTitle>
+            <div className="grid grid-cols-2 gap-3">
+              <DarkInput label="SAM中值 (万元)" value={g.sam_midpoint} def={DEFAULT_MODEL.global.sam_midpoint} onChange={v => setG('sam_midpoint', v)} step={10000} />
+              <DarkInput label="敏感性摆幅 (±)" value={g.sensitivity_bed_swing} def={DEFAULT_MODEL.global.sensitivity_bed_swing} onChange={v => setG('sensitivity_bed_swing', v)} step={0.05} />
+            </div>
+            <div className="rounded-lg bg-slate-800/40 border border-slate-700/30 p-3 text-[11px] text-slate-400">
+              SAM中值 = ¥{(g.sam_midpoint / 10000).toFixed(1)}亿 · 敏感性 = ±{Math.round(g.sensitivity_bed_swing * 100)}% · Y5 SOM穿透率 = {g.sam_midpoint > 0 ? ((scenarioResult.years[4].total_revenue / 10000 / g.sam_midpoint) * 100).toFixed(2) : '—'}%
             </div>
           </div>
         )}
@@ -341,8 +437,20 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
         {/* ===== DEPLOY ===== */}
         {tab === 'deploy' && (
           <div className="space-y-4">
-            <SectionTitle>年度部署计划 (床位数)</SectionTitle>
+            <SectionTitle>年度部署计划 (床位数) — 时间线: {activeTimeline === 'aggressive' ? '🚀 激进' : '📊 标准'}</SectionTitle>
             <NoteBar text={model.annotations.deployment} annotationKey="deployment" onChange={setAnnotation} />
+
+            <ScenarioBlock scenario={activeScenario} title="部署乘数">
+              <div className="grid grid-cols-3 gap-3">
+                <ScenarioDarkInput label="部署量系数" value={so.bed_growth_factor} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].bed_growth_factor} onChange={v => setSO('bed_growth_factor', v)} step={0.05} scenario={activeScenario} />
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">
+                {activeScenario === 'optimistic' ? '🟢 乐观: 部署×1.15 — 渠道加速+医院接受度高' :
+                 activeScenario === 'conservative' ? '🟠 保守: 部署×0.85 — 渠道铺设延迟/竞品干扰' :
+                 '🔵 中性: 部署×1.0 — BP基准计划'}
+              </div>
+            </ScenarioBlock>
+
             <div className="flex gap-2 mb-2">
               <button onClick={() => setDeployCase('best')} className={`px-3 py-1 rounded text-xs font-bold transition ${deployCase === 'best' ? 'bg-cyan-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}>Best Case</button>
               <button onClick={() => setDeployCase('base')} className={`px-3 py-1 rounded text-xs font-bold transition ${deployCase === 'base' ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}>Base Case</button>
@@ -354,8 +462,6 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 <DarkRow label="经销商 C2" values={y.baxter_c2} defaults={DEFAULT_MODEL.yearly.baxter_c2} onChange={(i, v) => setY('baxter_c2', i, v)} />
                 <DarkRow label="经销商 C3" values={y.baxter_c3} defaults={DEFAULT_MODEL.yearly.baxter_c3} onChange={(i, v) => setY('baxter_c3', i, v)} />
                 <DarkRow label="升级 C2→C3" values={y.planned_upgrade} defaults={DEFAULT_MODEL.yearly.planned_upgrade} onChange={(i, v) => setY('planned_upgrade', i, v)} />
-                <DarkRow label="授权金(万)" values={y.baxter_license.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.baxter_license.map(v => v / 10000)} onChange={(i, v) => setY('baxter_license', i, v * 10000)} />
-                <DarkRow label="折旧(万)" values={y.depreciation.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly.depreciation.map(v => v / 10000)} onChange={(i, v) => setY('depreciation', i, v * 10000)} />
               </DarkTable>
             ) : (
               <DarkTable>
@@ -364,20 +470,97 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 <DarkRow label="经销商 C2" values={yb.baxter_c2} defaults={DEFAULT_MODEL.yearly_base.baxter_c2} onChange={(i, v) => setYBase('baxter_c2', i, v)} />
                 <DarkRow label="经销商 C3" values={yb.baxter_c3} defaults={DEFAULT_MODEL.yearly_base.baxter_c3} onChange={(i, v) => setYBase('baxter_c3', i, v)} />
                 <DarkRow label="升级 C2→C3" values={yb.planned_upgrade} defaults={DEFAULT_MODEL.yearly_base.planned_upgrade} onChange={(i, v) => setYBase('planned_upgrade', i, v)} />
-                <DarkRow label="授权金(万)" values={yb.baxter_license.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly_base.baxter_license.map(v => v / 10000)} onChange={(i, v) => setYBase('baxter_license', i, v * 10000)} />
-                <DarkRow label="折旧(万)" values={yb.depreciation.map(v => v / 10000)} defaults={DEFAULT_MODEL.yearly_base.depreciation.map(v => v / 10000)} onChange={(i, v) => setYBase('depreciation', i, v * 10000)} />
               </DarkTable>
             )}
+
+            {/* SOM / Beds / ARR real-time display */}
+            <SectionTitle>市场机会 — {activeScenario === 'optimistic' ? '🟢乐观' : activeScenario === 'conservative' ? '🟠保守' : '🔵中性'} × {activeTimeline === 'aggressive' ? '🚀激进' : '📊标准'} 时间线</SectionTitle>
+            <div className="overflow-x-auto rounded-xl border border-slate-700/50">
+              <table className="w-full text-xs">
+                <thead>
+                  <tr className="bg-slate-800/80">
+                    <th className="text-left px-3 py-2 text-cyan-400 font-semibold w-[120px]">指标</th>
+                    {['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'].map(l => (
+                      <th key={l} className="text-right px-2 py-2 text-slate-400 font-semibold">{l}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className="border-t border-slate-700/30">
+                    <td className="px-3 py-2 text-slate-300 font-medium">累计床位</td>
+                    {scenarioResult.years.map((yr, i) => (
+                      <td key={i} className="text-right px-2 py-2 text-slate-200 font-mono">{yr.cumulative_beds.toLocaleString()}</td>
+                    ))}
+                  </tr>
+                  <tr className="border-t border-slate-700/30">
+                    <td className="px-3 py-2 text-slate-300 font-medium">活跃付费床位</td>
+                    {scenarioResult.years.map((yr, i) => (
+                      <td key={i} className="text-right px-2 py-2 text-green-400 font-mono">{yr.active_paying.toLocaleString()}</td>
+                    ))}
+                  </tr>
+                  <tr className="border-t border-slate-700/30">
+                    <td className="px-3 py-2 text-slate-300 font-medium">总收入 (万)</td>
+                    {scenarioResult.years.map((yr, i) => (
+                      <td key={i} className="text-right px-2 py-2 text-cyan-400 font-mono">{Math.round(yr.total_revenue / 10000).toLocaleString()}</td>
+                    ))}
+                  </tr>
+                  <tr className="border-t border-slate-700/30">
+                    <td className="px-3 py-2 text-slate-300 font-medium">SOM穿透率</td>
+                    {scenarioResult.years.map((yr, i) => (
+                      <td key={i} className="text-right px-2 py-2 text-purple-400 font-mono">
+                        {yr.total_revenue > 0 && g.sam_midpoint > 0 ? ((yr.total_revenue / 10000 / g.sam_midpoint) * 100).toFixed(2) + '%' : '—'}
+                      </td>
+                    ))}
+                  </tr>
+                  <tr className="border-t border-cyan-500/20 bg-cyan-500/5">
+                    <td className="px-3 py-2 text-cyan-300 font-bold">ARR (万)</td>
+                    {scenarioResult.years.map((yr, i) => {
+                      const saasPerBed = i < 5 ? g.price_saas_c2 : g.price_saas_c2; // simplified
+                      const arr = yr.active_paying * saasPerBed / 10000;
+                      return <td key={i} className="text-right px-2 py-2 text-cyan-300 font-mono font-bold">{Math.round(arr).toLocaleString()}</td>;
+                    })}
+                  </tr>
+                  <tr className="border-t border-slate-700/30">
+                    <td className="px-3 py-2 text-slate-300 font-medium">EBITDA (万)</td>
+                    {scenarioResult.years.map((yr, i) => (
+                      <td key={i} className={`text-right px-2 py-2 font-mono font-bold ${yr.ebitda >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                        {Math.round(yr.ebitda / 10000).toLocaleString()}
+                      </td>
+                    ))}
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
 
         {/* ===== OPEX ===== */}
         {tab === 'opex' && (
           <div className="space-y-4">
-            <SectionTitle>运营费用明细 (万元)</SectionTitle>
+            <SectionTitle>薪资分解 (人数 × 平均薪资)</SectionTitle>
+            <DarkTable>
+              <DarkRow label="团队人数" values={g.headcount} defaults={DEFAULT_MODEL.global.headcount} onChange={(i, v) => {
+                const hc = [...g.headcount]; hc[i] = v;
+                const sal = [...(ox.salary)]; sal[i] = v * g.avg_salary[i];
+                onModelChange({ ...model, global: { ...g, headcount: hc }, opex: { ...ox, salary: sal } });
+              }} />
+              <DarkRow label="人均薪资(万)" values={g.avg_salary.map(v => v / 10000)} defaults={DEFAULT_MODEL.global.avg_salary.map(v => v / 10000)} onChange={(i, v) => {
+                const as2 = [...g.avg_salary]; as2[i] = v * 10000;
+                const sal = [...(ox.salary)]; sal[i] = g.headcount[i] * v * 10000;
+                onModelChange({ ...model, global: { ...g, avg_salary: as2 }, opex: { ...ox, salary: sal } });
+              }} />
+              <tr className="border-t border-cyan-500/30">
+                <td className="py-2 px-2 text-xs font-bold text-cyan-400">薪资合计 (万)</td>
+                {[0,1,2,3,4].map(i => (
+                  <td key={i} className="py-2 px-1 text-center text-xs font-bold text-cyan-400">{(g.headcount[i] * g.avg_salary[i] / 10000).toFixed(0)}</td>
+                ))}
+              </tr>
+            </DarkTable>
+
+            <SectionTitle>其他运营费用明细 (万元)</SectionTitle>
             <NoteBar text={model.annotations.opex} annotationKey="opex" onChange={setAnnotation} />
             <DarkTable>
-              {(Object.keys(OPEX_LABELS) as (keyof OpExDetail)[]).map(key => (
+              {(Object.keys(OPEX_LABELS) as (keyof OpExDetail)[]).filter(k => k !== 'salary').map(key => (
                 <DarkRow
                   key={key}
                   label={OPEX_LABELS[key]}
@@ -394,6 +577,28 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 })}
               </tr>
             </DarkTable>
+
+            <ScenarioBlock scenario={activeScenario} title="Y6-Y10 OpEx增长率">
+              <div className="grid grid-cols-5 gap-3">
+                <ScenarioDarkInput label="Y6 OpEx增速" value={so.opex_growth_y6} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y6} onChange={v => setSO('opex_growth_y6', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y7 OpEx增速" value={so.opex_growth_y7} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y7} onChange={v => setSO('opex_growth_y7', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y8 OpEx增速" value={so.opex_growth_y8} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y8} onChange={v => setSO('opex_growth_y8', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y9 OpEx增速" value={so.opex_growth_y9} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y9} onChange={v => setSO('opex_growth_y9', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y10 OpEx增速" value={so.opex_growth_y10} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y10} onChange={v => setSO('opex_growth_y10', v)} step={0.01} scenario={activeScenario} />
+              </div>
+              <div className="mt-1 text-[10px] text-slate-500">
+                Finance Plan: 33%→25%→24%→21%→22% (团队扩编+市场开拓+经营杠杆)
+              </div>
+            </ScenarioBlock>
+
+            <ScenarioBlock scenario={activeScenario} title="Y6-Y10 COGS目标比率">
+              <div className="grid grid-cols-2 gap-3">
+                <ScenarioDarkInput label="COGS目标率" value={so.cogs_rate_target} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].cogs_rate_target} onChange={v => setSO('cogs_rate_target', v)} step={0.01} scenario={activeScenario} />
+              </div>
+              <div className="mt-1 text-[10px] text-slate-500">
+                Finance Plan: Y5及以后COGS率保持34% (规模效应稳定)
+              </div>
+            </ScenarioBlock>
           </div>
         )}
 
@@ -445,17 +650,35 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
             <NoteBar text={model.annotations.milestones} annotationKey="milestones" onChange={setAnnotation} />
 
             <p className="text-xs text-slate-300">设置前置活动后，该活动的开始月份 = 前置活动结束月份 + Lag + 1。修改前置活动时所有依赖链自动重算。拖拽卡片可调整顺序。</p>
+            <p className="text-[11px] text-slate-500">时间线: Best=激进时间线, Base=标准时间线。切换场景面板顶部的时间线选择器时自动使用对应里程碑。</p>
+
+            {/* Milestone → EBITDA impact preview */}
+            <div className="rounded-lg bg-slate-800/40 border border-slate-700/30 p-3">
+              <div className="text-[11px] text-slate-400 mb-1 font-semibold">里程碑→EBITDA 联动影响 (当前时间线: {msCase === 'best' ? '🚀激进' : '📊标准'})</div>
+              <div className="flex gap-4 text-[11px]">
+                {[1,2,3,4].map(yi => {
+                  const ebitda = (msCase === 'best' ? resultBest : resultBase).years[yi]?.ebitda ?? 0;
+                  return (
+                    <span key={yi} className={ebitda >= 0 ? 'text-green-400' : 'text-red-400'}>
+                      Y{yi + 1}: ¥{Math.round(ebitda / 10000)}万
+                    </span>
+                  );
+                })}
+                <span className="text-slate-500">|</span>
+                <span className="text-slate-400">EBITDA转正: Y{((msCase === 'best' ? resultBest : resultBase).years.findIndex(yr => yr.ebitda > 0) + 1) || '?'}</span>
+              </div>
+            </div>
 
             {/* Resolved preview */}
             {(() => {
-              const resolved = resolveMilestones(currentMs);
+              const resolved = resolveMilestones(editMs);
               const otherResolved = resolveMilestones(otherMs);
               // Build a lookup for cross-reference by ID
               const otherMap = new Map(otherResolved.map(m => [m.id, m]));
 
               return (
                 <div className="space-y-2">
-                  {currentMs.map((m, i) => {
+                  {editMs.map((m, i) => {
                     const rm = resolved[i];
                     const duration = m.endM - m.startM + 1;
                     const resolvedDuration = rm.endM - rm.startM + 1;
@@ -500,7 +723,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                             <span className="text-slate-400 cursor-grab text-sm select-none" title="拖拽排序">⠇</span>
                             <div className="flex flex-col gap-0.5">
                               <button onClick={() => moveMilestone(i, -1)} disabled={i === 0} className="text-slate-400 hover:text-cyan-400 disabled:opacity-20 text-xs leading-none px-0.5">▲</button>
-                              <button onClick={() => moveMilestone(i, 1)} disabled={i === currentMs.length - 1} className="text-slate-400 hover:text-cyan-400 disabled:opacity-20 text-xs leading-none px-0.5">▼</button>
+                              <button onClick={() => moveMilestone(i, 1)} disabled={i === editMs.length - 1} className="text-slate-400 hover:text-cyan-400 disabled:opacity-20 text-xs leading-none px-0.5">▼</button>
                             </div>
                           </div>
                           <input value={m.id} onChange={e => setMilestone(i, 'id', e.target.value)} className="w-24 bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-cyan-300 font-mono outline-none focus:border-cyan-500/50" placeholder="id" />
@@ -531,14 +754,14 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                             value={m.predecessorId || ''}
                             onChange={e => {
                               const val = e.target.value || null;
-                              let next = currentMs.map((item, j) => j === i ? { ...item, predecessorId: val, manualStart: !val } : item);
+                              let next = editMs.map((item, j) => j === i ? { ...item, predecessorId: val, manualStart: !val } : item);
                               next = resolveMilestones(next);
                               onModelChange({ ...model, [msKey]: next });
                             }}
                             className="bg-slate-700/50 border border-slate-600/50 rounded-md px-2 py-1.5 text-xs text-white outline-none focus:border-cyan-500/50 max-w-[120px]"
                           >
                             <option value="">无</option>
-                            {currentMs.filter(other => other.id !== m.id).map(other => (
+                            {editMs.filter(other => other.id !== m.id).map(other => (
                               <option key={other.id} value={other.id}>{other.id}</option>
                             ))}
                           </select>
@@ -587,30 +810,29 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
         {tab === 'projection' && (() => {
           const fmtWan = (n: number) => { const v = n / 10000; return v >= 10000 ? `${(v / 10000).toFixed(2)}亿` : `${Math.round(v)}万`; };
 
-          // Calculator now produces 10 years directly
-          const bestRevs: number[] = resultBest.years.map(yr => yr.total_revenue);
-          const baseRevs: number[] = resultBase.years.map(yr => yr.total_revenue);
+          const scRevs: number[] = scenarioResult.years.map(yr => yr.total_revenue);
 
           return (
             <div className="space-y-4">
-              <SectionTitle>1–10年销售额测算</SectionTitle>
-              <p className="text-xs text-slate-300">Year 1–5 由模型自动计算 · Year 6–10 基于 Year 5 按年增长率复合推演</p>
+              <SectionTitle>1–10年测算 — {activeScenario === 'optimistic' ? '🟢乐观' : activeScenario === 'conservative' ? '🟠保守' : '🔵中性'} × {activeTimeline === 'aggressive' ? '🚀激进' : '📊标准'}</SectionTitle>
+              <p className="text-xs text-slate-300">Y1–5 由模型自动计算 · Y6–10 基于Y5按场景增长率推演 · 行业对标: 推想30-50% / 鹰瞳25-40%</p>
 
-              <SectionTitle>年增长率设置 (Y6–Y10)</SectionTitle>
-              <div className="grid grid-cols-5 gap-3">
-                <DarkInput label="Y6 增长率" value={g.growth_y6} def={DEFAULT_MODEL.global.growth_y6} onChange={v => setG('growth_y6', v)} step={0.05} />
-                <DarkInput label="Y7 增长率" value={g.growth_y7} def={DEFAULT_MODEL.global.growth_y7} onChange={v => setG('growth_y7', v)} step={0.05} />
-                <DarkInput label="Y8 增长率" value={g.growth_y8} def={DEFAULT_MODEL.global.growth_y8} onChange={v => setG('growth_y8', v)} step={0.05} />
-                <DarkInput label="Y9 增长率" value={g.growth_y9} def={DEFAULT_MODEL.global.growth_y9} onChange={v => setG('growth_y9', v)} step={0.05} />
-                <DarkInput label="Y10 增长率" value={g.growth_y10} def={DEFAULT_MODEL.global.growth_y10} onChange={v => setG('growth_y10', v)} step={0.05} />
-              </div>
+              <ScenarioBlock scenario={activeScenario} title="Y6-Y10 收入增长率">
+                <div className="grid grid-cols-5 gap-3">
+                  <ScenarioDarkInput label="Y6 增长率" value={so.growth_y6} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].growth_y6} onChange={v => setSO('growth_y6', v)} step={0.05} scenario={activeScenario} />
+                  <ScenarioDarkInput label="Y7 增长率" value={so.growth_y7} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].growth_y7} onChange={v => setSO('growth_y7', v)} step={0.05} scenario={activeScenario} />
+                  <ScenarioDarkInput label="Y8 增长率" value={so.growth_y8} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].growth_y8} onChange={v => setSO('growth_y8', v)} step={0.05} scenario={activeScenario} />
+                  <ScenarioDarkInput label="Y9 增长率" value={so.growth_y9} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].growth_y9} onChange={v => setSO('growth_y9', v)} step={0.05} scenario={activeScenario} />
+                  <ScenarioDarkInput label="Y10 增长率" value={so.growth_y10} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].growth_y10} onChange={v => setSO('growth_y10', v)} step={0.05} scenario={activeScenario} />
+                </div>
+              </ScenarioBlock>
 
-              <SectionTitle>10年销售额预览 (Best Case 🚀)</SectionTitle>
+              <SectionTitle>10年收入 + EBITDA 预览</SectionTitle>
               <div className="overflow-x-auto rounded-lg border border-slate-700/50">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-slate-800/80">
-                      <th className="text-left px-3 py-2 text-cyan-400 font-semibold">Year</th>
+                      <th className="text-left px-3 py-2 text-cyan-400 font-semibold w-[100px]">指标</th>
                       {Array.from({ length: 10 }, (_, i) => (
                         <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
                           Y{i + 1}{i >= 5 ? ' ⬆' : ''}
@@ -620,61 +842,52 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                   </thead>
                   <tbody>
                     <tr className="border-t border-slate-700/30">
-                      <td className="px-3 py-2 text-slate-400">收入 (万)</td>
-                      {bestRevs.map((r, i) => (
-                        <td key={i} className={`text-right px-2 py-2 font-mono ${i < 5 ? 'text-slate-200' : 'text-orange-300'}`}>
-                          {fmtWan(r)}
-                        </td>
+                      <td className="px-3 py-2 text-slate-400">收入</td>
+                      {scRevs.map((r, i) => (
+                        <td key={i} className={`text-right px-2 py-2 font-mono ${i < 5 ? 'text-slate-200' : 'text-orange-300'}`}>{fmtWan(r)}</td>
                       ))}
                     </tr>
                     <tr className="border-t border-slate-700/30">
                       <td className="px-3 py-2 text-slate-400">YoY</td>
-                      {bestRevs.map((r, i) => (
-                        <td key={i} className="text-right px-2 py-2 text-slate-400 font-mono">
-                          {i === 0 ? '—' : bestRevs[i - 1] === 0 ? '—' : `${((r / bestRevs[i - 1] - 1) * 100).toFixed(0)}%`}
+                      {scRevs.map((r, i) => {
+                        const pct = i === 0 ? null : scRevs[i - 1] === 0 ? null : (r / scRevs[i - 1] - 1) * 100;
+                        const isAnomaly = pct !== null && (pct > 200 || pct < -50);
+                        return (
+                          <td key={i} className={`text-right px-2 py-2 font-mono ${isAnomaly ? 'text-amber-400' : 'text-slate-400'}`}>
+                            {pct === null ? '—' : `${pct.toFixed(0)}%`}
+                            {isAnomaly && <span className="text-[8px] block text-amber-500">⚠</span>}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">EBITDA</td>
+                      {scenarioResult.years.map((yr, i) => (
+                        <td key={i} className={`text-right px-2 py-2 font-mono font-bold ${yr.ebitda >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {fmtWan(yr.ebitda)}
                         </td>
                       ))}
+                    </tr>
+                    <tr className="border-t border-cyan-500/20 bg-cyan-500/5">
+                      <td className="px-3 py-2 text-cyan-300 font-bold">ARR</td>
+                      {scenarioResult.years.map((yr, i) => {
+                        const arr = yr.active_paying * g.price_saas_c2 / 10000;
+                        return <td key={i} className="text-right px-2 py-2 text-cyan-300 font-mono font-bold">{fmtWan(arr * 10000)}</td>;
+                      })}
                     </tr>
                   </tbody>
                 </table>
               </div>
 
-              <SectionTitle>10年销售额预览 (Base Case 📊)</SectionTitle>
-              <div className="overflow-x-auto rounded-lg border border-slate-700/50">
-                <table className="w-full text-xs">
-                  <thead>
-                    <tr className="bg-slate-800/80">
-                      <th className="text-left px-3 py-2 text-cyan-400 font-semibold">Year</th>
-                      {Array.from({ length: 10 }, (_, i) => (
-                        <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
-                          Y{i + 1}{i >= 5 ? ' ⬆' : ''}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="border-t border-slate-700/30">
-                      <td className="px-3 py-2 text-slate-400">收入 (万)</td>
-                      {baseRevs.map((r, i) => (
-                        <td key={i} className={`text-right px-2 py-2 font-mono ${i < 5 ? 'text-slate-200' : 'text-orange-300'}`}>
-                          {fmtWan(r)}
-                        </td>
-                      ))}
-                    </tr>
-                    <tr className="border-t border-slate-700/30">
-                      <td className="px-3 py-2 text-slate-400">YoY</td>
-                      {baseRevs.map((r, i) => (
-                        <td key={i} className="text-right px-2 py-2 text-slate-400 font-mono">
-                          {i === 0 ? '—' : baseRevs[i - 1] === 0 ? '—' : `${((r / baseRevs[i - 1] - 1) * 100).toFixed(0)}%`}
-                        </td>
-                      ))}
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              {/* YoY anomaly explanation for Base/standard timeline */}
+              {activeTimeline === 'standard' && (
+                <div className="rounded-lg p-3 bg-amber-500/10 border border-amber-500/30 text-[11px] text-amber-300 leading-relaxed">
+                  ⚠ <strong>标准时间线 YoY 异常说明:</strong> Base Case中Y3首年商业化→Y4仅续约收入(死亡谷/无新硬件+授权金消失)→Y5 C3大规模部署反弹。这是有意的保守场景设计，非计算错误。
+                </div>
+              )}
 
               <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-xs text-slate-400 leading-relaxed">
-                💡 Y1–Y5 收入由部署数量×定价×SaaS续约模型自动计算。Y6–Y10 基于 Y5 收入按上方增长率逐年复合推演，OpEx按半速增长(经营杠杆)。
+                💡 Y1–5由部署量×定价×SaaS续约自动计算。Y6–10按场景增长率推演。ARR = 活跃付费床位 × 年化单床SaaS (¥{(g.price_saas_c2 / 10000).toFixed(2)}万/床)。续约率={Math.round(so.rr_base * 100)}%。
               </div>
             </div>
           );
@@ -739,6 +952,77 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
             )}
           </div>
         )}
+      </div>
+
+      {/* Archive Sidebar */}
+      {showArchive && (
+        <div className="w-72 flex-shrink-0 border-l border-slate-700/50 bg-slate-900/60 px-4 py-5 overflow-y-auto max-h-[600px]">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-bold text-purple-300">📚 存档历史</h3>
+            <button onClick={() => setShowArchive(false)} className="text-slate-400 hover:text-slate-200 text-xs">✕</button>
+          </div>
+          {archives.length === 0 ? (
+            <p className="text-xs text-slate-500">暂无存档。接受参数变更后将自动生成。</p>
+          ) : (
+            <div className="space-y-2">
+              {archives.map(a => (
+                <div key={a.id} className={`rounded-lg border p-2.5 space-y-1.5 ${
+                  a.type === 'financial_plan' ? 'border-cyan-500/30 bg-cyan-500/5' :
+                  a.type === 'bp' ? 'border-green-500/30 bg-green-500/5' :
+                  'border-purple-500/30 bg-purple-500/5'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <span className={`text-[10px] font-bold uppercase tracking-wider ${
+                      a.type === 'financial_plan' ? 'text-cyan-400' :
+                      a.type === 'bp' ? 'text-green-400' : 'text-purple-400'
+                    }`}>
+                      {a.type === 'financial_plan' ? '📄 Financial Plan' :
+                       a.type === 'bp' ? '📋 BP' : '📊 Roadshow'}
+                    </span>
+                    <span className="text-[10px] text-slate-500">{a.version}</span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">{a.label}</p>
+                  <p className="text-[10px] text-slate-500">{new Date(a.timestamp).toLocaleString('zh-CN')}</p>
+                  <div className="flex gap-1.5">
+                    <button
+                      onClick={() => {
+                        if (a.modelSnapshot) {
+                          onModelChange(a.modelSnapshot);
+                        }
+                      }}
+                      className="px-2 py-0.5 text-[10px] rounded bg-slate-700/50 border border-slate-600/50 text-slate-300 hover:bg-slate-600/50 transition-all"
+                    >
+                      加载参数
+                    </button>
+                    <button
+                      onClick={() => {
+                        const ext = a.type === 'roadshow' ? '.html' : '.md';
+                        const name = a.type === 'financial_plan' ? 'ARIA_Financial_Plan' :
+                                     a.type === 'bp' ? 'ARIA_BP' : 'ARIA_Roadshow';
+                        downloadFile(a.content, `${name}_${a.version}${ext}`);
+                      }}
+                      className="px-2 py-0.5 text-[10px] rounded bg-slate-700/50 border border-slate-600/50 text-slate-300 hover:bg-slate-600/50 transition-all"
+                    >
+                      下载
+                    </button>
+                    <button
+                      onClick={async () => {
+                        if (a.id) {
+                          await deleteArchive(a.id);
+                          refreshArchives();
+                        }
+                      }}
+                      className="px-2 py-0.5 text-[10px] rounded bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20 transition-all"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
       </div>
 
       {/* Validation warnings */}
@@ -908,6 +1192,48 @@ function FundingCard({ title, color, children }: { title: string; color: string;
     <div className={`rounded-xl bg-gradient-to-br ${color} border p-4 space-y-3`}>
       <div className="text-xs text-slate-300 font-bold uppercase tracking-wider">{title}</div>
       {children}
+    </div>
+  );
+}
+
+const SCENARIO_COLORS: Record<string, { border: string; bg: string; text: string; label: string }> = {
+  neutral: { border: 'border-blue-500/40', bg: 'bg-blue-500/8', text: 'text-blue-300', label: '🔵 中性' },
+  optimistic: { border: 'border-green-500/40', bg: 'bg-green-500/8', text: 'text-green-300', label: '🟢 乐观' },
+  conservative: { border: 'border-orange-500/40', bg: 'bg-orange-500/8', text: 'text-orange-300', label: '🟠 保守' },
+};
+
+function ScenarioBlock({ scenario, title, children }: { scenario: string; title: string; children: React.ReactNode }) {
+  const c = SCENARIO_COLORS[scenario] || SCENARIO_COLORS.neutral;
+  return (
+    <div className={`rounded-xl ${c.bg} border ${c.border} p-4 space-y-3`}>
+      <div className="flex items-center gap-2">
+        <span className={`text-xs font-bold uppercase tracking-wider ${c.text}`}>{c.label} — {title}</span>
+        <span className="text-[10px] text-slate-500">场景专属参数</span>
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function ScenarioDarkInput({ label, value, def, onChange, step = 0.01, scenario }: {
+  label: string; value: number; def: number; onChange: (v: number) => void; step?: number; scenario: string;
+}) {
+  const modified = Math.abs(value - def) > 0.0001;
+  const c = SCENARIO_COLORS[scenario] || SCENARIO_COLORS.neutral;
+  return (
+    <div>
+      <label className={`text-xs block mb-0.5 uppercase tracking-wider ${c.text}`}>{label}</label>
+      <input
+        type="number"
+        value={value}
+        step={step}
+        onChange={e => onChange(Number(e.target.value))}
+        className={`w-full px-2.5 py-1.5 text-xs rounded-lg outline-none transition-all ${
+          modified
+            ? `${c.bg} border ${c.border} ${c.text} shadow-sm`
+            : 'bg-slate-800/50 border border-slate-700/50 text-slate-300'
+        } focus:border-cyan-500/60 focus:shadow-md focus:shadow-cyan-500/10`}
+      />
     </div>
   );
 }

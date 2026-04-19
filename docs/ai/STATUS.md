@@ -39,6 +39,11 @@
 | 路演页 | ✅ | /roadshow 独立页面 |
 | 答疑页 | ✅ | /qa 独立页面 |
 | GitHub Pages | ✅ | 部署成功，run_attempt:2 |
+| **变更检测系统** | **✅** | **参数变更→影响BP章节+路演页提示，ChangeBanner组件** |
+| **接受变更流** | **✅** | **自动生成Financial Plan + 更新BP数字 + 更新路演数据** |
+| **IndexedDB文档存档** | **✅** | **版本化存储Financial Plan/BP/Roadshow快照** |
+| **参数面板存档侧栏** | **✅** | **右侧栏显示历史版本，支持加载参数/下载/删除** |
+| **SAM/敏感性参数** | **✅** | **SAM中值+敏感性摆幅已加入定价tab** |
 
 ## 待完成改善项（P1）
 
@@ -54,10 +59,14 @@
 
 | 文件 | 路径 | 说明 |
 |------|------|------|
-| BP全文 v2 | `docs/ARIA_BP_v2_Latest.md` | §1-§11，38.9KB |
+| BP全文 v2 | `docs/ARIA_BP_External.md` | §1-§11，38.9KB |
 | 财务计划 v2.2（合并版） | `docs/ARIA_Financial_Plan_latest.md` | 10年主表+SOM+§0 Simulator集成说明+§1 BP映射表（§源→§目标格式） |
 | ~~集成规划~~ | ~~`docs/integration/ARIA_FINANCE_PLAN_V2.md`~~ | **已删除**，内容合并入财务计划 v2.2 |
 | BP源数据(code) | `src/lib/bp-reference.ts` | BP_MAIN_TABLE / BP_SOM / detectConflicts() |
+| 变更检测 | `src/lib/changeTracker.ts` | detectChanges() 参数变更检测 |
+| 文档生成 | `src/lib/docGenerator.ts` | generateFinancialPlan() + patchBPSections() |
+| 存档系统 | `src/lib/archiveStore.ts` | IndexedDB版本化文档存档 |
+| 变更横幅 | `src/components/ChangeBanner.tsx` | 参数变更提示+接受按钮 |
 
 > ⚡ 所有Agent应以 `docs/` 下的BP文件为权威数据源，`src/lib/bp-reference.ts` 为代码级数据对照。
 
@@ -67,8 +76,9 @@
 
 | 日期 | 变更 | 负责人 |
 |------|------|--------|
+| 2026-04-19 | 实现Source-of-Truth架构：参数面板变更检测→ChangeBanner→接受变更自动导出Financial Plan+更新BP+路演数据；IndexedDB版本化存档+参数面板右侧栏历史；新增SAM中值+敏感性参数 | GitHub Copilot |
 | 2026-04-19 | 合并 Financial_Plan v2.1 + FINANCE_PLAN_V2.md → v2.2合并版；映射ID从 M-01~M-07 改为 §源→§目标 格式；新增§0集成说明；删除 FINANCE_PLAN_V2.md | GitHub Copilot |
-| 2026-04-19 | BP源文件迁入workspace: `docs/ARIA_BP_v2_Latest.md` + `docs/ARIA_Financial_Plan_latest.md` | GitHub Copilot |
+| 2026-04-19 | BP源文件迁入workspace: `docs/ARIA_BP_External.md` + `docs/ARIA_Financial_Plan_latest.md` | GitHub Copilot |
 | 2026-04-19 | 完成参考文件(5个)审阅，确认6/7项已实现，3项待改善(audit写入、impact diff、sensitivity对比) | GitHub Copilot |
 | 2026-04-19 | GitHub Pages部署成功(run_attempt:2) | GitHub Copilot |
 | 2026-04-19 | 推送 `98b2b4d`：新增 ARIA v2 dashboard、parameters、数据合约、计算引擎和追踪组件 | GitHub Copilot |

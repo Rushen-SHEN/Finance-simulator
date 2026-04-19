@@ -1,10 +1,13 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useMemo } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL } from '@/lib/defaults';
 import { loadModel, saveModel, clearModel } from '@/lib/storage';
 import { exportPDF, exportPNG } from '@/lib/exportUtils';
+import { detectChanges, ChangeReport } from '@/lib/changeTracker';
+import { generateFinancialPlan, patchBPSections, extractRoadshowUpdates } from '@/lib/docGenerator';
+import { saveArchive } from '@/lib/archiveStore';
 import Header from '@/components/Header';
 import StatusStrip from '@/components/StatusStrip';
 import PhaseOverview from '@/components/PhaseOverview';
@@ -18,6 +21,7 @@ import FundingPlan from '@/components/FundingPlan';
 import GanttTimeline from '@/components/GanttTimeline';
 import Assumptions from '@/components/Assumptions';
 import ParameterPanel from '@/components/ParameterPanel';
+import ChangeBanner from '@/components/ChangeBanner';
 
 const CODE_HASH = 'c50281c3dd92d836d2ba7702fad19f778404cddd49059afc7b2e6e537f436ea7';
 
@@ -29,12 +33,14 @@ async function sha256(text: string): Promise<string> {
 export default function Home() {
   const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
   const [showParams, setShowParams] = useState(false);
-  const [scenario, setScenario] = useState<string>('neutral');
   const [mounted, setMounted] = useState(false);
   const [unlocked, setUnlocked] = useState(false);
   const [code, setCode] = useState('');
   const [codeError, setCodeError] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
+
+  const scenario = model.active_scenario || 'neutral';
+  const activeTimeline = model.active_timeline || 'aggressive';
 
   // Initialize from localStorage — use layout effect to avoid flash
   const [initialized, setInitialized] = useState(false);
@@ -61,8 +67,86 @@ export default function Home() {
     }
   }, [code]);
 
-  const resultBest: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best);
-  const resultBase: CalcResult = calculate(model.global, model.yearly_base, model.opex, model.milestones_base);
+  const so = model.scenario_overrides?.[scenario];
+  const resultBest: CalcResult = calculate(model.global, model.yearly, model.opex, model.milestones_best, so);
+  const resultBase: CalcResult = calculate(model.global, model.yearly_base, model.opex, model.milestones_base, so);
+
+  // Change detection — track baseline model (last accepted state)
+  const [acceptedModel, setAcceptedModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
+  const [acceptedInit, setAcceptedInit] = useState(false);
+  const [accepting, setAccepting] = useState(false);
+  const [archiveVersion, setArchiveVersion] = useState(0);
+  const [lastAcceptMsg, setLastAcceptMsg] = useState<string | null>(null);
+
+  // Initialize accepted model from localStorage
+  if (!acceptedInit && typeof window !== 'undefined') {
+    const saved = loadModel();
+    setAcceptedModel(structuredClone(saved));
+    setAcceptedInit(true);
+  }
+
+  const changeReport: ChangeReport = useMemo(
+    () => detectChanges(acceptedModel, model),
+    [acceptedModel, model]
+  );
+
+  // Accept changes: generate documents, archive, update roadshow
+  const handleAcceptChanges = useCallback(async () => {
+    setAccepting(true);
+    setLastAcceptMsg(null);
+    try {
+      const now = Date.now();
+
+      // 1. Generate Financial Plan
+      const fp = generateFinancialPlan(model, resultBest, resultBase);
+      await saveArchive({
+        timestamp: now,
+        version: fp.version,
+        type: 'financial_plan',
+        label: `参数变更自动生成 — ${changeReport.changedGroups.map(g => g.label).join(', ')}`,
+        content: fp.content,
+        modelSnapshot: structuredClone(model),
+      });
+
+      // 2. Patch BP document (read current, patch numbers)
+      let bpContent = '';
+      try {
+        const resp = await fetch('/docs/ARIA_BP_External.md');
+        if (resp.ok) bpContent = await resp.text();
+      } catch { /* ignore — BP may not be fetchable in static build */ }
+
+      if (bpContent) {
+        const bp = patchBPSections(bpContent, model, resultBest);
+        await saveArchive({
+          timestamp: now,
+          version: bp.version,
+          type: 'bp',
+          label: `BP数字表格更新 — ${changeReport.affectedMappings.map(m => m.mappingId).join(', ')}`,
+          content: bp.content,
+          modelSnapshot: structuredClone(model),
+        });
+      }
+
+      // 3. Save roadshow data snapshot
+      const roadshowData = extractRoadshowUpdates(model, resultBest);
+      await saveArchive({
+        timestamp: now,
+        version: fp.version,
+        type: 'roadshow',
+        label: `路演数据更新`,
+        content: JSON.stringify(roadshowData, null, 2),
+        modelSnapshot: structuredClone(model),
+      });
+
+      // 4. Update baseline
+      setAcceptedModel(structuredClone(model));
+      setArchiveVersion(v => v + 1);
+      setLastAcceptMsg(`✅ 已生成 Financial Plan ${fp.version}${bpContent ? ` + BP更新` : ''} + 路演数据快照`);
+    } catch (err) {
+      setLastAcceptMsg(`❌ 导出失败: ${err instanceof Error ? err.message : String(err)}`);
+    }
+    setAccepting(false);
+  }, [model, resultBest, resultBase, changeReport]);
 
   const handleModelChange = useCallback((m: ModelInputs) => {
     setModel(m);
@@ -71,20 +155,15 @@ export default function Home() {
 
   const handleReset = useCallback(() => {
     clearModel();
-    setModel(structuredClone(DEFAULT_MODEL));
-    setScenario('neutral');
+    const fresh = structuredClone(DEFAULT_MODEL);
+    setModel(fresh);
+    setAcceptedModel(structuredClone(fresh));
+    setLastAcceptMsg(null);
   }, []);
 
   const handleScenario = useCallback((s: string) => {
-    setScenario(s);
     setModel(prev => {
-      let rr = 0.70;
-      switch (s) {
-        case 'optimistic': rr = 0.85; break;
-        case 'conservative': rr = 0.55; break;
-        case 'delayed': rr = 0.70; break;
-      }
-      const next = { ...prev, global: { ...prev.global, rr_base: rr } };
+      const next = { ...prev, active_scenario: s as ModelInputs['active_scenario'] };
       saveModel(next);
       return next;
     });
@@ -161,7 +240,20 @@ export default function Home() {
               onModelChange={handleModelChange}
               onReset={handleReset}
               onClose={() => setShowParams(false)}
+              archiveVersion={archiveVersion}
             />
+          </div>
+        )}
+
+        {/* Change detection banner */}
+        {showParams && (
+          <div data-no-export>
+            <ChangeBanner report={changeReport} onAccept={handleAcceptChanges} accepting={accepting} />
+            {lastAcceptMsg && (
+              <div className="mx-4 sm:mx-8 mb-3 px-4 py-2 rounded-lg border border-slate-700/50 bg-slate-800/50 text-xs text-slate-300">
+                {lastAcceptMsg}
+              </div>
+            )}
           </div>
         )}
 

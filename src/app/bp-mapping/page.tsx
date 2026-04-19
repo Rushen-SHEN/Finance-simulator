@@ -6,7 +6,7 @@ import { DEFAULT_MODEL, YEAR_LABELS_SHORT } from '@/lib/defaults';
 import { loadModel, loadAuditLog, AuditEntry } from '@/lib/storage';
 import {
   BP_MAIN_TABLE, BP_SOM, BP_CHANNEL,
-  BP_MAPPING_BLOCKS, BP_SENSITIVITY,
+  BP_MAPPING_BLOCKS, BP_SENSITIVITY, DOC_VERSIONS,
   DataConflict, detectConflicts, generateAuditReport,
 } from '@/lib/bp-reference';
 
@@ -123,11 +123,11 @@ export default function BPMappingPage() {
           <div className="flex items-center justify-between flex-wrap gap-4">
             <div>
               <div className="text-sm font-bold text-white">
-                {conflicts.length === 0 && '✓ 所有数据与BP v2.1一致'}
+                {conflicts.length === 0 && `✓ 所有数据与${DOC_VERSIONS.bp}一致`}
                 {conflicts.length > 0 && `⚠️ 发现 ${conflicts.length} 处数据冲突`}
               </div>
               <div className="text-xs text-slate-400 mt-1">
-                BP版本: ARIA_Financial_Plan_latest.md v2.1 (2026-04-19) · 容差: 5% · 严重: &gt;20%偏差
+                BP版本: {DOC_VERSIONS.bpFile} ({DOC_VERSIONS.bp}) · FP版本: {DOC_VERSIONS.fpFile} ({DOC_VERSIONS.fp}) · 容差: 5% · 严重: &gt;20%偏差
                 {criticalConflicts.length > 0 && (
                   <span className="text-red-400 ml-2">🔴 严重: {criticalConflicts.length}</span>
                 )}
@@ -137,7 +137,7 @@ export default function BPMappingPage() {
               </div>
             </div>
             <div className="text-xs text-slate-500">
-              Source of Truth: ARIA_Financial_Plan_latest.md
+              Source of Truth: {DOC_VERSIONS.bpFile} ({DOC_VERSIONS.bp})
             </div>
           </div>
         </div>
@@ -177,11 +177,11 @@ export default function BPMappingPage() {
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
                       <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
                         hasCritical ? 'bg-red-500/20 text-red-400' : hasWarning ? 'bg-amber-500/20 text-amber-400' : 'bg-cyan-500/20 text-cyan-400'
                       }`}>{block.id}</span>
-                      <span className="text-sm font-bold text-white">{block.content.split(' ')[0]}</span>
+                      <span className="text-sm font-bold text-white">{block.content}</span>
                       {blockConflicts.length > 0 && (
                         <span className={`text-[10px] px-1.5 py-0.5 rounded-full ${
                           hasCritical ? 'bg-red-500/20 text-red-400' : 'bg-amber-500/20 text-amber-400'
@@ -193,13 +193,12 @@ export default function BPMappingPage() {
                         <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400">✓</span>
                       )}
                     </div>
-                    <div className="text-xs text-slate-400">{block.content}</div>
-                    <div className="flex gap-3 mt-2 text-[11px]">
-                      <span className="text-slate-500">来源: {block.source}</span>
-                      <span className="text-slate-500">→</span>
-                      <span className="text-cyan-400/70">{block.bpSection}</span>
+                    <div className="text-xs text-slate-300 font-medium mt-1.5 px-2 py-1 rounded bg-slate-800/60 border border-slate-700/40 inline-block">
+                      <span className="text-cyan-400/80">{block.sourceLabel}</span>
+                      <span className="text-slate-500 mx-1.5">→</span>
+                      <span className="text-amber-400/80">{block.targetLabel}</span>
                     </div>
-                    <div className="text-[11px] text-slate-600 mt-1">触发: {block.trigger}</div>
+                    <div className="text-[11px] text-slate-600 mt-1.5">触发: {block.trigger}</div>
                   </div>
                   <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
                 </div>
@@ -367,7 +366,7 @@ export default function BPMappingPage() {
             </table>
           </div>
           <div className="text-[10px] text-slate-500 mt-2 flex gap-4">
-            <span>🟡 BP值 (amber) = ARIA_Financial_Plan_latest.md v2.1</span>
+            <span>🟡 BP值 (amber) = {DOC_VERSIONS.bpFile} ({DOC_VERSIONS.bp})</span>
             <span>🔵 模拟器值 (cyan) = 当前参数计算结果</span>
             <span>🔴 冲突 (red) = 偏差&gt;5%</span>
           </div>

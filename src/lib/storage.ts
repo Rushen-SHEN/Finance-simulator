@@ -112,6 +112,15 @@ function mergeWithDefaults(partial: Partial<ModelInputs>): ModelInputs {
     milestones_best: partial.milestones_best || d.milestones_best.map(m => ({ ...m })),
     milestones_base: partial.milestones_base || d.milestones_base.map(m => ({ ...m })),
     annotations: { ...d.annotations, ...(partial.annotations || {}) },
+    active_scenario: partial.active_scenario || d.active_scenario,
+    active_timeline: partial.active_timeline || d.active_timeline,
+    scenario_overrides: partial.scenario_overrides
+      ? {
+          neutral: { ...d.scenario_overrides.neutral, ...(partial.scenario_overrides.neutral || {}) },
+          optimistic: { ...d.scenario_overrides.optimistic, ...(partial.scenario_overrides.optimistic || {}) },
+          conservative: { ...d.scenario_overrides.conservative, ...(partial.scenario_overrides.conservative || {}) },
+        }
+      : structuredClone(d.scenario_overrides),
   };
 }
 

@@ -1,5 +1,25 @@
-// ARIA Financial Model Calculator — BPcc v3.1
+// ARIA Financial Model Calculator — BPcc v3.2
 // Full breakdown: OpEx 8 items, COGS sub-items, distributor channel, milestones, funding
+// Scenario system: neutral / optimistic / conservative × aggressive / standard timeline
+
+export type Scenario = 'neutral' | 'optimistic' | 'conservative';
+export type Timeline = 'aggressive' | 'standard';
+
+export interface ScenarioOverrides {
+  rr_base: number;
+  growth_y6: number;
+  growth_y7: number;
+  growth_y8: number;
+  growth_y9: number;
+  growth_y10: number;
+  bed_growth_factor: number;    // multiplier on deployment: 1.0=neutral, 1.15=optimistic, 0.85=conservative
+  opex_growth_y6: number;       // independent OpEx growth for Y6-Y10
+  opex_growth_y7: number;
+  opex_growth_y8: number;
+  opex_growth_y9: number;
+  opex_growth_y10: number;
+  cogs_rate_target: number;     // target COGS rate for Y6-Y10 (e.g. 0.34)
+}
 
 export interface GlobalInputs {
   // Pricing (元/bed)
@@ -27,17 +47,28 @@ export interface GlobalInputs {
   // Baxter channel
   baxter_hw_commission: number;
   baxter_saas_commission: number;
+  // Channel structured: license & milestone
+  license_amount: number;       // 前期授权金 (元), default 3000000
+  license_year: number;         // 到账年份 (1-based), default 2 (Y2)
+  milestone_payment: number;    // 里程碑付款 (元), default 2000000
+  milestone_year: number;       // 到账年份 (1-based), default 3 (Y3)
   // ROI value anchors
   value_anchor_c2: number;
   value_anchor_c3: number;
   // Post-Class-III annual revenue growth rate (e.g. 0.30 = 30%)
   post_class3_growth: number;
-  // Per-year growth rates for Y6, Y7, Y8, Y9, Y10 projection
+  // Per-year growth rates for Y6-Y10 (neutral defaults, overridden by scenario)
   growth_y6: number;
   growth_y7: number;
   growth_y8: number;
   growth_y9: number;
   growth_y10: number;
+  // SOM / Sensitivity
+  sam_midpoint: number;           // SAM中值 (万元), default 275000 = 27.5亿
+  sensitivity_bed_swing: number;  // 敏感性摆幅, default 0.15 = ±15%
+  // Salary breakdown
+  headcount: number[];            // [Y1..Y5] number of employees
+  avg_salary: number[];           // [Y1..Y5] average salary per person (元/year)
 }
 
 export interface OpExDetail {
@@ -118,6 +149,9 @@ export interface ModelInputs {
   milestones_best: MilestoneItem[];
   milestones_base: MilestoneItem[];
   annotations: Record<string, string>;
+  active_scenario: Scenario;
+  active_timeline: Timeline;
+  scenario_overrides: Record<Scenario, ScenarioOverrides>;
 }
 
 export interface YearlyCalc {
@@ -268,9 +302,29 @@ export function computeBOM(g: GlobalInputs) {
   };
 }
 
-export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, milestones?: MilestoneItem[]): CalcResult {
+/** Merge GlobalInputs with scenario overrides to produce effective parameters */
+export function mergeScenario(g: GlobalInputs, so: ScenarioOverrides): { rr: number; growths: number[]; bedFactor: number; opexGrowths: number[]; cogsRate: number } {
+  return {
+    rr: so.rr_base,
+    growths: [so.growth_y6, so.growth_y7, so.growth_y8, so.growth_y9, so.growth_y10],
+    bedFactor: so.bed_growth_factor,
+    opexGrowths: [so.opex_growth_y6, so.opex_growth_y7, so.opex_growth_y8, so.opex_growth_y9, so.opex_growth_y10],
+    cogsRate: so.cogs_rate_target,
+  };
+}
+
+/** Derive baxter_license array from structured license/milestone inputs */
+export function deriveLicenseArray(g: GlobalInputs): number[] {
+  const arr = [0, 0, 0, 0, 0];
+  if (g.license_year >= 1 && g.license_year <= 5) arr[g.license_year - 1] += g.license_amount;
+  if (g.milestone_year >= 1 && g.milestone_year <= 5) arr[g.milestone_year - 1] += g.milestone_payment;
+  return arr;
+}
+
+export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, milestones?: MilestoneItem[], scenarioOverride?: ScenarioOverrides): CalcResult {
   const bom = computeBOM(g);
-  const rr = g.rr_base;
+  const rr = scenarioOverride ? scenarioOverride.rr_base : g.rr_base;
+  const bedFactor = scenarioOverride ? scenarioOverride.bed_growth_factor : 1.0;
   const years: YearlyCalc[] = [];
   const directCohorts: { c2: number; c3: number }[] = [];
   const baxterCohorts: { c2: number; c3: number }[] = [];
@@ -282,10 +336,10 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     // Gate deployments by approval timing
     const c2g = gating.c2Gate[i];
     const c3g = gating.c3Gate[i];
-    const dC2 = Math.round((y.direct_c2[i] || 0) * c2g);
-    const dC3 = Math.round((y.direct_c3[i] || 0) * c3g);
-    const bC2 = Math.round((y.baxter_c2[i] || 0) * c2g);
-    const bC3 = Math.round((y.baxter_c3[i] || 0) * c3g);
+    const dC2 = Math.round((y.direct_c2[i] || 0) * c2g * bedFactor);
+    const dC3 = Math.round((y.direct_c3[i] || 0) * c3g * bedFactor);
+    const bC2 = Math.round((y.baxter_c2[i] || 0) * c2g * bedFactor);
+    const bC3 = Math.round((y.baxter_c3[i] || 0) * c3g * bedFactor);
     const totalNew = dC2 + dC3 + bC2 + bC3;
 
     const plannedUpg = y.planned_upgrade[i] || 0;
@@ -381,7 +435,13 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
   }
 
   // === Y6-Y10: Growth-rate projection from Y5 baseline ===
-  const growthRates = [g.growth_y6, g.growth_y7, g.growth_y8, g.growth_y9, g.growth_y10];
+  const growthRates = scenarioOverride
+    ? [scenarioOverride.growth_y6, scenarioOverride.growth_y7, scenarioOverride.growth_y8, scenarioOverride.growth_y9, scenarioOverride.growth_y10]
+    : [g.growth_y6, g.growth_y7, g.growth_y8, g.growth_y9, g.growth_y10];
+  const opexGrowths = scenarioOverride
+    ? [scenarioOverride.opex_growth_y6, scenarioOverride.opex_growth_y7, scenarioOverride.opex_growth_y8, scenarioOverride.opex_growth_y9, scenarioOverride.opex_growth_y10]
+    : growthRates.map(r => r * 0.5); // fallback: half revenue growth
+  const cogsRate = scenarioOverride ? scenarioOverride.cogs_rate_target : -1; // -1 = use auto from Y5
   for (let p = 0; p < 5; p++) {
     const prev = years[4 + p];
     const gr = growthRates[p];
@@ -396,22 +456,22 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     const license = 0; // no one-off license fees in projection years
     const totalRevenue = hwDirect + hwBaxter + upgradeRev + saasDirect + saasBaxter + license;
 
-    // COGS scales with hardware revenue ratio
-    const cogsRatio = prev.total_revenue > 0 ? prev.cogs / prev.total_revenue : 0.35;
-    const cogs = Math.round(totalRevenue * cogsRatio);
+    // COGS: use scenario target rate or auto-derive from Y5
+    const effectiveCogsRate = cogsRate > 0 ? cogsRate : (prev.total_revenue > 0 ? prev.cogs / prev.total_revenue : 0.35);
+    const cogs = Math.round(totalRevenue * effectiveCogsRate);
     const grossProfit = totalRevenue - cogs;
 
-    // OpEx grows at half the revenue growth rate (operating leverage)
-    const opexScale = 1 + gr * 0.5;
+    // OpEx: use independent OpEx growth rates
+    const opexGr = 1 + opexGrowths[p];
     const od = {
-      salary: Math.round(prev.opex_detail.salary * opexScale),
-      cdmo_nre: 0, // NRE done by Y5
+      salary: Math.round(prev.opex_detail.salary * opexGr),
+      cdmo_nre: 0,
       pilot_bom: 0,
       cro: 0,
-      reg: Math.round(prev.opex_detail.reg * opexScale),
-      compliance: Math.round(prev.opex_detail.compliance * opexScale),
-      patent_ai: Math.round(prev.opex_detail.patent_ai * opexScale),
-      travel_ops: Math.round(prev.opex_detail.travel_ops * opexScale),
+      reg: Math.round(prev.opex_detail.reg * opexGr),
+      compliance: Math.round(prev.opex_detail.compliance * opexGr),
+      patent_ai: Math.round(prev.opex_detail.patent_ai * opexGr),
+      travel_ops: Math.round(prev.opex_detail.travel_ops * opexGr),
     };
     const totalOpex = od.salary + od.cdmo_nre + od.pilot_bom + od.cro + od.reg + od.compliance + od.patent_ai + od.travel_ops;
 

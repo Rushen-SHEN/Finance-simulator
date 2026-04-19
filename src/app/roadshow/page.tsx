@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useEffect } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL } from '@/lib/defaults';
 import { loadModel } from '@/lib/storage';
+import { extractRoadshowUpdates } from '@/lib/docGenerator';
 
 export default function RoadshowPage() {
   const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
@@ -23,24 +24,8 @@ export default function RoadshowPage() {
     [model]
   );
 
-  // Derive data updates to send to iframe
-  const dataUpdates = useMemo(() => {
-    const yrs = resultBest.years;
-    const fmt = (v: number) => `¥${Math.round(v / 10000).toLocaleString()} 万`;
-    const ebitdaYear = yrs.findIndex(y => y.ebitda > 0);
-    return {
-      'ebitda-positive': ebitdaYear >= 0 ? `第 ${ebitdaYear + 1} 年` : '未转正',
-      'y5-revenue': fmt(yrs[4].total_revenue),
-      'y2-revenue': fmt(yrs[1].total_revenue),
-      'y3-revenue': fmt(yrs[2].total_revenue),
-      'y4-revenue': fmt(yrs[3].total_revenue),
-      'y5-revenue-detail': fmt(yrs[4].total_revenue),
-      'y2-beds': `${yrs[1].cumulative_beds} 床`,
-      'y3-beds': `${yrs[2].cumulative_beds} 床`,
-      'y4-beds': `${yrs[3].cumulative_beds} 床`,
-      'y5-beds': `${yrs[4].cumulative_beds} 床`,
-    };
-  }, [resultBest]);
+  // Derive data updates to send to iframe (using shared generator)
+  const dataUpdates = useMemo(() => extractRoadshowUpdates(model, resultBest), [model, resultBest]);
 
   // Listen for messages from iframe
   useEffect(() => {

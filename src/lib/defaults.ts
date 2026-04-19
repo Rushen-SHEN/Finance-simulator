@@ -1,5 +1,5 @@
-// ARIA defaults — BPcc v3.1 full breakdown (April 2026)
-import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs } from './calculator';
+// ARIA defaults — BPcc v3.2 full breakdown (April 2026)
+import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, ScenarioOverrides, Scenario } from './calculator';
 
 export const DEFAULT_GLOBAL: GlobalInputs = {
   price_hw_c2: 65000,
@@ -22,6 +22,11 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   rr_base: 0.70,
   baxter_hw_commission: 0.15,
   baxter_saas_commission: 0.35,
+  // Channel structured inputs
+  license_amount: 3000000,    // 前期授权金 ¥300万
+  license_year: 2,            // Y2 到账
+  milestone_payment: 2000000, // 里程碑付款 ¥200万
+  milestone_year: 3,          // Y3 到账
   value_anchor_c2: 62500,
   value_anchor_c3: 80000,
   post_class3_growth: 0.30,
@@ -30,6 +35,11 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   growth_y8: 0.30,
   growth_y9: 0.25,
   growth_y10: 0.25,
+  sam_midpoint: 275000,           // 万元 = 27.5亿
+  sensitivity_bed_swing: 0.15,    // ±15%
+  // Salary breakdown
+  headcount: [6, 12, 18, 25, 30],
+  avg_salary: [270000, 144167, 152222, 144800, 137000],
 };
 
 // Best Case yearly inputs (BPccR2 §5.4 / §9.3)
@@ -55,7 +65,7 @@ export const DEFAULT_YEARLY_BASE: YearlyInputs = {
 };
 
 export const DEFAULT_OPEX: OpExDetail = {
-  salary:     [1420000, 1730000, 2740000, 3620000, 4110000],
+  salary:     [1620000, 1730000, 2740000, 3620000, 4110000],
   cdmo_nre:   [ 800000,       0,       0,       0,       0],
   pilot_bom:  [1280000,       0,       0,       0,       0],
   cro:        [ 300000,  800000,  400000,       0,       0],
@@ -66,20 +76,20 @@ export const DEFAULT_OPEX: OpExDetail = {
 };
 
 export const DEFAULT_FUNDING: FundingInputs = {
-  seed_min: 4000000,
+  seed_min: 5000000,
   seed_max: 6000000,
   seed_dilution: 0.175,
-  preA_min: 4000000,
-  preA_max: 6000000,
+  preA_min: 3000000,
+  preA_max: 5000000,
   preA_dilution: 0.10,
   seriesA_min: 0,
-  seriesA_max: 4000000,
+  seriesA_max: 5000000,
   seriesA_dilution: 0.10,
 };
 
 // Best Case milestones (BPccR2 §11.1)
 export const DEFAULT_MILESTONES_BEST: MilestoneItem[] = [
-  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥400–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 3,  predecessorId: null,     lagMonths: 0, manualStart: true },
+  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥500–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 3,  predecessorId: null,     lagMonths: 0, manualStart: true },
   { id: 'cdmo',        desc: 'CDMO签约+功能原型',                 kpi: '原型验收通过',          type: '研发',   bold: false, startM: 4,  endM: 7,  predecessorId: null,     lagMonths: 0, manualStart: true },
   { id: 'iso',         desc: 'ISO13485质量体系联调',              kpi: '体系审核通过',          type: '注册',   bold: false, startM: 5,  endM: 7,  predecessorId: null,     lagMonths: 0, manualStart: true },
   { id: 'pilot',       desc: '2家医院40床科研部署',               kpi: '三模态数据采集通过',    type: '研发',   bold: false, startM: 10, endM: 12, predecessorId: 'cdmo',   lagMonths: 2, manualStart: false },
@@ -96,7 +106,7 @@ export const DEFAULT_MILESTONES_BEST: MilestoneItem[] = [
 
 // Base Case milestones (BPccR2 §11.1)
 export const DEFAULT_MILESTONES_BASE: MilestoneItem[] = [
-  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥400–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 4,  predecessorId: null,     lagMonths: 0, manualStart: true },
+  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥500–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 4,  predecessorId: null,     lagMonths: 0, manualStart: true },
   { id: 'cdmo',        desc: 'CDMO签约+功能原型',                 kpi: '原型验收通过',          type: '研发',   bold: false, startM: 5,  endM: 10, predecessorId: null,     lagMonths: 0, manualStart: true },
   { id: 'iso',         desc: 'ISO13485质量体系联调',              kpi: '体系审核通过',          type: '注册',   bold: false, startM: 11, endM: 16, predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
   { id: 'pilot',       desc: '2家医院40床科研部署',               kpi: '三模态数据采集通过',    type: '研发',   bold: false, startM: 11, endM: 13, predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
@@ -123,6 +133,33 @@ export const DEFAULT_ANNOTATIONS: Record<string, string> = {
   'roi': 'C2 ¥6.25万/床/年(ICU平均减少1.2天住院+降低并发症) · C3 ¥8万/床/年(预警+诊断双重价值)',
 };
 
+// ============================================================
+// Scenario Overrides Presets
+// ============================================================
+export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
+  neutral: {
+    rr_base: 0.70,
+    growth_y6: 0.30, growth_y7: 0.30, growth_y8: 0.30, growth_y9: 0.25, growth_y10: 0.25,
+    bed_growth_factor: 1.0,
+    opex_growth_y6: 0.33, opex_growth_y7: 0.25, opex_growth_y8: 0.24, opex_growth_y9: 0.21, opex_growth_y10: 0.22,
+    cogs_rate_target: 0.34,
+  },
+  optimistic: {
+    rr_base: 0.85,
+    growth_y6: 0.40, growth_y7: 0.38, growth_y8: 0.35, growth_y9: 0.32, growth_y10: 0.30,
+    bed_growth_factor: 1.15,
+    opex_growth_y6: 0.30, opex_growth_y7: 0.22, opex_growth_y8: 0.20, opex_growth_y9: 0.18, opex_growth_y10: 0.18,
+    cogs_rate_target: 0.32,
+  },
+  conservative: {
+    rr_base: 0.55,
+    growth_y6: 0.20, growth_y7: 0.20, growth_y8: 0.20, growth_y9: 0.18, growth_y10: 0.15,
+    bed_growth_factor: 0.85,
+    opex_growth_y6: 0.35, opex_growth_y7: 0.28, opex_growth_y8: 0.26, opex_growth_y9: 0.24, opex_growth_y10: 0.24,
+    cogs_rate_target: 0.36,
+  },
+};
+
 export const DEFAULT_MODEL: ModelInputs = {
   global: DEFAULT_GLOBAL,
   yearly: DEFAULT_YEARLY,
@@ -132,6 +169,9 @@ export const DEFAULT_MODEL: ModelInputs = {
   milestones_best: DEFAULT_MILESTONES_BEST,
   milestones_base: DEFAULT_MILESTONES_BASE,
   annotations: DEFAULT_ANNOTATIONS,
+  active_scenario: 'neutral',
+  active_timeline: 'aggressive',
+  scenario_overrides: structuredClone(DEFAULT_SCENARIO_OVERRIDES),
 };
 
 // BPccR2 §9.2 Best Case targets (万元)

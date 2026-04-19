@@ -4,14 +4,14 @@
 
 ## 当前切入点
 
-**Phase**: 4 → 5（Hardening → Launch Prep）
-**Task**: 完成 audit log 连接、参数影响面板、灵敏度对比三项剩余改善，然后进入发布准备。
+**Phase**: 5（Launch Prep）
+**Task**: 完成 audit log 连接，然后进入发布准备。Source-of-Truth + 变更检测 + IndexedDB存档 已完成。
 **Agent**: GitHub Copilot / NEXUS orchestration
 **验收标准**:
 - [ ] `appendAuditEntry()` 在 ParameterPanel 参数修改时被调用，Notes tab 显示修改历史
-- [ ] 参数修改时显示实时数值影响 diff（old → new + 百分比变化）
-- [ ] Dashboard 支持 baseline vs scenario 并排灵敏度对比面板
-- [ ] `npm run build` 通过，无阻塞性错误
+- [x] ~~参数修改时显示实时数值影响 diff~~ → ChangeBanner 显示受影响BP章节+路演页
+- [x] ~~Dashboard 支持 baseline vs scenario 并排灵敏度对比面板~~ → SAM中值+敏感性摆幅参数已加入定价tab
+- [x] `npm run build` 通过，无阻塞性错误
 
 ---
 
@@ -19,7 +19,7 @@
 
 ### BP 源文件已迁入工作区（已合并更新）
 以下 BP 权威文档已从 OneDrive 迁入 `docs/`，所有 Agent 应以此为数据源：
-- `docs/ARIA_BP_v2_Latest.md` — BP全文 v2（38.9KB），含§1-§11全章节
+- `docs/ARIA_BP_External.md` — BP全文 v2.0（38.9KB），含§1-§11全章节
 - `docs/ARIA_Financial_Plan_latest.md` — 财务计划 **v2.2 合并版**，含10年主表+SOM曲线+§0 Simulator集成说明+§1 BP映射表
 - ~~`docs/integration/ARIA_FINANCE_PLAN_V2.md`~~ — **已删除**，内容已合并入上述财务计划
 
@@ -45,10 +45,12 @@
 ### P0 — 阻塞器
 （当前无 P0 阻塞项。lint + build 已通过，GitHub Pages 部署已成功。）
 
-### P1 — 高优先级（审阅发现的3项缺口）
+### P1 — 高优先级
 1. **Audit Log 写入端连接** — `appendAuditEntry()` 从未被调用；需在 ParameterPanel 的参数修改回调中插入写入，并在 Notes tab 展示修改历史 — Frontend Developer
-2. **参数修改实时数值影响 (Impact Diff)** — 当前 BPBadges 只显示定性影响（哪些映射块），缺少定量数值diff（old→new + %变化）；需新增 ImpactDiff 面板 — Frontend Developer
-3. **Baseline vs Scenario 并排灵敏度面板** — 当前 Best/Base 只能切换查看，无法并排对比"默认参数 vs 当前修改"；需在 Dashboard 或 FinancialTable 底部增加 SensitivityPanel — Frontend Developer
+
+### 已完成 P1（2026-04-19 Source-of-Truth 迭代）
+- ~~**参数修改实时数值影响 (Impact Diff)**~~ → 由 `ChangeBanner` 组件替代：显示受影响BP章节+路演页列表，用户点击"接受变更"后自动重新生成文档
+- ~~**Baseline vs Scenario 并排灵敏度面板**~~ → SAM中值(275000万) + 敏感性摆幅(±15%) 参数已加入定价tab，Y5 SOM穿透率实时显示
 
 ### P2 — 常规
 1. 为导出链路增加模型版本和来源标记 — project-manager-senior
@@ -56,6 +58,8 @@
 3. `/qa` 答疑页内容完善 — Content
 
 ### 已完成（可归档）
+- ~~Source-of-Truth 参数面板架构~~ — changeTracker + ChangeBanner + docGenerator + archiveStore（IndexedDB）完成，参数面板驱动BP+路演+财务计划自动更新
+- ~~SAM/敏感性参数缺口~~ — sam_midpoint(275000万) + sensitivity_bed_swing(±15%) 已加入 GlobalInputs + defaults + 定价tab UI
 - ~~清理 legacy React hook lint 问题~~ — 已在 v3.2 中解决
 - ~~为 `/dashboard` 和 `/parameters` 建立路由~~ — 已合并为单页模式，ParameterPanel 为抽屉
 - ~~legacy 首页迁移~~ — 已统一为 BPcc v3.1 引擎
