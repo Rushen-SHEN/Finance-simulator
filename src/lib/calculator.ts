@@ -19,6 +19,7 @@ export interface ScenarioOverrides {
   opex_growth_y9: number;
   opex_growth_y10: number;
   cogs_rate_target: number;     // target COGS rate for Y6-Y10 (e.g. 0.34)
+  salary_growth: number;        // Y6-Y10 salary growth rate (headcount capped, reflects raises only, e.g. 0.08)
 }
 
 export interface GlobalInputs {
@@ -514,9 +515,10 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     const cogs = Math.round(totalRevenue * effectiveCogsRate);
     const grossProfit = totalRevenue - cogs;
 
-    // OpEx: use independent OpEx growth rates with unrounded intermediates
+    // OpEx: salary grows at its own rate (headcount capped), other items use general OpEx growth
     const opexGr = 1 + opexGrowths[p];
-    raw_salary *= opexGr;
+    const salaryGr = 1 + (scenarioOverride?.salary_growth ?? 0.08);
+    raw_salary *= salaryGr;
     raw_reg *= opexGr;
     raw_compliance *= opexGr;
     raw_patent_ai *= opexGr;

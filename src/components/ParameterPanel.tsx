@@ -137,6 +137,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     if (key === 'rr_base') clamped = Math.max(0.1, Math.min(0.99, val));
     else if (key === 'bed_growth_factor') clamped = Math.max(0.5, Math.min(2.0, val));
     else if (key === 'cogs_rate_target') clamped = Math.max(0.05, Math.min(0.8, val));
+    else if (key === 'salary_growth') clamped = Math.max(0, Math.min(0.5, val));
     else if (key.startsWith('growth_') || key.startsWith('opex_growth_')) clamped = Math.max(-0.5, Math.min(1.5, val));
     const nextOverrides = { ...model.scenario_overrides, [activeScenario]: { ...so, [key]: clamped } };
     onModelChange({ ...model, scenario_overrides: nextOverrides });
@@ -521,6 +522,10 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
             <ScenarioBlock scenario={activeScenario} title="COGS比率 & OpEx增长率">
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 <ScenarioDarkInput label="Y6-Y10 COGS目标比率" value={so.cogs_rate_target} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].cogs_rate_target} onChange={v => setSO('cogs_rate_target', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="薪资年增长率 (人员封顶)" value={so.salary_growth} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].salary_growth} onChange={v => setSO('salary_growth', v)} step={0.01} scenario={activeScenario} />
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">
+                💡 人员封顶~20人后，薪资仅反映年度调薪（5-10%），不再与OpEx通胀率同步。OpEx增长率仅控制合规/专利/差旅等非薪资项。
               </div>
               <div className="grid grid-cols-5 gap-3 mt-3">
                 <ScenarioDarkInput label="Y6 OpEx增长" value={so.opex_growth_y6} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y6} onChange={v => setSO('opex_growth_y6', v)} step={0.01} scenario={activeScenario} />
@@ -530,9 +535,9 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 <ScenarioDarkInput label="Y10 OpEx增长" value={so.opex_growth_y10} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y10} onChange={v => setSO('opex_growth_y10', v)} step={0.01} scenario={activeScenario} />
               </div>
               <div className="mt-2 text-[10px] text-slate-500">
-                {activeScenario === 'optimistic' ? '🟢 乐观: COGS 32% (规模化+供应链议价) · OpEx增速 30%→18% (高效运营)' :
-                 activeScenario === 'conservative' ? '🟠 保守: COGS 36% (供应链未优化) · OpEx增速 35%→24% (扩张成本居高)' :
-                 '🔵 中性: COGS 34% (行业基准) · OpEx增速 33%→22% (标准扩张)'}
+                {activeScenario === 'optimistic' ? '🟢 乐观: COGS 32% · 薪资+5%/年 · 其他OpEx 30%→18%' :
+                 activeScenario === 'conservative' ? '🟠 保守: COGS 36% · 薪资+10%/年 · 其他OpEx 35%→24%' :
+                 '🔵 中性: COGS 34% · 薪资+8%/年 · 其他OpEx 33%→22%'}
               </div>
             </ScenarioBlock>
 
