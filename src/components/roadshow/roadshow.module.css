@@ -1,0 +1,410 @@
+/* roadshow.module.css — React roadshow slide system */
+
+/* ===== Scroll-Snap Container ===== */
+.container {
+  width: 100vw;
+  height: 100vh;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  scroll-behavior: smooth;
+  background: linear-gradient(180deg, #03070f 0%, #06101d 50%, #040811 100%);
+  color: #e9f1ff;
+  font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ===== Individual Slide ===== */
+.slide {
+  width: 100vw;
+  height: 100vh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.slideFrame {
+  width: min(1200px, 92vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  scrollbar-width: none;
+}
+
+.slideFrame::-webkit-scrollbar {
+  display: none;
+}
+
+/* ===== Slide Header ===== */
+.slideHeader {
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #55d5ff;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+.title {
+  font-size: clamp(1.75rem, 3vw, 2.5rem);
+  font-weight: 700;
+  color: #e9f1ff;
+  margin: 0 0 0.5rem;
+  line-height: 1.2;
+}
+
+.subtitle {
+  font-size: 0.95rem;
+  color: #9db0c9;
+  line-height: 1.6;
+  max-width: 48rem;
+  margin: 0;
+}
+
+.slideNote {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ===== Chips / Tags ===== */
+.chip {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.2em 0.7em;
+  border-radius: 9999px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.chipFact {
+  background: rgba(85, 213, 255, 0.12);
+  color: #55d5ff;
+  border: 1px solid rgba(85, 213, 255, 0.25);
+}
+
+.chipProjected {
+  background: rgba(61, 240, 209, 0.12);
+  color: #3df0d1;
+  border: 1px solid rgba(61, 240, 209, 0.25);
+}
+
+.chipPlan {
+  background: rgba(110, 162, 255, 0.12);
+  color: #6ea2ff;
+  border: 1px solid rgba(110, 162, 255, 0.25);
+}
+
+/* ===== Slide Indicator Dots ===== */
+.indicators {
+  position: fixed;
+  right: 1.25rem;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  z-index: 100;
+}
+
+.dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(157, 176, 201, 0.25);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  padding: 0;
+}
+
+.dot:hover {
+  background: rgba(85, 213, 255, 0.5);
+  transform: scale(1.3);
+}
+
+.dotActive {
+  background: #55d5ff;
+  box-shadow: 0 0 8px rgba(85, 213, 255, 0.5);
+  transform: scale(1.3);
+}
+
+/* ===== Panel Cards ===== */
+.panel {
+  background: rgba(10, 21, 39, 0.84);
+  border: 1px solid rgba(130, 188, 255, 0.18);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.panelTitle {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #7590b2;
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+}
+
+/* ===== Price Cards ===== */
+.priceCard {
+  background: rgba(10, 21, 39, 0.84);
+  border: 1px solid rgba(130, 188, 255, 0.18);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.priceCard .price {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #55d5ff;
+  margin: 0.5rem 0 0.125rem;
+}
+
+.priceCard .priceLabel {
+  font-size: 0.8rem;
+  color: #7590b2;
+  margin: 0 0 0.75rem;
+}
+
+/* ===== ROI Cards ===== */
+.roiCardGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.roiCard {
+  background: rgba(5, 12, 24, 0.72);
+  border: 1px solid rgba(130, 188, 255, 0.12);
+  border-radius: 0.625rem;
+  padding: 1rem;
+  text-align: center;
+}
+
+.roiName {
+  font-size: 0.75rem;
+  color: #7590b2;
+  margin-bottom: 0.375rem;
+  font-weight: 600;
+}
+
+.roiValue {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #3df0d1;
+  margin-bottom: 0.375rem;
+}
+
+.roiMeta {
+  font-size: 0.7rem;
+  color: #9db0c9;
+  line-height: 1.5;
+}
+
+.roiSummary {
+  font-size: 0.8rem;
+  color: #9db0c9;
+  margin-top: 0.75rem;
+  line-height: 1.5;
+}
+
+/* ===== Mini Table ===== */
+.miniTable {
+  border: 1px solid rgba(130, 188, 255, 0.18);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 1.5fr repeat(2, 1fr);
+  gap: 0;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
+  border-bottom: 1px solid rgba(130, 188, 255, 0.08);
+  color: #e9f1ff;
+}
+
+.tableRow:last-child {
+  border-bottom: none;
+}
+
+.tableRowHeader {
+  background: rgba(130, 188, 255, 0.06);
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #7590b2;
+}
+
+/* ===== Source Box ===== */
+.sourceBox {
+  margin-top: 1.5rem;
+  padding: 0.75rem 1rem;
+  background: rgba(5, 12, 24, 0.6);
+  border-left: 2px solid rgba(85, 213, 255, 0.25);
+  border-radius: 0 0.375rem 0.375rem 0;
+  font-size: 0.65rem;
+  color: #7590b2;
+  line-height: 1.7;
+}
+
+.sourceBox strong {
+  color: #9db0c9;
+}
+
+.sourceLine {
+  display: block;
+}
+
+.sourceNote {
+  opacity: 0.7;
+  font-style: italic;
+}
+
+/* ===== Placeholder Slide ===== */
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  opacity: 0.4;
+  text-align: center;
+}
+
+.placeholderIcon {
+  font-size: 3rem;
+}
+
+.placeholderText {
+  font-size: 1rem;
+  color: #7590b2;
+}
+
+/* ===== Two-Column Layout ===== */
+.gridCols2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+}
+
+.stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+/* ===== Pricing Grid (two-column responsive) ===== */
+.pricingGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+/* ===== Fade-up Animation ===== */
+.fadeUp {
+  animation: fadeUpIn 0.6s ease both;
+}
+
+@keyframes fadeUpIn {
+  from {
+    opacity: 0;
+    transform: translateY(1.5rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .container {
+    overflow: visible;
+    scroll-snap-type: none;
+    height: auto;
+    background: white;
+    color: #1a1a1a;
+  }
+
+  .slide {
+    height: auto;
+    min-height: 100vh;
+    scroll-snap-align: unset;
+    page-break-after: always;
+    page-break-inside: avoid;
+    break-after: page;
+    break-inside: avoid;
+  }
+
+  .indicators {
+    display: none;
+  }
+
+  .panel,
+  .priceCard,
+  .roiCard {
+    background: #f5f7fa;
+    border-color: #d0d7e0;
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+
+  .title {
+    color: #1a1a1a;
+  }
+
+  .eyebrow {
+    color: #0077b6;
+  }
+
+  .subtitle,
+  .roiMeta,
+  .panelTitle {
+    color: #555;
+  }
+
+  .roiValue {
+    color: #00805a;
+  }
+
+  .priceCard .price {
+    color: #0077b6;
+  }
+
+  .dot,
+  .dotActive {
+    display: none;
+  }
+}
+
+/* ===== Responsive ===== */
+@media (max-width: 768px) {
+  .pricingGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gridCols2 {
+    grid-template-columns: 1fr;
+  }
+
+  .roiCardGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .slideFrame {
+    width: 95vw;
+  }
+}
