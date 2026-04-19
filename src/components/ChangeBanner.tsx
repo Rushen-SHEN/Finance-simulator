@@ -92,8 +92,8 @@ export default function ChangeBanner({ report, onAccept, accepting }: Props) {
           {/* What accept will do */}
           <div className="rounded-lg bg-slate-800/40 border border-slate-700/40 p-3 text-[11px] text-slate-400 space-y-1">
             <p className="font-semibold text-slate-300">点击「接受变更」将：</p>
-            <p>1. 📄 自动生成新版 ARIA_Financial_Plan_latest.md 并存档</p>
-            <p>2. 📋 更新 ARIA_BP_External.md 相应数字表格并存档</p>
+            <p>1. 📄 自动生成新版 ARIA_Financial_Plan_latest_v2.4.1.md 并存档</p>
+            <p>2. 📋 更新 ARIA_BP_External_v2.4.1.md 相应数字表格并存档</p>
             <p>3. 📊 更新路演HTML页面数据</p>
             <p>4. 💾 旧版本保留在存档历史中</p>
           </div>

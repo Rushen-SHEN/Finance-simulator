@@ -12,7 +12,7 @@ export type ArchiveType = 'financial_plan' | 'bp' | 'roadshow' | 'hicool';
 export interface ArchiveEntry {
   id?: number;                // auto-increment
   timestamp: number;
-  version: string;            // e.g. "v2.3"
+  version: string;            // e.g. "v2.4.1"
   type: ArchiveType;
   label: string;              // user-visible description
   content: string;            // markdown or HTML content

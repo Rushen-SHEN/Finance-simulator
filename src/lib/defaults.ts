@@ -44,7 +44,7 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
 
 // Best Case yearly inputs (BPccR2 §5.4 / §9.3)
 export const DEFAULT_YEARLY: YearlyInputs = {
-  // v2.3 cumulative commercial beds target: Y2 287, Y3 2033, Y4 4393, Y5 7403
+  // Current simulator cumulative commercial beds target: Y2 287, Y3 2033, Y4 4393, Y5 7403
   direct_c2:       [   0,   18,  115,    0,    0],
   direct_c3:       [   0,    0,    0,  308,  170],
   baxter_c2:       [   0,  413, 1631,    0,    0],
@@ -127,12 +127,12 @@ export const DEFAULT_MILESTONES_BASE: MilestoneItem[] = [
 export const DEFAULT_ANNOTATIONS: Record<string, string> = {
   'pricing': 'BPccR2 §5.2 价值定价法 · C2按ICU监测市场替代定价 · C3按预警诊断增值溢价 · 大客户5年期享¥3.5万折扣',
   'bom': 'C2小批量BOM ¥3.2万 · C3量产BOM ¥2.15万(含传感器+边缘计算+外壳+PCB+组装+包装) · CDMO代工模式',
-  'renewal': 'v2.3 固定续约率85% · ARR按活跃付费床位计算',
+  'renewal': '当前simulator基线：固定续约率85% · ARR按活跃付费床位计算',
   'baxter': '多经销商渠道: HW分成15% SaaS分成35% · 授权金¥300万+里程碑¥200万 · Best M8-10签约/Base M17-22',
-  'opex': 'v2.3 §9.2 OpEx拆分 · Y1含CDMO NRE ¥80万+样机BOM ¥128万 · 薪资按6→12→18→20→20人',
-  'funding': 'v2.3 §7 融资区间: 种子轮¥600-800万, Pre-A ¥400-600万, A轮可选0',
+  'opex': '当前simulator基线 §9.2 OpEx拆分 · Y1含CDMO NRE ¥80万+样机BOM ¥128万 · 薪资按6→12→18→20→20人',
+  'funding': '当前simulator基线 §7 融资区间: 种子轮¥600-800万, Pre-A ¥400-600万, A轮可选0',
   'milestones': 'BPccR2 §11.1 · Best M16二类获批→M35三类 · Base M24二类→M49三类 · M1=2026年7月',
-  'deployment': 'v2.3 目标累计床位: Y2 287, Y3 2033, Y4 4393, Y5 7403',
+  'deployment': '当前simulator目标累计床位: Y2 287, Y3 2033, Y4 4393, Y5 7403',
   'roi': 'C2 ¥6.25万/床/年(ICU平均减少1.2天住院+降低并发症) · C3 ¥8万/床/年(预警+诊断双重价值)',
 };
 

@@ -8,6 +8,7 @@ import { exportPDF, exportPNG } from '@/lib/exportUtils';
 import { detectChanges, ChangeReport } from '@/lib/changeTracker';
 import { generateFinancialPlan, patchBPSections, extractRoadshowUpdates } from '@/lib/docGenerator';
 import { saveArchive } from '@/lib/archiveStore';
+import { DOC_VERSIONS } from '@/lib/bp-reference';
 import Header from '@/components/Header';
 import StatusStrip from '@/components/StatusStrip';
 import PhaseOverview from '@/components/PhaseOverview';
@@ -126,7 +127,7 @@ export default function Home() {
       let bpContent = '';
       let bpPatched: { content: string; version: string } | null = null;
       try {
-        const resp = await fetch(`${BASE_PATH}/docs/ARIA_BP_External.md`);
+        const resp = await fetch(`${BASE_PATH}/docs/${DOC_VERSIONS.bpFile}`);
         if (resp.ok) bpContent = await resp.text();
       } catch { /* ignore — BP may not be fetchable in static build */ }
 
@@ -166,8 +167,8 @@ export default function Home() {
 
   const handleDownloadDocs = useCallback(() => {
     if (!generatedDocs) return;
-    if (generatedDocs.fp) downloadFile(`ARIA_Financial_Plan_latest.md`, generatedDocs.fp);
-    if (generatedDocs.bp) downloadFile(`ARIA_BP_External_clean.md`, generatedDocs.bp);
+    if (generatedDocs.fp) downloadFile(DOC_VERSIONS.fpFile.replace('ARIA_Financial_Plan_', 'ARIA_Financial_Plan_latest_'), generatedDocs.fp);
+    if (generatedDocs.bp) downloadFile(DOC_VERSIONS.bpFile, generatedDocs.bp);
     if (generatedDocs.roadshow) downloadFile(`roadshow-data.json`, generatedDocs.roadshow, 'application/json');
   }, [generatedDocs]);
 

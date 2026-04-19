@@ -76,7 +76,7 @@ export interface HicoolDraft {
 }
 
 const KEY = 'aria-hicool-draft-v1';
-export const HICOOL_TEMPLATE_VERSION = '2026-04-19-award-v2';
+export const HICOOL_TEMPLATE_VERSION = '2026-04-19-award-v2.4.1';
 
 const w = (v: number) => `${Math.round(v / 10000).toLocaleString('en-US')}万`;
 const pct = (v: number) => `${(v * 100).toFixed(0)}%`;
@@ -231,16 +231,19 @@ export function buildHicoolAuditNotes(
 ): Record<HicoolSectionKey, HicoolAuditNote> {
   const liveUpdates = extractRoadshowUpdates(model, result);
   const changedGroups = new Set(changeReport?.changedGroups.map((group) => group.group) ?? []);
+  const hasParamChanges = !!changeReport?.hasChanges;
   const stamp = buildHicoolSourceStamp(nowTs);
   const notes = {} as Record<HicoolSectionKey, HicoolAuditNote>;
 
   for (const key of Object.keys(HICOOL_TITLES) as HicoolSectionKey[]) {
     const relatedSlides = HICOOL_ROADSHOW_SLIDES[key];
     const slidePoints = ROADSHOW_DATA_POINTS.filter((point) => relatedSlides.includes(point.slideId));
-    const deltaItems = slidePoints
-      .filter((point) => (liveUpdates[point.field] ?? '') !== point.bpValue)
-      .slice(0, 3)
-      .map((point) => `${point.slideId}/${point.label}: 基线 ${point.bpValue}；当前 ${liveUpdates[point.field] ?? '空值'}`);
+    const deltaItems = hasParamChanges
+      ? slidePoints
+          .filter((point) => (liveUpdates[point.field] ?? '') !== point.bpValue)
+          .slice(0, 3)
+          .map((point) => `${point.slideId}/${point.label}: 基线 ${point.bpValue}；实时模型 ${liveUpdates[point.field] ?? '空值'}`)
+      : [];
 
     const needsReview = HICOOL_CHANGE_GROUPS[key].some((group) => changedGroups.has(group));
     const summary = needsReview
@@ -249,6 +252,8 @@ export function buildHicoolAuditNotes(
 
     const roadshowLabel = relatedSlides.length === 0
       ? '路演稿暂无独立团队页锚点，本栏以总里程碑与整体叙事口径辅助校验。'
+      : !hasParamChanges
+        ? `当前未检测到参数变更，路演页 ${relatedSlides.join(' / ')} 继续沿用 ${stamp.bpVersion} / ${stamp.fpVersion} 基线口径。`
       : deltaItems.length === 0
         ? `关联路演页 ${relatedSlides.join(' / ')} 当前无显著偏差，和 simulator 口径一致。`
         : `关联路演页 ${relatedSlides.join(' / ')} 存在 ${deltaItems.length}/${slidePoints.length} 处已捕获偏差，请优先核对右侧列出的关键项。`;

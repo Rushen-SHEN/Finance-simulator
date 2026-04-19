@@ -19,7 +19,6 @@ import RegulatorySlide from '@/components/roadshow/slides/RegulatorySlide';
 import TeamSlide from '@/components/roadshow/slides/TeamSlide';
 import MilestonesSlide from '@/components/roadshow/slides/MilestonesSlide';
 import FundingSlide from '@/components/roadshow/slides/FundingSlide';
-import RevenueSlide from '@/components/roadshow/slides/RevenueSlide';
 import ReferencesSlide from '@/components/roadshow/slides/ReferencesSlide';
 import GlossarySlide from '@/components/roadshow/slides/GlossarySlide';
 
@@ -39,7 +38,6 @@ const SLIDE_IDS = [
   's12-team',
   's13-milestones',
   's14-funding',
-  's15-revenue',
   's16-appendix',
   's17-glossary',
 ];
@@ -79,9 +77,6 @@ export default function RoadshowReactPage() {
 
       {/* ── Phase 2: Funding slide ── */}
       <FundingSlide model={model} result={result} />
-
-      {/* ── Phase 2: Revenue slide ── */}
-      <RevenueSlide model={model} result={result} />
 
       <ReferencesSlide />
 

@@ -23,7 +23,7 @@ export function generateFinancialPlan(
   model: ModelInputs,
   resultBest: CalcResult,
   resultBase: CalcResult,
-  prevVersion: string = 'v2.2'
+  prevVersion: string = 'v2.4.0'
 ): { content: string; version: string } {
   const g = model.global;
   const yrs = resultBest.years;
@@ -31,10 +31,11 @@ export function generateFinancialPlan(
   const swing = g.sensitivity_bed_swing;
 
   // Bump version
-  const match = prevVersion.match(/v(\d+)\.(\d+)/);
+  const match = prevVersion.match(/v(\d+)\.(\d+)(?:\.(\d+))?/);
   const major = match ? parseInt(match[1]) : 2;
-  const minor = match ? parseInt(match[2]) + 1 : 3;
-  const version = `v${major}.${minor}`;
+  const minor = match ? parseInt(match[2]) : 4;
+  const patch = match?.[3] ? parseInt(match[3]) + 1 : 1;
+  const version = `v${major}.${minor}.${patch}`;
 
   // EBITDA turn-positive year
   const ebitdaYear = yrs.findIndex(y => y.ebitda > 0);
@@ -278,7 +279,7 @@ ${yrs.filter((_, i) => i > 0).map((yr, i) => {
 - 本文件由参数面板自动生成，基于 \`src/lib/docGenerator.ts\`
 - **Finance Simulator 是所有财务数据的单一真值来源 (Single Source of Truth)**
 - 所有数据变更均通过 §1 BP映射表追踪同步
-- BP全文权威源：\`docs/ARIA_BP_External_clean.md\`（v2.2，财务数据从Simulator同步）
+- BP全文权威源：\`docs/ARIA_BP_External_v2.4.1.md\`（v2.4.1，财务数据从Simulator同步）
 `;
 
   return { content, version };
@@ -303,13 +304,15 @@ export function patchBPSections(
   const g = model.global;
 
   // Bump BP version: find **版本** or **Version** line and increment
-  const versionMatch = patched.match(/\*\*版本\*\*:\s*v?(\d+)\.(\d+)/);
-  let bpVersion = 'v2.1';
+  const versionMatch = patched.match(/\*\*版本\*\*:\s*v?(\d+)\.(\d+)(?:\.(\d+))?/);
+  let bpVersion = 'v2.4.1';
   if (versionMatch) {
-    const newMinor = parseInt(versionMatch[2]) + 1;
-    bpVersion = `v${versionMatch[1]}.${newMinor}`;
+    const major = parseInt(versionMatch[1]);
+    const minor = parseInt(versionMatch[2]);
+    const patch = versionMatch[3] ? parseInt(versionMatch[3]) + 1 : 1;
+    bpVersion = `v${major}.${minor}.${patch}`;
     patched = patched.replace(
-      /\*\*版本\*\*:\s*v?\d+\.\d+/,
+      /\*\*版本\*\*:\s*v?\d+\.\d+(?:\.\d+)?/,
       `**版本**: ${bpVersion}`
     );
   }

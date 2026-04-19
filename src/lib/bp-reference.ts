@@ -1,32 +1,32 @@
 // Finance Simulator is the Single Source of Truth (2026-04-19)
 // BP / Financial Plan are downstream documents that must align with simulator output.
-// This module holds Financial Plan v2.4 reference data (parameters panel auto-generated)
+// This module holds Financial Plan v2.4.1 reference data (parameters panel auto-generated)
 // for conflict detection and audit of roadshow + BP mapping pages.
 
 import { CalcResult } from './calculator';
 
-/** Financial Plan v2.3 10-year financial main table (万元) */
+/** Financial Plan v2.4.1 10-year financial main table (万元) */
 export const BP_MAIN_TABLE = {
-  total_revenue:  [0, 879, 3399, 8424, 11267, 14647, 19041, 24753, 30942, 38677],
+  total_revenue:  [0, 825, 3021, 7371, 10693, 14970, 20659, 27890, 36814, 47859],
   license_milestone: [0, 300, 200, 0, 0, 0, 0, 0, 0, 0],
-  commercial_revenue: [0, 579, 3199, 8424, 11267, 14647, 19041, 24753, 30942, 38677],
-  total_cogs:     [0, 64, 372, 999, 954, 4980, 6474, 8416, 10520, 13150],
-  cogs_rate:      [0, 0.07, 0.11, 0.12, 0.08, 0.34, 0.34, 0.34, 0.34, 0.34],
-  gross_profit:   [0, 815, 3027, 7425, 10313, 9667, 12567, 16337, 20421, 25527],
-  gross_margin:   [0, 0.93, 0.89, 0.88, 0.92, 0.66, 0.66, 0.66, 0.66, 0.66],
-  total_opex:     [578, 716, 1054, 1202, 1355, 1694, 2117, 2625, 3177, 3875],
-  ebitda:         [-578, 99, 1973, 6223, 8958, 7973, 10450, 13712, 17245, 21651],
-  ebitda_margin:  [0, 0.11, 0.58, 0.74, 0.80, 0.54, 0.55, 0.55, 0.56, 0.56],
-  net_profit:     [-598, 74, 1948, 6193, 8928, 7934, 10399, 13646, 17162, 21548],
-  arr:            [0, 718, 5368, 12158, 18035, 22408, 28403, 36415, 46155, 58140],
+  commercial_revenue: [0, 525, 2821, 7371, 10693, 14970, 20659, 27890, 36814, 47859],
+  total_cogs:     [0, 248, 1075, 2917, 3164, 4791, 6611, 8925, 11781, 15315],
+  cogs_rate:      [0, 0.30, 0.36, 0.40, 0.30, 0.32, 0.32, 0.32, 0.32, 0.32],
+  gross_profit:   [0, 577, 1946, 4454, 7529, 10180, 14048, 18965, 25034, 32544],
+  gross_margin:   [0, 0.70, 0.64, 0.60, 0.70, 0.68, 0.68, 0.68, 0.68, 0.68],
+  total_opex:     [578, 716, 1054, 1202, 1355, 1462, 1569, 1684, 1807, 1942],
+  ebitda:         [-578, -139, 892, 3252, 6174, 8718, 12479, 17281, 23227, 30602],
+  ebitda_margin:  [0, -0.17, 0.30, 0.44, 0.58, 0.58, 0.60, 0.62, 0.63, 0.64],
+  net_profit:     [-598, -165, 858, 3208, 6161, 8705, 12465, 17266, 23211, 30585],
+  arr:            [0, 452, 3818, 11974, 19870, 27019, 36944, 50271, 67640, 89876],
 };
 
-/** Financial Plan v2.3 SOM growth curve */
+/** Financial Plan v2.4.1 SOM growth curve */
 export const BP_SOM = {
-  cumulative_beds:  [0, 287, 2033, 4393, 7403, 11316, 16403, 23016, 31282, 41615],
-  active_paying:    [0, 287, 2147, 4863, 7214, 8963, 11361, 14566, 18462, 23256],
-  som_penetration:  [0, 0.0032, 0.0124, 0.0306, 0.0410, 0.0533, 0.0692, 0.0900, 0.1125, 0.1406],
-  yoy_growth:       [0, 0, 2.866, 1.478, 0.338, 0.30, 0.30, 0.30, 0.25, 0.25],
+  cumulative_beds:  [0, 184, 1426, 3979, 6924, 11047, 16737, 24418, 34557, 47738],
+  active_paying:    [0, 184, 1554, 4874, 8088, 10998, 15038, 20463, 27533, 36584],
+  som_penetration:  [0, 0.0030, 0.0110, 0.0268, 0.0389, 0.0544, 0.0751, 0.1014, 0.1339, 0.1740],
+  yoy_growth:       [0, 0, 2.660, 1.440, 0.451, 0.40, 0.38, 0.35, 0.32, 0.30],
 };
 
 /** Channel parameters from BP §3.1 */
@@ -39,7 +39,7 @@ export const BP_CHANNEL = {
   saas_per_bed: 2.5, // 万元/bed/year
 };
 
-/** Funding plan from Financial Plan v2.3 §7 */
+/** Funding plan from Financial Plan v2.4.1 §7 */
 export const BP_FUNDING = {
   seed: { min: 600, max: 800, desc: '种子轮' },
   preA: { min: 400, max: 600, desc: 'Pre-A' },
@@ -49,29 +49,29 @@ export const BP_FUNDING = {
 /** Roadshow slide data points that should be live-linked to simulator output */
 export const ROADSHOW_DATA_POINTS = [
   // EBITDA
-  { slideId: 's9',  field: 'ebitda-positive',      label: 'EBITDA转正时点',        bpValue: '第 4 年' },
-  { slideId: 's16', field: 'ebitda-year-inline',    label: 'EBITDA转正(内联)',       bpValue: 'Year 4' },
+  { slideId: 's9',  field: 'ebitda-positive',      label: 'EBITDA转正时点',        bpValue: '第 3 年' },
+  { slideId: 's16', field: 'ebitda-year-inline',    label: 'EBITDA转正(内联)',       bpValue: 'Year 3' },
   // Revenue totals
-  { slideId: 's17', field: 'y2-revenue',            label: 'Y2总收入',              bpValue: '¥464 万' },
-  { slideId: 's17', field: 'y3-revenue',            label: 'Y3总收入',              bpValue: '¥341 万' },
-  { slideId: 's17', field: 'y4-revenue',            label: 'Y4总收入',              bpValue: '¥883 万' },
-  { slideId: 's16', field: 'y5-revenue',            label: 'Y5总收入',              bpValue: '¥1,220 万' },
-  { slideId: 's17', field: 'y5-revenue-detail',     label: 'Y5总收入(详情)',         bpValue: '¥1,220 万' },
-  { slideId: 's16', field: 'y10-revenue',           label: 'Y10总收入',             bpValue: '¥4,189 万' },
-  { slideId: 's16', field: 'y10-ebitda',            label: 'Y10 EBITDA',            bpValue: '¥1,042 万' },
+  { slideId: 's17', field: 'y2-revenue',            label: 'Y2总收入',              bpValue: '¥825 万' },
+  { slideId: 's17', field: 'y3-revenue',            label: 'Y3总收入',              bpValue: '¥3,021 万' },
+  { slideId: 's17', field: 'y4-revenue',            label: 'Y4总收入',              bpValue: '¥7,371 万' },
+  { slideId: 's16', field: 'y5-revenue',            label: 'Y5总收入',              bpValue: '¥10,693 万' },
+  { slideId: 's17', field: 'y5-revenue-detail',     label: 'Y5总收入(详情)',         bpValue: '¥10,693 万' },
+  { slideId: 's16', field: 'y10-revenue',           label: 'Y10总收入',             bpValue: '¥47,859 万' },
+  { slideId: 's16', field: 'y10-ebitda',            label: 'Y10 EBITDA',            bpValue: '¥30,602 万' },
   // Y2 revenue description
-  { slideId: 's17', field: 'y2-revenue-desc',       label: 'Y2收入结构描述',         bpValue: '硬件直销 ¥345 万；授权金 + 里程碑 ¥0；SaaS 及分成收入开始形成。' },
+  { slideId: 's17', field: 'y2-revenue-desc',       label: 'Y2收入结构描述',         bpValue: '硬件直销与SaaS收入开始形成，叠加授权金 ¥300 万，二类获批后进入放量周期。' },
   // Bed counts
-  { slideId: 's17', field: 'y2-beds',               label: 'Y2累计床位',            bpValue: '73 床' },
-  { slideId: 's17', field: 'y3-beds',               label: 'Y3累计床位',            bpValue: '78 床' },
-  { slideId: 's17', field: 'y4-beds',               label: 'Y4累计床位',            bpValue: '218 床' },
-  { slideId: 's17', field: 'y5-beds',               label: 'Y5累计床位',            bpValue: '398 床' },
-  { slideId: 's9',  field: 'y2-beds-inline',        label: 'Y2床位(内联)',           bpValue: '73' },
-  { slideId: 's9',  field: 'beds-expansion-desc',   label: '床位扩张描述',           bpValue: '78 → 218 → 398' },
+  { slideId: 's17', field: 'y2-beds',               label: 'Y2累计床位',            bpValue: '184 床' },
+  { slideId: 's17', field: 'y3-beds',               label: 'Y3累计床位',            bpValue: '1,426 床' },
+  { slideId: 's17', field: 'y4-beds',               label: 'Y4累计床位',            bpValue: '3,979 床' },
+  { slideId: 's17', field: 'y5-beds',               label: 'Y5累计床位',            bpValue: '6,924 床' },
+  { slideId: 's9',  field: 'y2-beds-inline',        label: 'Y2床位(内联)',           bpValue: '184' },
+  { slideId: 's9',  field: 'beds-expansion-desc',   label: '床位扩张描述',           bpValue: '1,426 → 3,979 → 6,924' },
   // Bar chart percentages
-  { slideId: 's17', field: 'y2-beds-pct',           label: 'Y2进度条%',             bpValue: '18' },
-  { slideId: 's17', field: 'y3-beds-pct',           label: 'Y3进度条%',             bpValue: '20' },
-  { slideId: 's17', field: 'y4-beds-pct',           label: 'Y4进度条%',             bpValue: '55' },
+  { slideId: 's17', field: 'y2-beds-pct',           label: 'Y2进度条%',             bpValue: '3' },
+  { slideId: 's17', field: 'y3-beds-pct',           label: 'Y3进度条%',             bpValue: '21' },
+  { slideId: 's17', field: 'y4-beds-pct',           label: 'Y4进度条%',             bpValue: '57' },
   { slideId: 's17', field: 'y5-beds-pct',           label: 'Y5进度条%',             bpValue: '100' },
   // Pricing
   { slideId: 's10', field: 'c2-hw-price',           label: 'C2硬件定价',            bpValue: '¥6.5 万 / 床' },
@@ -96,43 +96,43 @@ export const ROADSHOW_DATA_POINTS = [
   { slideId: 's10', field: 'roi-c3u-anchor',        label: 'C3升级价值锚点',         bpValue: '价值锚点 ¥8.0 万 / 床 / 年' },
   { slideId: 's10', field: 'roi-c3-5yr',            label: 'C3五年期ROI',            bpValue: '+20%' },
   // Revenue breakdown (from simulator neutral + best case)
-  { slideId: 's17', field: 'rev-hw-y2',             label: 'Y2硬件直销',            bpValue: '¥345 万' },
-  { slideId: 's17', field: 'rev-hw-y3',             label: 'Y3硬件直销',            bpValue: '¥33 万' },
-  { slideId: 's17', field: 'rev-hw-y5',             label: 'Y5硬件直销',            bpValue: '¥510 万' },
-  { slideId: 's17', field: 'rev-hwshare-y2',        label: 'Y2硬件分成',            bpValue: '¥20 万' },
-  { slideId: 's17', field: 'rev-hwshare-y3',        label: 'Y3硬件分成',            bpValue: '¥0' },
-  { slideId: 's17', field: 'rev-hwshare-y5',        label: 'Y5硬件分成',            bpValue: '¥153 万' },
+  { slideId: 's17', field: 'rev-hw-y2',             label: 'Y2硬件直销',            bpValue: '¥213 万' },
+  { slideId: 's17', field: 'rev-hw-y3',             label: 'Y3硬件直销',            bpValue: '¥1,249 万' },
+  { slideId: 's17', field: 'rev-hw-y5',             label: 'Y5硬件直销',            bpValue: '¥2,815 万' },
+  { slideId: 's17', field: 'rev-hwshare-y2',        label: 'Y2硬件分成',            bpValue: '¥39 万' },
+  { slideId: 's17', field: 'rev-hwshare-y3',        label: 'Y3硬件分成',            bpValue: '¥506 万' },
+  { slideId: 's17', field: 'rev-hwshare-y5',        label: 'Y5硬件分成',            bpValue: '¥1,044 万' },
   { slideId: 's17', field: 'rev-upgrade-y2',        label: 'Y2升级收入',            bpValue: '¥0' },
   { slideId: 's17', field: 'rev-upgrade-y3',        label: 'Y3升级收入',            bpValue: '¥0' },
-  { slideId: 's17', field: 'rev-upgrade-y5',        label: 'Y5升级收入',            bpValue: '¥68 万' },
-  { slideId: 's17', field: 'rev-saas-y2',           label: 'Y2 SaaS直销',           bpValue: '¥88 万' },
-  { slideId: 's17', field: 'rev-saas-y3',           label: 'Y3 SaaS直销',           bpValue: '¥96 万' },
-  { slideId: 's17', field: 'rev-saas-y5',           label: 'Y5 SaaS直销',           bpValue: '¥312 万' },
-  { slideId: 's17', field: 'rev-saasshare-y2',      label: 'Y2 SaaS分成',           bpValue: '¥12 万' },
-  { slideId: 's17', field: 'rev-saasshare-y3',      label: 'Y3 SaaS分成',           bpValue: '¥12 万' },
-  { slideId: 's17', field: 'rev-saasshare-y5',      label: 'Y5 SaaS分成',           bpValue: '¥178 万' },
-  { slideId: 's17', field: 'rev-license-y2',        label: 'Y2授权金+里程碑',        bpValue: '¥0' },
+  { slideId: 's17', field: 'rev-upgrade-y5',        label: 'Y5升级收入',            bpValue: '¥1,250 万' },
+  { slideId: 's17', field: 'rev-saas-y2',           label: 'Y2 SaaS直销',           bpValue: '¥197 万' },
+  { slideId: 's17', field: 'rev-saas-y3',           label: 'Y3 SaaS直销',           bpValue: '¥745 万' },
+  { slideId: 's17', field: 'rev-saas-y5',           label: 'Y5 SaaS直销',           bpValue: '¥4,125 万' },
+  { slideId: 's17', field: 'rev-saasshare-y2',      label: 'Y2 SaaS分成',           bpValue: '¥76 万' },
+  { slideId: 's17', field: 'rev-saasshare-y3',      label: 'Y3 SaaS分成',           bpValue: '¥321 万' },
+  { slideId: 's17', field: 'rev-saasshare-y5',      label: 'Y5 SaaS分成',           bpValue: '¥1,459 万' },
+  { slideId: 's17', field: 'rev-license-y2',        label: 'Y2授权金+里程碑',        bpValue: '¥300 万' },
   { slideId: 's17', field: 'rev-license-y3',        label: 'Y3授权金+里程碑',        bpValue: '¥200 万' },
   { slideId: 's17', field: 'rev-license-y5',        label: 'Y5授权金+里程碑',        bpValue: '¥0' },
   // Funding
-  { slideId: 's16', field: 'seed-range',            label: '种子轮金额',            bpValue: '¥500-600 万' },
-  { slideId: 's16', field: 'preA-range',            label: 'Pre-A金额',             bpValue: '¥300-500 万' },
-  { slideId: 's16', field: 'seriesA-range',         label: 'A轮金额',               bpValue: '¥0-500 万' },
+  { slideId: 's16', field: 'seed-range',            label: '种子轮金额',            bpValue: '¥600-800 万' },
+  { slideId: 's16', field: 'preA-range',            label: 'Pre-A金额',             bpValue: '¥400-600 万' },
+  { slideId: 's16', field: 'seriesA-range',         label: 'A轮金额',               bpValue: '¥0-0 万' },
   // Rates
-  { slideId: 's10', field: 'renewal-rate',          label: '续约率',                bpValue: '70%' },
+  { slideId: 's10', field: 'renewal-rate',          label: '续约率',                bpValue: '85%' },
   { slideId: 's10', field: 'hw-commission',         label: '硬件分成比例',           bpValue: '15%' },
   { slideId: 's10', field: 'saas-commission',       label: 'SaaS分成比例',           bpValue: '35%' },
   // SOM chart
-  { slideId: 's16', field: 'som-chart-beds',        label: 'SOM曲线(床位)',          bpValue: '[0,73,78,218,398,632,936,1331,1825,2443]' },
+  { slideId: 's16', field: 'som-chart-beds',        label: 'SOM曲线(床位)',          bpValue: '[0,184,1426,3979,6924,11047,16737,24418,34557,47738]' },
 ];
 
 /** Document version constants — update here when files change */
 export const DOC_VERSIONS = {
-  bp: 'BP V2.4',         // ARIA_BP_External_v2.4.md
-  fp: 'FP V2.4',         // ARIA_Financial_Plan_v2.4.md
-  bpFile: 'ARIA_BP_External_v2.4.md',
-  fpFile: 'ARIA_Financial_Plan_v2.4.md',
-  dataGovernance: 'Simulator is Single Source of Truth (2026-04-19)',
+  bp: 'BP V2.4.1',         // ARIA_BP_External_v2.4.1.md
+  fp: 'FP V2.4.1',         // ARIA_Financial_Plan_v2.4.1.md
+  bpFile: 'ARIA_BP_External_v2.4.1.md',
+  fpFile: 'ARIA_Financial_Plan_v2.4.1.md',
+  dataGovernance: 'Simulator is Single Source of Truth (2026-04-19, v2.4.1)',
 };
 
 /** Source → BP Section mapping block definitions with full detail from BP */
@@ -255,7 +255,7 @@ export const ROADSHOW_MAPPING_BLOCKS: MappingBlockDetail[] = [
   },
 ];
 
-/** Sensitivity scenarios from BP v2.2 §9.6 — from simulator sensitivity runs */
+/** Sensitivity scenarios from BP v2.4.1 §9.6 — from latest governed document runs */
 export const BP_SENSITIVITY = {
   optimistic: {
     label: '乐观(rr=85%)',
@@ -456,7 +456,7 @@ export function generateAuditReport(conflicts: DataConflict[], scenario: string)
     `ARIA 数据一致性审计报告`,
     `生成时间: ${now}`,
     `情景模式: ${scenario}`,
-    `BP版本: v2.3 (2026-04-19) — Simulator is Source of Truth`,
+    `BP版本: v2.4.1 (2026-04-19) — Simulator is Source of Truth`,
     `═══════════════════════════════════════════`,
     ``,
   ];
@@ -486,7 +486,7 @@ export function generateAuditReport(conflicts: DataConflict[], scenario: string)
   }
 
   if (conflicts.length === 0) {
-    lines.push(`✓ 所有指标与BP v2.3一致，无冲突。（Simulator is Source of Truth）`);
+    lines.push(`✓ 所有指标与BP v2.4.1一致，无冲突。（Simulator is Source of Truth）`);
   }
 
   lines.push(`───────────────────────────────────────────`);

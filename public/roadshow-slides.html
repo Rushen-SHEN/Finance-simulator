@@ -3979,7 +3979,7 @@
     </div>
   </section>
 
-  <section class="slide" id="s17" data-title="收入结构与盈利路径">
+  <section class="slide" id="s17" data-title="收入结构与盈利路径" data-removed="true" aria-hidden="true">
     <div class="frame">
       <div class="inner">
         <div class="slide-header fade-up">
@@ -4224,7 +4224,7 @@
   </section>
 
   <script>
-    const slides = Array.from(document.querySelectorAll('.slide'));
+    const slides = Array.from(document.querySelectorAll('.slide:not([data-removed="true"])'));
     const toc = document.getElementById('toc');
     const pageNow = document.getElementById('pageNow');
     const pageTotal = document.getElementById('pageTotal');
@@ -5040,7 +5040,7 @@
       var count = 0;
       function check() {
         count++;
-        var slides = Array.from(document.querySelectorAll('.slide'));
+        var slides = Array.from(document.querySelectorAll('.slide:not([data-removed="true"])'));
         if (!slides.length) return;
         var first = slides[0];
         var style = getComputedStyle(first);
@@ -5087,7 +5087,7 @@
     async function exportSlidesToPDF() {
       var btn = document.getElementById('exportPdfBtn');
       if (!PDF_EXPORT_READY || PDF_EXPORT_IN_PROGRESS) return;
-      var slides = Array.from(document.querySelectorAll('.slide'));
+      var slides = Array.from(document.querySelectorAll('.slide:not([data-removed="true"])'));
       if (!slides.length) return;
       PDF_EXPORT_IN_PROGRESS = true;
 
