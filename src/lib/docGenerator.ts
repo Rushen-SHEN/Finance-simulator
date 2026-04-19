@@ -1,5 +1,5 @@
 // Document generation: Financial Plan from model state + BP section patching
-import { ModelInputs, CalcResult, resolveMilestones, MAPPING_BLOCKS, PARAM_MAPPING, computeBOM, calculate } from './calculator';
+import { ModelInputs, CalcResult, GlobalInputs, resolveMilestones, MAPPING_BLOCKS, PARAM_MAPPING, computeBOM, calculate } from './calculator';
 
 // ============================================================
 // Helpers
@@ -503,12 +503,161 @@ export function extractRoadshowUpdates(model: ModelInputs, resultBest: CalcResul
     'hw-commission': `${Math.round(g.baxter_hw_commission * 100)}%`,
     'saas-commission': `${Math.round(g.baxter_saas_commission * 100)}%`,
 
+    // --- BOM / Margin / Channel (s10 business model) ---
+    ...buildBusinessModelFields(g, resultBest),
+
     // --- SOM chart data ---
     'som-chart-beds': JSON.stringify(yrs.map(yr => yr.cumulative_beds)),
     'som-chart-revenue': JSON.stringify(yrs.map(yr => Math.round(yr.total_revenue / 10000))),
 
+    // --- Base case revenue chart data ---
+    ...buildBaseAndFundingFields(model, resultBest),
+
     // --- Scenario comparison (三情景对比) ---
     ...buildScenarioFields(model, resultBest),
+  };
+}
+
+/** Compute BOM / margin / channel / ROI payback data-fields for roadshow s10 */
+function buildBusinessModelFields(g: GlobalInputs, resultBest: CalcResult): Record<string, string> {
+  const bom = computeBOM(g);
+  const fmtB = (v: number) => `¥${(v / 10000).toFixed(1)}万/床`;
+
+  // Hardware margins
+  const c2HwMargin = (g.price_hw_c2 - bom.c2) / g.price_hw_c2;
+  const c3HwMargin = (g.price_hw_c3 - bom.c3) / g.price_hw_c3;
+  const upgMargin = (g.price_upgrade - bom.upgrade) / g.price_upgrade;
+
+  // Annual costs (3-year amortization)
+  const c2AnnualCost = g.price_hw_c2 / 3 + g.price_saas_c2;
+  const c3AnnualCost = g.price_hw_c3 / 3 + g.price_saas_c3;
+  const upgAnnualCost = g.price_upgrade / 3 + g.price_saas_c3;
+  const c2ROI = g.value_anchor_c2 > 0 ? (g.value_anchor_c2 / c2AnnualCost - 1) : 0;
+  const c3ROI = g.value_anchor_c3 > 0 ? (g.value_anchor_c3 / c3AnnualCost - 1) : 0;
+  const upgROI = g.value_anchor_c3 > 0 ? (g.value_anchor_c3 / upgAnnualCost - 1) : 0;
+
+  // Channel commission amounts per bed
+  const hwCommAmt = g.price_hw_c3 * g.baxter_hw_commission;
+  const saasCommAmt = g.price_saas_c3 * g.baxter_saas_commission;
+  const licenseTotal = (g.license_amount + g.milestone_payment) / 10000;
+
+  return {
+    // BOM per bed
+    'bom-c2': fmtB(bom.c2),
+    'bom-c3': fmtB(bom.c3),
+    'bom-upgrade': fmtB(bom.upgrade),
+
+    // Margin percentages
+    'margin-c2': `${(c2HwMargin * 100).toFixed(1)}%`,
+    'margin-c3': `${(c3HwMargin * 100).toFixed(1)}%`,
+    'margin-upgrade': `${(upgMargin * 100).toFixed(1)}%`,
+
+    // Channel details
+    'hw-comm-pct': `${Math.round(g.baxter_hw_commission * 100)}%`,
+    'saas-comm-pct': `${Math.round(g.baxter_saas_commission * 100)}%`,
+    'hw-comm-amount': `¥${(hwCommAmt / 10000).toFixed(1)}万/床`,
+    'saas-comm-amount': `¥${(saasCommAmt / 10000).toFixed(1)}万/床/年`,
+    'license-total': `¥${licenseTotal.toFixed(0)}万`,
+    'license-y2': `¥${(g.license_amount / 10000).toFixed(0)}万`,
+    'license-y3': `¥${(g.milestone_payment / 10000).toFixed(0)}万`,
+
+    // Value anchors
+    'value-anchor-c2': `¥${(g.value_anchor_c2 / 10000).toFixed(1)}万/床/年`,
+    'value-anchor-c3': `¥${(g.value_anchor_c3 / 10000).toFixed(1)}万/床/年`,
+
+    // ROI payback (months)
+    'roi-c2-payback': c2ROI > 0 ? `~${Math.round(12 / (1 + c2ROI))}个月` : '—',
+    'roi-c3-payback': c3ROI > 0 ? `~${Math.round(12 / (1 + c3ROI))}个月` : '—',
+    'roi-upg-payback': upgROI > 0 ? `~${Math.round(12 / (1 + upgROI))}个月` : '—',
+
+    // Upgrade pricing
+    'upgrade-hw-price': `¥${(g.price_upgrade / 10000).toFixed(1)}万/床`,
+
+    // SaaS bulk
+    'c3-saas-bulk-price': `¥${(g.price_saas_c3_bulk / 10000).toFixed(1)}万`,
+
+    // Summary text: all ROI positive
+    'roi-all-positive': c2ROI > 0 && c3ROI > 0 && upgROI > 0 ? 'yes' : 'no',
+    'roi-summary-text': `C2 ROI ${(c2ROI * 100).toFixed(1)}% · C3 ROI ${(c3ROI * 100).toFixed(1)}% · 升级 ROI ${(upgROI * 100).toFixed(1)}%`,
+  };
+}
+
+/** Compute base-case revenue + funding advisory data-fields for roadshow s16 */
+function buildBaseAndFundingFields(model: ModelInputs, resultBest: CalcResult): Record<string, string> {
+  const g = model.global;
+  const f = model.funding;
+  const so = model.scenario_overrides?.[model.active_scenario || 'neutral'];
+
+  // Base case calculation
+  const resultBase = calculate(g, model.yearly_base, model.opex, model.milestones_base, so);
+  const bestYrs = resultBest.years;
+  const baseYrs = resultBase.years;
+
+  // Revenue arrays (万元)
+  const bestRevWan = bestYrs.map(yr => Math.round(yr.total_revenue / 10000));
+  const baseRevWan = baseYrs.map(yr => Math.round(yr.total_revenue / 10000));
+
+  // Format helpers
+  const fmtYi = (wan: number) => {
+    if (wan >= 10000) return `¥${(wan / 10000).toFixed(2)}亿`;
+    return `¥${wan}百万`;
+  };
+
+  // Funding advisory calculations (mirrors FundingPlan.tsx)
+  const seedMax = f.seed_max / 10000;
+  const seedMin = f.seed_min / 10000;
+  const y1Loss = -(bestYrs[0]?.net_profit || 0) / 10000;
+  const seedBuffer = seedMax - y1Loss;
+  const licenseAmount = (g.license_amount || 0) / 10000;
+  const milestoneAmount = (g.milestone_payment || 0) / 10000;
+  const cashAfterSeedAndY2 = f.seed_max + (bestYrs[0]?.net_profit || 0) + (bestYrs[1]?.net_profit || 0);
+  const needPreA = cashAfterSeedAndY2 < 0;
+  const ebitdaPositiveYear = bestYrs.findIndex(y => y.ebitda > 0);
+  const ebitdaLabel = ebitdaPositiveYear >= 0 ? `Year ${ebitdaPositiveYear + 1}` : '未转正';
+  let cumNP = 0;
+  const cumByYear = bestYrs.slice(0, 5).map(yr => { cumNP += yr.net_profit; return cumNP; });
+  const cumBreakEvenYear = cumByYear.findIndex(c => c >= 0);
+  const cashAfterPreA = cashAfterSeedAndY2 + f.preA_max + (bestYrs[2]?.net_profit || 0);
+  const needSeriesA = cashAfterPreA < 0;
+
+  const totalMin = (f.seed_min + f.preA_min + f.seriesA_min) / 10000;
+  const totalMax = (f.seed_max + f.preA_max + f.seriesA_max) / 10000;
+  const founderPct = ((1 - f.seed_dilution) * (1 - f.preA_dilution) * (1 - f.seriesA_dilution) * 100).toFixed(0);
+  const cumTotal = resultBest.cumulative_net_profit;
+
+  return {
+    // Revenue chart JSON arrays
+    'som-chart-best-revenue': JSON.stringify(bestRevWan),
+    'som-chart-base-revenue': JSON.stringify(baseRevWan),
+
+    // Revenue labels for chart annotations
+    'best-y5-rev-label': fmtYi(bestRevWan[4]),
+    'base-y5-rev-label': fmtYi(baseRevWan[4]),
+    'best-y10-rev-label': fmtYi(bestRevWan[9]),
+    'base-y10-rev-label': fmtYi(baseRevWan[9]),
+
+    // Funding advisory
+    'fund-total-range': `¥${totalMin.toFixed(0)}–${totalMax.toFixed(0)}万`,
+    'fund-y1-loss': `¥${y1Loss.toFixed(0)}万`,
+    'fund-seed-buffer': `¥${seedBuffer.toFixed(0)}万`,
+    'fund-seed-buffer-status': seedBuffer >= 50 ? 'ok' : seedBuffer >= 0 ? 'warn' : 'danger',
+    'fund-seed-tranche1': `¥${Math.round(seedMin * 0.6)}万`,
+    'fund-seed-tranche2': `¥${Math.round(seedMax - seedMin * 0.6)}万`,
+    'fund-y2-ebitda': `${(bestYrs[1]?.ebitda || 0) >= 0 ? '+' : ''}${((bestYrs[1]?.ebitda || 0) / 10000).toFixed(0)}万`,
+    'fund-license-amount': `¥${licenseAmount.toFixed(0)}万`,
+    'fund-milestone-amount': `¥${milestoneAmount.toFixed(0)}万`,
+    'fund-prea-cash': `¥${(cashAfterSeedAndY2 / 10000).toFixed(0)}万`,
+    'fund-prea-needed': needPreA ? 'yes' : 'no',
+    'fund-a-needed': needSeriesA ? 'yes' : 'no',
+    'fund-ebitda-year': ebitdaLabel,
+    'fund-cum-breakeven': cumBreakEvenYear >= 0 ? `Year ${cumBreakEvenYear + 1}` : '未回正',
+    'fund-advantage-amount': `¥${(licenseAmount + milestoneAmount).toFixed(0)}万`,
+    'fund-seed-dilution': `${(f.seed_dilution * 100).toFixed(0)}%`,
+    'fund-prea-dilution': `${(f.preA_dilution * 100).toFixed(0)}%`,
+    'fund-a-dilution': `${(f.seriesA_dilution * 100).toFixed(0)}%`,
+    'fund-founder-pct': `~${founderPct}%`,
+    'fund-cum-np': `¥${Math.round(cumTotal / 10000).toLocaleString()}万`,
+    'fund-y1-loss-cover': `−¥${y1Loss.toFixed(0)}万`,
   };
 }
 

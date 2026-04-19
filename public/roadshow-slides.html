@@ -1581,6 +1581,135 @@
       line-height: 1.5;
     }
 
+    /* ========== S16 two-column layout ========== */
+    .s16-layout {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    /* SOM dual-line chart styles */
+    .som-legend-dual { gap: 14px; }
+    .som-legend-dual .leg-best,
+    .som-legend-dual .leg-base {
+      display: inline-flex; align-items: center; gap: 6px;
+      color: var(--muted); font-size: 11px;
+    }
+    .som-legend-dual .leg-best::before {
+      content: ""; width: 18px; height: 0;
+      border-top: 3px solid rgba(61,240,100,0.9);
+    }
+    .som-legend-dual .leg-base::before {
+      content: ""; width: 18px; height: 0;
+      border-top: 3px dashed rgba(85,160,255,0.9);
+    }
+
+    .som-chart .best-line { fill: none; stroke: rgba(61,240,100,0.92); stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; }
+    .som-chart .base-line { fill: none; stroke: rgba(85,160,255,0.88); stroke-width: 3; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 10 7; }
+    .som-chart .best-dot { fill: #3df064; stroke: rgba(4,8,18,0.92); stroke-width: 2.5; }
+    .som-chart .base-dot { fill: #55a0ff; stroke: rgba(4,8,18,0.92); stroke-width: 2.5; }
+    .som-chart .best-label { fill: #3df064; font-size: 11px; font-family: var(--mono); font-weight: 700; }
+    .som-chart .base-label { fill: #55a0ff; font-size: 11px; font-family: var(--mono); font-weight: 700; }
+
+    /* Benchmark table */
+    .benchmark-panel {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(130,188,255,0.12);
+      background: rgba(255,255,255,0.025);
+    }
+    .benchmark-title {
+      font-size: 14px; font-weight: 700;
+      color: var(--text); margin-bottom: 8px;
+    }
+    .benchmark-note {
+      font-size: 11px; color: var(--muted); margin-top: 6px; line-height: 1.5;
+    }
+    .accent-warm { color: #ffbf66 !important; font-weight: 600; }
+    .accent-green { color: #56e39f !important; }
+    .accent-rose { color: #ff8a94 !important; font-weight: 700; }
+    .accent-blue { color: #55d5ff !important; }
+
+    /* Funding advisory */
+    .fund-advisory {
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(85,160,255,0.2);
+      background: rgba(30,60,120,0.12);
+      display: grid; gap: 8px;
+    }
+    .fund-advisory-title {
+      font-size: 13px; font-weight: 700; color: var(--text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .fund-badge {
+      font-size: 10px; font-weight: 400; color: var(--muted);
+      background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 8px;
+    }
+    .fund-block {
+      padding: 8px 10px; border-radius: 10px;
+      background: rgba(255,255,255,0.04);
+    }
+    .fund-block-label {
+      font-size: 12px; font-weight: 600; margin-bottom: 3px;
+    }
+    .fund-block-body {
+      font-size: 12px; color: var(--soft); line-height: 1.5;
+    }
+    .fund-block-sub {
+      font-size: 11px; color: var(--muted); margin-top: 3px;
+    }
+
+    /* Fund advantage */
+    .fund-advantage {
+      padding: 10px 14px; border-radius: 12px; font-size: 12px; line-height: 1.6;
+      background: rgba(61,240,100,0.06); border: 1px solid rgba(61,240,100,0.18);
+      color: #56e39f;
+    }
+
+    /* Fund cards */
+    .fund-cards {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .fund-card {
+      padding: 12px; border-radius: 14px;
+      background: rgba(10,21,39,0.6);
+      border: 1px solid rgba(130,188,255,0.12);
+      border-top: 3px solid rgba(130,188,255,0.3);
+    }
+    .fund-card-seed { border-top-color: #55d5ff; }
+    .fund-card-prea { border-top-color: #a78bfa; }
+    .fund-card-a { border-top-color: rgba(130,188,255,0.25); }
+    .fund-card-round {
+      font-size: 10px; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;
+    }
+    .fund-card-amount {
+      font-size: 20px; font-weight: 800; margin: 4px 0;
+    }
+    .fund-card-seed .fund-card-amount { color: #55d5ff; }
+    .fund-card-prea .fund-card-amount { color: #a78bfa; }
+    .fund-card-a .fund-card-amount { color: var(--muted); }
+    .fund-card-timing { font-size: 10px; color: #ffbf66; margin-bottom: 6px; }
+    .fund-card-use { font-size: 10px; color: var(--muted); line-height: 1.5; }
+    .fund-card-dilution { font-size: 10px; color: #a78bfa; margin-top: 5px; }
+
+    /* Fund summary */
+    .fund-summary {
+      display: grid; grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .fund-summary-card {
+      text-align: center; padding: 10px 6px; border-radius: 12px;
+      background: rgba(10,21,39,0.6); border: 1px solid rgba(130,188,255,0.1);
+    }
+    .fund-summary-label { font-size: 10px; color: var(--muted); margin-bottom: 4px; }
+    .fund-summary-value { font-size: 18px; font-weight: 800; }
+    .fund-summary-detail { font-size: 10px; color: var(--muted); margin-top: 3px; }
+
     .risk-grid {
       display: grid;
       grid-template-columns: 1.06fr 0.94fr;
@@ -2139,6 +2268,7 @@
       .pricing-grid,
       .gtm-grid,
       .fin-grid,
+      .s16-layout,
       .risk-grid,
       .team-grid,
       .timeline-grid,
@@ -2308,7 +2438,7 @@
       .fin-bars, .review-list, .hc-grid, .ref-columns,
       .hero-grid, .split-hero, .process-lane, .arch-grid,
       .ai-grid, .value-chain, .quadrant-wrap, .reg-grid,
-      .pricing-grid, .gtm-grid, .fin-grid, .risk-grid,
+      .pricing-grid, .gtm-grid, .fin-grid, .s16-layout, .risk-grid,
       .team-grid, .timeline-grid, .review-grid, .closing-grid {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
@@ -3437,9 +3567,9 @@
       <div class="inner">
         <div class="slide-header fade-up">
           <div>
-            <div class="eyebrow">Financing Plan</div>
+            <div class="eyebrow">Financing Plan &amp; SOM Growth</div>
             <h1 class="title">融资计划与SOM增长曲线</h1>
-            <p class="subtitle">这一页单独回答两个问题：资金分阶段怎么用，以及在获批后的中长期窗口里，SOM 如何沿着可解释的路径放量。</p>
+            <p class="subtitle">资金分阶段怎么用，以及在获批后的中长期窗口里，SOM 如何沿着可解释的路径放量。</p>
           </div>
           <div class="slide-note">
             <span class="chip projected">全部财务数据为测算</span>
@@ -3447,86 +3577,137 @@
           </div>
         </div>
 
-        <div class="fin-grid">
+        <div class="s16-layout">
+          <!-- ========== LEFT: SOM Revenue Chart + Benchmark ========== -->
           <div class="stack fade-up">
             <div class="som-curve-panel projected">
               <div class="som-curve-top">
-                <h3>SOM 的 10 年增长曲线</h3>
-                <div class="som-legend">
-                  <span>五年模型值</span>
-                  <span>十年延展测算</span>
+                <h3>SOM 收入曲线 — Best Case vs Base Case</h3>
+                <div class="som-legend som-legend-dual">
+                  <span class="leg-best">Best Case SOM</span>
+                  <span class="leg-base">Base Case SOM</span>
                 </div>
               </div>
-              <div class="som-chart" aria-label="SOM 十年增长曲线">
+              <div class="som-chart som-chart-revenue" aria-label="SOM 十年收入曲线">
                 <svg viewBox="0 0 1000 300" role="img">
+                  <!-- grid lines -->
                   <line x1="62" y1="240" x2="962" y2="240" stroke="rgba(130,188,255,0.18)" stroke-width="1.5"></line>
                   <line x1="62" y1="190" x2="962" y2="190" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
                   <line x1="62" y1="140" x2="962" y2="140" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
                   <line x1="62" y1="90" x2="962" y2="90" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
                   <line x1="62" y1="40" x2="962" y2="40" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
-
-                  <text x="18" y="244" class="axis-text">0</text>
-                  <text x="8" y="194" class="axis-text soft">400</text>
-                  <text x="8" y="144" class="axis-text soft">800</text>
-                  <text x="2" y="94" class="axis-text soft">1200</text>
-                  <text x="2" y="44" class="axis-text soft">1600</text>
-
-                  <polyline class="solid-line" points="90,240 180,226 270,202 360,172 450,143"></polyline>
-                  <polyline class="dashed-line" points="450,143 540,117 630,95 720,76 810,58 900,44"></polyline>
-
-                  <circle class="solid-dot" cx="90" cy="240" r="7"></circle>
-                  <circle class="solid-dot" cx="180" cy="226" r="7"></circle>
-                  <circle class="solid-dot" cx="270" cy="202" r="7"></circle>
-                  <circle class="solid-dot" cx="360" cy="172" r="7"></circle>
-                  <circle class="solid-dot" cx="450" cy="143" r="7"></circle>
-
-                  <circle class="dashed-dot" cx="540" cy="117" r="6"></circle>
-                  <circle class="dashed-dot" cx="630" cy="95" r="6"></circle>
-                  <circle class="dashed-dot" cx="720" cy="76" r="6"></circle>
-                  <circle class="dashed-dot" cx="810" cy="58" r="6"></circle>
-                  <circle class="dashed-dot" cx="900" cy="44" r="6"></circle>
-
-                  <text x="78" y="258" class="point-label">0</text>
-                  <text x="165" y="214" class="point-label">110</text>
-                  <text x="255" y="190" class="point-label">290</text>
-                  <text x="345" y="160" class="point-label">520</text>
-                  <text x="434" y="131" class="point-label">780</text>
-
-                  <text x="82" y="280" class="axis-text">Y1</text>
-                  <text x="172" y="280" class="axis-text">Y2</text>
-                  <text x="262" y="280" class="axis-text">Y3</text>
-                  <text x="352" y="280" class="axis-text">Y4</text>
-                  <text x="442" y="280" class="axis-text">Y5</text>
-                  <text x="532" y="280" class="axis-text soft">Y6</text>
-                  <text x="622" y="280" class="axis-text soft">Y7</text>
-                  <text x="712" y="280" class="axis-text soft">Y8</text>
-                  <text x="802" y="280" class="axis-text soft">Y9</text>
-                  <text x="888" y="280" class="axis-text soft">Y10</text>
+                  <!-- Y6-Y10 projection zone -->
+                  <rect x="495" y="30" width="475" height="220" rx="8" fill="rgba(255,191,102,0.06)" stroke="rgba(255,191,102,0.12)" stroke-width="1" stroke-dasharray="4 3"></rect>
+                  <text x="650" y="50" fill="rgba(255,191,102,0.5)" font-size="11" font-family="var(--mono)" text-anchor="middle">Y6-Y10 外推区间</text>
+                  <!-- placeholder: will be redrawn by JS -->
+                  <text x="500" y="150" fill="rgba(157,176,201,0.5)" font-size="14" text-anchor="middle">加载中...</text>
                 </svg>
               </div>
               <div class="som-chart-note">
-                <span>Y1-Y5 采用五年模型中的累计商业床位：0 → 110 → 290 → 520 → 780。</span>
-                <span>Y6-Y10 为延展测算，用于展示获批后 SOM 的长期放量形态，不应理解为已锁定经营目标。</span>
+                <span>TAM ¥54-150亿/年（中国ICU广义床位15-25万张 × 年化收入） · SAM ¥15-40亿/年（三级医院口径 × 支付/数据/临床过滤） · SOM = 模型实际计算收入 · Y6-Y10为增长率外推</span>
               </div>
+            </div>
+
+            <!-- Benchmark table -->
+            <div class="benchmark-panel fade-up">
+              <div class="benchmark-title">📌 对标中国AI医疗器械公司</div>
+              <div class="mini-table">
+                <div class="table-row header"><span>公司</span><span>产品</span><span>获批后增长率</span><span>ARIA可比性</span></div>
+                <div class="table-row"><strong>鹰瞳科技</strong><span>AI眼底筛查</span><span class="accent-warm">获批后3年CAGR ~70-90%</span><span>SaaS模型类似</span></div>
+                <div class="table-row"><strong>推想医疗</strong><span>AI肺部CT</span><span class="accent-warm">获批后2年收入 0→¥1.08亿</span><span>AI+影像硬件</span></div>
+                <div class="table-row"><strong>联影医疗</strong><span>高端影像设备</span><span class="accent-warm">早期CAGR ~30-40%</span><span>硬件+SaaS混合</span></div>
+              </div>
+              <div class="benchmark-note">ARIA定位: 非接触多模态AI + 硬件(C2/C3) + SaaS · 获批后增长预期介于鹰瞳(纯SaaS)和联影(纯硬件)之间 · Y3-Y5 目标CAGR 50-80%</div>
             </div>
           </div>
 
+          <!-- ========== RIGHT: Funding Plan ========== -->
           <div class="stack fade-up">
-            <div class="mini-table">
-              <div class="table-row header"><span>轮次</span><span>金额</span><span>主要用途</span></div>
-              <div class="table-row"><strong>种子轮</strong><span data-field="seed-range">¥500-600 万</span><span>CDMO NRE、40 台样机、薪资与注册前准备</span></div>
-              <div class="table-row"><strong>Pre-A</strong><span data-field="preA-range">¥300-500 万</span><span>二类获批后商业化启动与渠道放大</span></div>
-              <div class="table-row"><strong>A 轮（可选）</strong><span data-field="seriesA-range">¥0-500 万</span><span>用于加速扩张，非生存必需</span></div>
+            <!-- Smart Funding Advisory -->
+            <div class="fund-advisory">
+              <div class="fund-advisory-title">📊 融资需求智能分析 <span class="fund-badge">基于模型实时计算</span></div>
+
+              <div class="fund-block">
+                <div class="fund-block-label">🏦 种子轮 SEED — Y1覆盖分析</div>
+                <div class="fund-block-body">
+                  Y1亏损 <strong class="accent-rose" data-field="fund-y1-loss">¥598万</strong> · 种子轮 <span data-field="seed-range">¥600-800 万</span>
+                  · <span class="accent-green" data-field="fund-seed-buffer-text">✅ 余量充足 (¥202万)</span>
+                </div>
+                <div class="fund-block-sub">建议分两期到账：<span class="accent-blue">第1期 M1 <span data-field="fund-seed-tranche1">¥360万</span></span> (CDMO+原型) · <span class="accent-blue">第2期 M6 <span data-field="fund-seed-tranche2">¥440万</span></span> (试点+CRO)</div>
+              </div>
+
+              <div class="fund-block">
+                <div class="fund-block-label">💜 Pre-A轮 — M13~M15到账</div>
+                <div class="fund-block-body">
+                  Y2 EBITDA: <span class="accent-green" data-field="fund-y2-ebitda">+99万</span>
+                  · 非稀释收入: 经销商授权金 <span data-field="fund-license-amount">¥300万</span> + 里程碑 <span data-field="fund-milestone-amount">¥200万</span>
+                </div>
+                <div class="fund-block-sub accent-green" data-field="fund-prea-status-text">✅ 种子轮后Y2末现金 +¥276万 → 经销商授权金可替代大部分Pre-A</div>
+              </div>
+
+              <div class="fund-block">
+                <div class="fund-block-label">🟡 A轮评估</div>
+                <div class="fund-block-body accent-green" data-field="fund-a-status-text">✅ EBITDA Year 2转正，累计Year 3回正 → 不需要A轮融资</div>
+              </div>
             </div>
-            <div class="panel projected">
-              <div class="panel-title">关键财务锚点</div>
-              <h3>基准模型下，<span data-field="ebitda-year-inline">Year 2</span> EBITDA 转正，Year 5 总收入约 <span data-field="y5-revenue">¥1,665 万</span>；当前无外部融资，所有财务曲线都应被理解为经营模型而非既有经营结果。</h3>
-              <p>这些数字均以注册时点、渠道合作、续约率和单床经济模型为前提；项目下一步的关键，是把融资、注册和试点里程碑严格绑定，避免资金消耗先于证据积累。</p>
+
+            <!-- Key Advantage -->
+            <div class="fund-advantage">
+              💡 <strong>关键优势</strong>：合作经销商授权金+里程碑=<span data-field="fund-advantage-amount">¥500万</span>，可部分或完全替代Pre-A轮融资，大幅降低稀释。EBITDA <span data-field="fund-ebitda-year">Year 2</span>转正后无需A轮。
+            </div>
+
+            <!-- Funding Round Cards -->
+            <div class="fund-cards">
+              <div class="fund-card fund-card-seed">
+                <div class="fund-card-round">种子轮 · SEED</div>
+                <div class="fund-card-amount" data-field="seed-range">¥600–800万</div>
+                <div class="fund-card-timing">📅 M1–M3 (2026年7–9月)</div>
+                <div class="fund-card-use">CDMO原型(40%) · 试点部署(25%)<br/>算法验证(20%) · 云/工具(15%)</div>
+                <div class="fund-card-dilution">稀释 <span data-field="fund-seed-dilution">18%</span></div>
+              </div>
+              <div class="fund-card fund-card-prea">
+                <div class="fund-card-round">PRE-A轮 (或经销商替代)</div>
+                <div class="fund-card-amount" data-field="preA-range">¥400–600万</div>
+                <div class="fund-card-timing">📅 M13–M15 (2027年7–9月)</div>
+                <div class="fund-card-use">注册审评(35%) · CMO备料(30%)<br/>质量体系(20%) · 运营(15%)</div>
+                <div class="fund-card-dilution">经销商授权金可覆盖50–75% · 稀释 <span data-field="fund-prea-dilution">10%</span></div>
+              </div>
+              <div class="fund-card fund-card-a">
+                <div class="fund-card-round">A轮(可选)</div>
+                <div class="fund-card-amount" data-field="seriesA-range">¥0–0万</div>
+                <div class="fund-card-timing">📅 M25–M30 (如需)</div>
+                <div class="fund-card-use">三类审评(25%) · 扩产(20%)<br/>仅在EBITDA未转正时启动<br/>否则不需要</div>
+                <div class="fund-card-dilution">EBITDA Y2已转正时无需 · 稀释 <span data-field="fund-a-dilution">10%</span></div>
+              </div>
+            </div>
+
+            <!-- Summary Cards -->
+            <div class="fund-summary">
+              <div class="fund-summary-card">
+                <div class="fund-summary-label">总融资(最轻量)</div>
+                <div class="fund-summary-value accent-blue" data-field="fund-total-range">¥1000–1400万</div>
+                <div class="fund-summary-detail">经销商替代Pre-A时最优</div>
+              </div>
+              <div class="fund-summary-card">
+                <div class="fund-summary-label">创始团队持股</div>
+                <div class="fund-summary-value accent-green" data-field="fund-founder-pct">~67%</div>
+                <div class="fund-summary-detail">经销商替代Pre-A时最优</div>
+              </div>
+              <div class="fund-summary-card">
+                <div class="fund-summary-label">Y1亏损覆盖</div>
+                <div class="fund-summary-value accent-rose" data-field="fund-y1-loss-cover">−¥598万</div>
+                <div class="fund-summary-detail">种子轮覆盖</div>
+              </div>
+              <div class="fund-summary-card">
+                <div class="fund-summary-label">五年累计净利润</div>
+                <div class="fund-summary-value accent-green" data-field="fund-cum-np">¥91,577万</div>
+                <div class="fund-summary-detail">EBITDA <span data-field="fund-ebitda-year">Year 2</span>转正</div>
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="source-box"><strong>说明：</strong>本页为融资计划与 SOM 延展测算页，外部床位口径与授权费率锚点已在相关正文页标注。</div>
+        <div class="source-box"><strong>说明：</strong>本页为融资计划与 SOM 延展测算页。对标数据来源：各公司财报/招股书；SOM = 模型实际计算收入。</div>
       </div>
     </div>
   </section>
@@ -3985,26 +4166,23 @@
   <script>
     /* === ARIA Data Binding === */
 
-    /* Redraw SOM chart SVG from a beds array [Y1..Y10] */
+    /* Redraw SOM chart SVG from a beds array [Y1..Y10] — legacy single-line */
     function redrawSOMChart(beds) {
-      var chart = document.querySelector('.som-chart');
+      var chart = document.querySelector('.som-chart:not(.som-chart-revenue)');
       if (!chart) return;
       var svg = chart.querySelector('svg');
       if (!svg) return;
 
       var maxVal = Math.max.apply(null, beds);
-      /* Round up to nearest nice step */
       var step = maxVal <= 200 ? 50 : maxVal <= 500 ? 100 : maxVal <= 1000 ? 200 : maxVal <= 2000 ? 400 : maxVal <= 5000 ? 1000 : 2000;
       var yMax = Math.ceil(maxVal * 1.15 / step) * step;
       if (yMax === 0) yMax = step;
 
       var xStart = 90, xStep = 90;
       var yBottom = 240, yTop = 40, yRange = yBottom - yTop;
-
       function toY(v) { return yBottom - (v / yMax) * yRange; }
       function toX(i) { return xStart + i * xStep; }
 
-      /* Build grid + axis labels */
       var html = '';
       for (var g = 0; g <= 4; g++) {
         var gy = yBottom - g * (yRange / 4);
@@ -4016,42 +4194,117 @@
         var cls = g === 0 ? 'axis-text' : 'axis-text soft';
         html += '<text x="' + tx + '" y="' + (gy + 4) + '" class="' + cls + '">' + gv + '</text>';
       }
-
-      /* Solid line (Y1-Y5) */
       var solidPts = [];
       for (var i = 0; i < 5; i++) solidPts.push(toX(i) + ',' + toY(beds[i]));
       html += '<polyline class="solid-line" points="' + solidPts.join(' ') + '"></polyline>';
-
-      /* Dashed line (Y5-Y10) */
       var dashPts = [toX(4) + ',' + toY(beds[4])];
       for (var j = 5; j < 10; j++) dashPts.push(toX(j) + ',' + toY(beds[j]));
       html += '<polyline class="dashed-line" points="' + dashPts.join(' ') + '"></polyline>';
-
-      /* Dots */
       for (var s = 0; s < 5; s++) html += '<circle class="solid-dot" cx="' + toX(s) + '" cy="' + toY(beds[s]) + '" r="7"></circle>';
       for (var d = 5; d < 10; d++) html += '<circle class="dashed-dot" cx="' + toX(d) + '" cy="' + toY(beds[d]) + '" r="6"></circle>';
-
-      /* Point labels (Y1-Y5 only) */
       for (var p = 0; p < 5; p++) {
         html += '<text x="' + (toX(p) - 12) + '" y="' + (toY(beds[p]) - 12) + '" class="point-label">' + beds[p] + '</text>';
       }
-
-      /* X-axis labels */
       for (var a = 0; a < 10; a++) {
         var acls = a < 5 ? 'axis-text' : 'axis-text soft';
         html += '<text x="' + (toX(a) - 8) + '" y="280" class="' + acls + '">Y' + (a + 1) + '</text>';
       }
+      svg.innerHTML = html;
+    }
+
+    /* Redraw dual-line SOM REVENUE chart [Y1..Y10] for s16 */
+    function redrawSOMRevenueChart(bestRev, baseRev) {
+      var chart = document.querySelector('.som-chart-revenue');
+      if (!chart) return;
+      var svg = chart.querySelector('svg');
+      if (!svg) return;
+
+      var allVals = bestRev.concat(baseRev);
+      var maxVal = Math.max.apply(null, allVals);
+      /* Nice Y-axis step in 万 */
+      var step = maxVal <= 500 ? 100 : maxVal <= 1000 ? 200 : maxVal <= 2000 ? 500 : maxVal <= 5000 ? 1000 : maxVal <= 10000 ? 2000 : 5000;
+      var yMax = Math.ceil(maxVal * 1.12 / step) * step;
+      if (yMax === 0) yMax = step;
+
+      var xStart = 72, xStep = 90;
+      var yBottom = 238, yTop = 38, yRange = yBottom - yTop;
+      function toY(v) { return yBottom - (v / yMax) * yRange; }
+      function toX(i) { return xStart + i * xStep; }
+
+      /* Format label: 万 → 亿 or 百万 */
+      function fmtLabel(wan) {
+        if (wan >= 10000) return String.fromCharCode(165) + (wan / 10000).toFixed(2) + String.fromCharCode(20159);
+        if (wan >= 100) return String.fromCharCode(165) + (wan / 100).toFixed(1) + String.fromCharCode(30334) + String.fromCharCode(19975);
+        return String.fromCharCode(165) + wan + String.fromCharCode(19975);
+      }
+
+      var html = '';
+
+      /* Y6-Y10 projection zone */
+      var zoneX = (toX(4) + toX(5)) / 2;
+      html += '<rect x="' + zoneX + '" y="28" width="' + (toX(9) - zoneX + 40) + '" height="' + (yBottom - 20) + '" rx="8" fill="rgba(255,191,102,0.06)" stroke="rgba(255,191,102,0.12)" stroke-width="1" stroke-dasharray="4 3"></rect>';
+      html += '<text x="' + ((toX(6) + toX(8)) / 2) + '" y="48" fill="rgba(255,191,102,0.5)" font-size="11" font-family="var(--mono)" text-anchor="middle">Y6-Y10 \u5916\u63A8\u533A\u95F4</text>';
+
+      /* Grid lines + Y-axis labels */
+      for (var g = 0; g <= 4; g++) {
+        var gy = yBottom - g * (yRange / 4);
+        var gv = Math.round((g / 4) * yMax);
+        var opacity = g === 0 ? '0.18' : '0.12';
+        var sw = g === 0 ? '1.5' : '1';
+        html += '<line x1="62" y1="' + gy + '" x2="962" y2="' + gy + '" stroke="rgba(130,188,255,' + opacity + ')" stroke-width="' + sw + '"></line>';
+        /* Format axis as 亿 if large enough */
+        var axisLabel;
+        if (gv >= 10000) axisLabel = (gv / 10000).toFixed(1) + '\u4EBF';
+        else if (gv >= 1000) axisLabel = (gv / 1000).toFixed(0) + 'K';
+        else axisLabel = String(gv);
+        var tx = axisLabel.length >= 4 ? 2 : axisLabel.length >= 3 ? 6 : 14;
+        var cls = g === 0 ? 'axis-text' : 'axis-text soft';
+        html += '<text x="' + tx + '" y="' + (gy + 4) + '" class="' + cls + '">' + axisLabel + '</text>';
+      }
+
+      /* Best case line (green solid) */
+      var bestPts = [];
+      for (var i = 0; i < 10; i++) bestPts.push(toX(i) + ',' + toY(bestRev[i]));
+      html += '<polyline class="best-line" points="' + bestPts.join(' ') + '"></polyline>';
+
+      /* Base case line (blue dashed) */
+      var basePts = [];
+      for (var i2 = 0; i2 < 10; i2++) basePts.push(toX(i2) + ',' + toY(baseRev[i2]));
+      html += '<polyline class="base-line" points="' + basePts.join(' ') + '"></polyline>';
+
+      /* Best case dots */
+      for (var s = 0; s < 10; s++) {
+        var r = s < 5 ? 5.5 : 4.5;
+        html += '<circle class="best-dot" cx="' + toX(s) + '" cy="' + toY(bestRev[s]) + '" r="' + r + '"></circle>';
+      }
+      /* Base case dots */
+      for (var d = 0; d < 10; d++) {
+        var r2 = d < 5 ? 4.5 : 3.5;
+        html += '<circle class="base-dot" cx="' + toX(d) + '" cy="' + toY(baseRev[d]) + '" r="' + r2 + '"></circle>';
+      }
+
+      /* Key labels: Y5 and Y10 for both */
+      var labelPairs = [
+        { idx: 4, best: bestRev[4], base: baseRev[4] },
+        { idx: 9, best: bestRev[9], base: baseRev[9] }
+      ];
+      labelPairs.forEach(function(lp) {
+        var bx = toX(lp.idx);
+        /* Best label (above) */
+        html += '<text x="' + (bx + 8) + '" y="' + (toY(lp.best) - 10) + '" class="best-label">' + fmtLabel(lp.best) + '</text>';
+        /* Base label (below) */
+        html += '<text x="' + (bx + 8) + '" y="' + (toY(lp.base) + 18) + '" class="base-label">' + fmtLabel(lp.base) + '</text>';
+      });
+
+      /* X-axis labels */
+      for (var a = 0; a < 10; a++) {
+        var acls = a < 5 ? 'axis-text' : 'axis-text soft';
+        html += '<text x="' + (toX(a) - 8) + '" y="' + (yBottom + 22) + '" class="' + acls + '">Y' + (a + 1) + '</text>';
+      }
 
       svg.innerHTML = html;
 
-      /* Update note text */
-      var note = chart.parentElement.querySelector('.som-chart-note');
-      if (note) {
-        var spans = note.querySelectorAll('span');
-        if (spans[0]) spans[0].textContent = 'Y1-Y5 采用五年模型中的累计商业床位：' + beds.slice(0, 5).join(' → ') + '。';
-      }
-
-      /* Flash the chart border to indicate update */
+      /* Flash chart */
       chart.style.outline = '2px solid rgba(255,191,0,0.6)';
       chart.style.borderRadius = '12px';
       setTimeout(function() { chart.style.outline = 'none'; }, 2000);
@@ -4063,7 +4316,7 @@
       if (e.data.type === 'aria-data-update') {
         var updates = e.data.updates || {};
 
-        /* Handle SOM chart redraw if bed data is present */
+        /* Handle legacy SOM bed chart redraw */
         if (updates['som-chart-beds']) {
           try {
             var beds = JSON.parse(updates['som-chart-beds']);
@@ -4073,9 +4326,20 @@
           } catch(ex) { /* ignore parse error */ }
         }
 
+        /* Handle dual SOM revenue chart redraw */
+        if (updates['som-chart-best-revenue'] && updates['som-chart-base-revenue']) {
+          try {
+            var bestRev = JSON.parse(updates['som-chart-best-revenue']);
+            var baseRev = JSON.parse(updates['som-chart-base-revenue']);
+            if (Array.isArray(bestRev) && bestRev.length === 10 && Array.isArray(baseRev) && baseRev.length === 10) {
+              redrawSOMRevenueChart(bestRev, baseRev);
+            }
+          } catch(ex) { /* ignore parse error */ }
+        }
+
         Object.keys(updates).forEach(function(field) {
           /* Skip chart data keys — handled above */
-          if (field === 'som-chart-beds' || field === 'som-chart-revenue') return;
+          if (field === 'som-chart-beds' || field === 'som-chart-revenue' || field === 'som-chart-best-revenue' || field === 'som-chart-base-revenue') return;
 
           /* Handle bar chart --pct updates via data-pct-field */
           var pctEl = document.querySelector('[data-pct-field="' + field + '"]');
@@ -4092,7 +4356,7 @@
             if (current !== newVal) {
               el.textContent = newVal;
               el.classList.add('data-updated');
-              el.title = '已更新 — 点击接受';
+              el.title = '\u5DF2\u66F4\u65B0 \u2014 \u70B9\u51FB\u63A5\u53D7';
             }
           });
         });

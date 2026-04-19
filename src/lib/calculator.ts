@@ -536,7 +536,8 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     const totalOpex = od.salary + od.cdmo_nre + od.pilot_bom + od.cro + od.reg + od.compliance + od.patent_ai + od.travel_ops;
 
     const ebitda = grossProfit - totalOpex;
-    raw_dep *= scale;
+    // Depreciation: office/IT/R&D assets grow with headcount (salary rate), not revenue
+    raw_dep *= salaryGr;
     const dep = Math.round(raw_dep);
     const netProfit = ebitda - dep;
 

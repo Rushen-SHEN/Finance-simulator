@@ -7,7 +7,7 @@ const DB_NAME = 'aria-archive';
 const DB_VERSION = 1;
 const STORE_NAME = 'documents';
 
-export type ArchiveType = 'financial_plan' | 'bp' | 'roadshow';
+export type ArchiveType = 'financial_plan' | 'bp' | 'roadshow' | 'hicool';
 
 export interface ArchiveEntry {
   id?: number;                // auto-increment

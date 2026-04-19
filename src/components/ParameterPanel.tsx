@@ -446,8 +446,8 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               </div>
             </div>
 
-            {/* COGS Y1-5 per-year breakdown */}
-            <SectionTitle>COGS 年度明细 (Y1–5, 万元)</SectionTitle>
+            {/* COGS Y1-10 per-year breakdown */}
+            <SectionTitle>COGS 年度明细 (Y1–10, 万元)</SectionTitle>
             <div className="overflow-x-auto rounded-lg border border-slate-700/50">
               <table className="w-full text-xs">
                 <thead>
@@ -466,31 +466,31 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                       <>
                         <tr className="border-t border-slate-700/30">
                           <td className="px-3 py-2 text-slate-400">直销C2 × ¥{(bom_c2/10000).toFixed(2)}万</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                          {scenarioResult.years.map((yr, i) => (
                             <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.direct_c2 * bom_c2)}</td>
                           ))}
                         </tr>
                         <tr className="border-t border-slate-700/30">
                           <td className="px-3 py-2 text-slate-400">直销C3 × ¥{(bom_c3/10000).toFixed(2)}万</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                          {scenarioResult.years.map((yr, i) => (
                             <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.direct_c3 * bom_c3)}</td>
                           ))}
                         </tr>
                         <tr className="border-t border-slate-700/30">
                           <td className="px-3 py-2 text-slate-400">升级 × ¥{(bom_upg/10000).toFixed(2)}万</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                          {scenarioResult.years.map((yr, i) => (
                             <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.actual_upgrade * bom_upg)}</td>
                           ))}
                         </tr>
                         <tr className="border-t border-cyan-500/20 bg-cyan-500/5">
                           <td className="px-3 py-2 text-cyan-300 font-bold">COGS合计</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                          {scenarioResult.years.map((yr, i) => (
                             <td key={i} className="text-right px-2 py-2 font-mono text-cyan-300 font-bold">{fmtW(yr.cogs)}</td>
                           ))}
                         </tr>
                         <tr className="border-t border-slate-700/30">
                           <td className="px-3 py-2 text-amber-400/80">COGS比率</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => {
+                          {scenarioResult.years.map((yr, i) => {
                             const rate = yr.total_revenue > 0 ? (yr.cogs / yr.total_revenue * 100) : 0;
                             return (
                               <td key={i} className={`text-right px-2 py-2 font-mono ${rate > 50 ? 'text-red-400' : rate > 40 ? 'text-amber-400' : 'text-green-400'}`}>
@@ -501,7 +501,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                         </tr>
                         <tr className="border-t border-slate-700/30 bg-slate-800/20">
                           <td className="px-3 py-2 text-slate-400 font-medium">毛利</td>
-                          {scenarioResult.years.slice(0, 5).map((yr, i) => (
+                          {scenarioResult.years.map((yr, i) => (
                             <td key={i} className={`text-right px-2 py-2 font-mono font-medium ${yr.gross_profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtW(yr.gross_profit)}</td>
                           ))}
                         </tr>
@@ -512,7 +512,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               </table>
             </div>
             <div className="rounded-lg p-2 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500">
-              📐 COGS = Σ(直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM_升级) · 经销商渠道=佣金模式,不计BOM · 毛利 = 总收入−COGS
+              📐 Y1-5: COGS = Σ(直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM_升级) · Y6-10: COGS = COGS目标比率 × 总收入 · 毛利 = 总收入−COGS
             </div>
 
             {/* ===== Y6-Y10 COGS / OpEx Projection ===== */}
@@ -681,9 +681,9 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
 
             <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500 leading-relaxed space-y-1">
               <div>📐 <strong>Y6-Y10 COGS</strong> = 总收入 × COGS目标比率（不再按BOM逐台精算）</div>
-              <div>📐 <strong>Y6-Y10 OpEx</strong> = 上年OpEx × (1 + OpEx增长率)，逐年独立设定</div>
+              <div>📐 <strong>Y6-Y10 OpEx</strong> = 薪资按独立调薪率增长（人员封顶），其余项按OpEx增长率增长</div>
               <div>📐 <strong>EBITDA</strong> = 毛利(总收入−COGS) − OpEx合计</div>
-              <div>⚠ 保守情景EBITDA为负：续约率55%(SaaS复利弱) + COGS 36%(未优化) + 低增速(20%→15%) + 高OpEx增速(35%→24%) → 成本增长快于收入增长，Y10入不敷出</div>
+              <div>📐 <strong>折旧摊销</strong> = 办公/IT设备+研发工具+IP摊销（ARIA直售硬件给医院，BOM计入COGS非资本化）</div>
             </div>
           </div>
         )}
@@ -1298,15 +1298,15 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                     <tr className="border-t border-slate-700/30">
                       <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ 直销C2</td>
                       {scenarioResult.years.map((yr, i) => {
-                        const v = i < 5 ? yr.direct_c2 * bom_c2 : yr.cogs * 0.4;
-                        return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{fmtWan(v)}</td>;
+                        const v = i < 5 ? yr.direct_c2 * bom_c2 : 0;
+                        return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{v > 0 ? fmtWan(v) : '—'}</td>;
                       })}
                     </tr>
                     <tr className="border-t border-slate-700/20">
                       <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ 直销C3</td>
                       {scenarioResult.years.map((yr, i) => {
-                        const v = i < 5 ? yr.direct_c3 * bom_c3 : yr.cogs * 0.4;
-                        return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{fmtWan(v)}</td>;
+                        const v = i < 5 ? yr.direct_c3 * bom_c3 : 0;
+                        return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{v > 0 ? fmtWan(v) : '—'}</td>;
                       })}
                     </tr>
                     <tr className="border-t border-slate-700/20">
@@ -1352,8 +1352,8 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 <div>　　Y1-5: COGS = Σ(直销C2 × BOM_C2 + 直销C3 × BOM_C3 + 升级 × BOM_升级)  ⚠经销商渠道不计BOM</div>
                 <div>　　Y6-10: COGS = 总收入 × 目标COGS率 ({(so.cogs_rate_target * 100).toFixed(0)}%)</div>
                 <div>📐 <strong>薪资合计</strong> (Y1-5) = 团队人数 × 人均薪资 （OpEx tab 手动设置）</div>
-                <div>　　Y6-10: 薪资<sub>Yn</sub> = 薪资<sub>Yn-1</sub> × (1 + OpEx增速<sub>Yn</sub>)</div>
-                <div>　　当前: Y6={(so.opex_growth_y6 * 100).toFixed(0)}% → Y7={(so.opex_growth_y7 * 100).toFixed(0)}% → Y8={(so.opex_growth_y8 * 100).toFixed(0)}% → Y9={(so.opex_growth_y9 * 100).toFixed(0)}% → Y10={(so.opex_growth_y10 * 100).toFixed(0)}%</div>
+                <div>　　Y6-10: 薪资<sub>Yn</sub> = 薪资<sub>Yn-1</sub> × (1 + 薪资增速) — 人员封顶后仅反映调薪</div>
+                <div>　　当前薪资增速: {(so.salary_growth * 100).toFixed(0)}%/年 （OpEx其他项增速: Y6={(so.opex_growth_y6 * 100).toFixed(0)}%→Y10={(so.opex_growth_y10 * 100).toFixed(0)}%）</div>
                 <div>📐 <strong>其他OpEx</strong> (Y6-10): 注册/合规/专利/差旅按同比例增长，CDMO/CRO/试产归零</div>
               </div>
 
