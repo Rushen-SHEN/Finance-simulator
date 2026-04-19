@@ -113,7 +113,7 @@ export default function RoadshowPage() {
       {/* Full-viewport iframe — 1:1 roadshow.html */}
       <iframe
         ref={iframeRef}
-        src={`${basePath}/roadshow.html`}
+        src={`${basePath}/roadshow-slides.html`}
         className="w-full h-full border-0"
         title="ARIA 路演稿"
         onLoad={() => setIframeReady(true)}

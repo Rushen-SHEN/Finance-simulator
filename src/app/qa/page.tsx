@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
-import { DEFAULT_MODEL } from '@/lib/defaults';
+import { DEFAULT_MODEL, BP_TARGETS } from '@/lib/defaults';
 import { loadModel } from '@/lib/storage';
 import {
   BP_MAIN_TABLE, BP_SOM,
@@ -10,6 +10,10 @@ import {
 } from '@/lib/bp-reference';
 
 const YEAR_LABELS = ['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'];
+
+// ARIA Finance Plan v2.0 data (BPccR2 §9.2 Best Case, Y1-Y5 only)
+const FP_VERSION = 'Finance Plan v2.0';
+const BP_VERSION = 'BP v2.1 (2026-04-19)';
 
 export default function QAPage() {
   const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
@@ -101,34 +105,37 @@ export default function QAPage() {
               <div className="text-sm font-bold mb-1 text-white">
                 {conflicts.length > 0 ? `⚠️ 发现 ${conflicts.length} 处数据冲突` : '✓ 所有数据与BP一致'}
               </div>
-              <div className="text-xs text-slate-400">BP版本: v2.1 (2026-04-19) · 容差: 5%</div>
+              <div className="text-xs text-slate-400">{BP_VERSION} · {FP_VERSION} (BPccR2 §9.2) · 容差: 5%</div>
             </div>
 
-            {/* Revenue comparison */}
+            {/* Revenue comparison — 3-way */}
             <div>
               <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">收入对比 (万元)</h3>
-              <div className="rounded-xl border border-slate-700 overflow-hidden">
+              <div className="rounded-xl border border-slate-700 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-800/80">
                       <th className="text-left px-3 py-2 text-slate-400 font-medium">年份</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">BP值</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">模拟器</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">差异</th>
+                      <th className="text-right px-2 py-2 text-amber-400/80 font-medium text-xs">{BP_VERSION.split(' (')[0]}</th>
+                      <th className="text-right px-2 py-2 text-violet-400/80 font-medium text-xs">{FP_VERSION}</th>
+                      <th className="text-right px-2 py-2 text-cyan-400/80 font-medium text-xs">模拟器</th>
+                      <th className="text-right px-2 py-2 text-slate-400 font-medium text-xs">BP差异</th>
                     </tr>
                   </thead>
                   <tbody>
                     {YEAR_LABELS.map((label, i) => {
                       const bp = BP_MAIN_TABLE.total_revenue[i];
+                      const fp = BP_TARGETS.total_revenue[i];
                       const sim = liveData.revenue[i];
                       const diff = bp > 0 ? ((sim - bp) / bp * 100).toFixed(1) : '—';
                       const isConflict = bp > 0 && Math.abs(sim - bp) / bp > 0.05;
                       return (
                         <tr key={label} className={`border-t border-slate-700/50 ${isConflict ? 'bg-amber-500/5' : ''}`}>
                           <td className="px-3 py-2 text-slate-300 font-mono">{label}</td>
-                          <td className="px-3 py-2 text-right text-slate-400 font-mono">{bp.toLocaleString()}</td>
-                          <td className={`px-3 py-2 text-right font-mono ${isConflict ? 'text-amber-400' : 'text-slate-300'}`}>{sim.toLocaleString()}</td>
-                          <td className={`px-3 py-2 text-right font-mono text-xs ${isConflict ? 'text-amber-400' : 'text-slate-500'}`}>{diff === '—' ? '—' : `${diff}%`}</td>
+                          <td className="px-2 py-2 text-right text-amber-400/70 font-mono">{bp.toLocaleString()}</td>
+                          <td className="px-2 py-2 text-right text-violet-400/70 font-mono">{fp > 0 ? fp.toLocaleString() : <span className="text-slate-600">—</span>}</td>
+                          <td className={`px-2 py-2 text-right font-mono ${isConflict ? 'text-amber-400' : 'text-cyan-300'}`}>{sim.toLocaleString()}</td>
+                          <td className={`px-2 py-2 text-right font-mono text-xs ${isConflict ? 'text-amber-400' : 'text-slate-500'}`}>{diff === '—' ? '—' : `${diff}%`}</td>
                         </tr>
                       );
                     })}
@@ -137,32 +144,36 @@ export default function QAPage() {
               </div>
             </div>
 
-            {/* EBITDA comparison */}
+            {/* EBITDA comparison — 3-way */}
             <div>
               <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">EBITDA对比 (万元)</h3>
-              <div className="rounded-xl border border-slate-700 overflow-hidden">
+              <div className="rounded-xl border border-slate-700 overflow-x-auto">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-slate-800/80">
                       <th className="text-left px-3 py-2 text-slate-400 font-medium">年份</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">BP值</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">模拟器</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">差异</th>
+                      <th className="text-right px-2 py-2 text-amber-400/80 font-medium text-xs">{BP_VERSION.split(' (')[0]}</th>
+                      <th className="text-right px-2 py-2 text-violet-400/80 font-medium text-xs">{FP_VERSION}</th>
+                      <th className="text-right px-2 py-2 text-cyan-400/80 font-medium text-xs">模拟器</th>
+                      <th className="text-right px-2 py-2 text-slate-400 font-medium text-xs">BP差异</th>
                     </tr>
                   </thead>
                   <tbody>
                     {YEAR_LABELS.map((label, i) => {
                       const bp = BP_MAIN_TABLE.ebitda[i];
+                      const fp = BP_TARGETS.ebitda[i];
                       const sim = liveData.ebitda[i];
                       const absBp = Math.abs(bp);
                       const diff = absBp > 0 ? ((sim - bp) / absBp * 100).toFixed(1) : (sim === bp ? '0.0' : '—');
                       const isConflict = absBp > 0 ? Math.abs(sim - bp) / absBp > 0.05 : Math.abs(sim - bp) > 50;
+                      const hasFp = fp !== 0 || i === 0; // Y1 can be 0 legitimately for EBITDA but BP_TARGETS has -180
                       return (
                         <tr key={label} className={`border-t border-slate-700/50 ${isConflict ? 'bg-amber-500/5' : ''}`}>
                           <td className="px-3 py-2 text-slate-300 font-mono">{label}</td>
-                          <td className="px-3 py-2 text-right text-slate-400 font-mono">{bp.toLocaleString()}</td>
-                          <td className={`px-3 py-2 text-right font-mono ${isConflict ? 'text-amber-400' : 'text-slate-300'}`}>{sim.toLocaleString()}</td>
-                          <td className={`px-3 py-2 text-right font-mono text-xs ${isConflict ? 'text-amber-400' : 'text-slate-500'}`}>{diff}%</td>
+                          <td className="px-2 py-2 text-right text-amber-400/70 font-mono">{bp.toLocaleString()}</td>
+                          <td className="px-2 py-2 text-right text-violet-400/70 font-mono">{hasFp && i < 5 ? fp.toLocaleString() : <span className="text-slate-600">—</span>}</td>
+                          <td className={`px-2 py-2 text-right font-mono ${isConflict ? 'text-amber-400' : 'text-cyan-300'}`}>{sim.toLocaleString()}</td>
+                          <td className={`px-2 py-2 text-right font-mono text-xs ${isConflict ? 'text-amber-400' : 'text-slate-500'}`}>{diff}%</td>
                         </tr>
                       );
                     })}
@@ -179,8 +190,8 @@ export default function QAPage() {
                   <thead>
                     <tr className="bg-slate-800/80">
                       <th className="text-left px-3 py-2 text-slate-400 font-medium">年份</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">BP值</th>
-                      <th className="text-right px-3 py-2 text-slate-400 font-medium">模拟器</th>
+                      <th className="text-right px-2 py-2 text-amber-400/80 font-medium text-xs">{BP_VERSION.split(' (')[0]}</th>
+                      <th className="text-right px-2 py-2 text-cyan-400/80 font-medium text-xs">模拟器</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -191,13 +202,29 @@ export default function QAPage() {
                       return (
                         <tr key={label} className={`border-t border-slate-700/50 ${isConflict ? 'bg-amber-500/5' : ''}`}>
                           <td className="px-3 py-2 text-slate-300 font-mono">{label}</td>
-                          <td className="px-3 py-2 text-right text-slate-400 font-mono">{bp.toLocaleString()}</td>
-                          <td className={`px-3 py-2 text-right font-mono ${isConflict ? 'text-amber-400' : 'text-slate-300'}`}>{sim.toLocaleString()}</td>
+                          <td className="px-2 py-2 text-right text-amber-400/70 font-mono">{bp.toLocaleString()}</td>
+                          <td className={`px-2 py-2 text-right font-mono ${isConflict ? 'text-amber-400' : 'text-cyan-300'}`}>{sim.toLocaleString()}</td>
                         </tr>
                       );
                     })}
                   </tbody>
                 </table>
+              </div>
+            </div>
+
+            {/* Version legend */}
+            <div className="flex flex-wrap gap-3 p-3 rounded-xl border border-slate-700/50 bg-slate-800/20">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-amber-400/70" />
+                <span className="text-[11px] text-slate-400">{BP_VERSION}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-violet-400/70" />
+                <span className="text-[11px] text-slate-400">{FP_VERSION} (BPccR2 §9.2 Best Case, Y1-Y5)</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-cyan-400/70" />
+                <span className="text-[11px] text-slate-400">模拟器实时计算</span>
               </div>
             </div>
 
@@ -323,6 +350,40 @@ export default function QAPage() {
 
         {activeTab === 'scenarios' && (
           <div className="space-y-6">
+            {/* Glossary */}
+            <div className="p-5 rounded-xl border border-slate-700 bg-slate-800/30">
+              <h3 className="text-sm font-bold text-slate-200 mb-3">📖 术语表 (Glossary)</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1.5 text-xs">
+                {[
+                  ['ARR', 'Annual Recurring Revenue — 年度经常性收入，SaaS订阅模式下按年计算的可预期收入'],
+                  ['EBITDA', 'Earnings Before Interest, Taxes, Depreciation & Amortization — 息税折旧摊销前利润'],
+                  ['SOM', 'Serviceable Obtainable Market — 可获得服务市场，实际可触达的市场规模'],
+                  ['SAM', 'Serviceable Available Market — 可服务市场，产品理论可覆盖的市场总量'],
+                  ['SaaS', 'Software as a Service — 软件即服务，按订阅周期收费的云/端软件模式'],
+                  ['BOM', 'Bill of Materials — 物料清单，硬件产品的原材料与零部件成本'],
+                  ['COGS', 'Cost of Goods Sold — 销货成本，直接用于生产产品的费用总和'],
+                  ['OpEx', 'Operating Expenses — 运营支出，研发/销售/管理等日常经营开支'],
+                  ['P&L', 'Profit & Loss Statement — 损益表，记录收入与支出的财务报表'],
+                  ['CDMO', 'Contract Development & Manufacturing Organization — 合同研发与生产机构'],
+                  ['CRO', 'Contract Research Organization — 合同研究组织，承接临床试验外包'],
+                  ['NRE', 'Non-Recurring Engineering — 一次性工程费用，首次开模/认证等不重复成本'],
+                  ['NMPA', '国家药品监督管理局 — 中国医疗器械注册审批的主管部门'],
+                  ['C2/C3', '二类/三类医疗器械 — 按风险等级分类，C2由省局审批，C3由NMPA审批'],
+                  ['谵妄 (Delirium)', 'ICU常见急性脑功能障碍，表现为意识模糊、注意力涣散，发生率60-80%'],
+                  ['边缘AI (Edge AI)', '在设备端本地运行的AI推理，无需上传云端，满足医疗数据隐私与实时性要求'],
+                  ['ROI', 'Return on Investment — 投资回报率，此处指医院采购ARIA的经济效益'],
+                  ['Pre-A / Series A', '融资轮次 — Pre-A为天使轮后首次机构融资，Series A为首轮正式风险投资'],
+                  ['续约率 (Renewal Rate)', 'SaaS客户年度续费比例，直接影响ARR存量和LTV'],
+                  ['穿透率 (Penetration)', 'SOM占SAM比例，反映市场渗透深度'],
+                ].map(([term, desc]) => (
+                  <div key={term} className="py-1.5 border-b border-slate-700/30">
+                    <span className="text-cyan-300 font-mono font-bold">{term}</span>
+                    <span className="text-slate-400 ml-1.5">{desc}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
             {/* Scenario cards */}
             {[
               { key: 'neutral', icon: '◆', title: '中性 (Neutral)', color: 'cyan', border: 'border-cyan-500/20 bg-cyan-500/5',
@@ -438,7 +499,7 @@ export default function QAPage() {
         )}
 
         <footer className="text-center py-6 border-t border-slate-600/50 mt-8 text-xs text-slate-400">
-          ARIA 路演答疑数据面板 · BP v2.1 (2026-04-19)
+          ARIA 路演答疑数据面板 · {BP_VERSION} · {FP_VERSION}
         </footer>
       </div>
     </div>
