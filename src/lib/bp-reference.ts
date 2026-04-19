@@ -1,32 +1,32 @@
 // Finance Simulator is the Single Source of Truth (2026-04-19)
-// BP (v2.2) and Financial Plan are downstream documents that must align with simulator output.
-// This module holds BP v2.2 reference data (derived from simulator neutral + best case)
+// BP / Financial Plan are downstream documents that must align with simulator output.
+// This module holds Financial Plan v2.3 reference data for conflict detection.
 // for conflict detection and audit.
 
 import { CalcResult } from './calculator';
 
-/** BP v2.2 10-year financial main table (万元) — from simulator neutral + best case timeline */
+/** Financial Plan v2.3 10-year financial main table (万元) */
 export const BP_MAIN_TABLE = {
-  total_revenue:  [300, 464, 341, 883, 1220, 1586, 2062, 2681, 3351, 4189],
-  license_milestone: [300, 0, 200, 0, 0, 0, 0, 0, 0, 0],
-  commercial_revenue: [0, 464, 141, 883, 1220, 1586, 2062, 2681, 3351, 4189],
-  total_cogs:     [0, 170, 16, 141, 152, 539, 701, 912, 1139, 1424],
-  cogs_rate:      [0, 0.37, 0.05, 0.16, 0.12, 0.34, 0.34, 0.34, 0.34, 0.34],
-  gross_profit:   [300, 294, 325, 741, 1068, 1047, 1361, 1769, 2212, 2765],
-  gross_margin:   [1.00, 0.63, 0.95, 0.84, 0.88, 0.66, 0.66, 0.66, 0.66, 0.66],
-  total_opex:     [500, 361, 464, 504, 566, 753, 941, 1167, 1412, 1722],
-  ebitda:         [-200, -67, -139, 237, 502, 294, 420, 603, 800, 1042],
-  ebitda_margin:  [0, 0, 0, 0.27, 0.41, 0.19, 0.20, 0.22, 0.24, 0.25],
-  net_profit:     [-220, -87, -159, 212, 477, 262, 378, 548, 731, 956],
-  arr:            [0, 18, 14, 55, 90, 122, 161, 212, 271, 345],
+  total_revenue:  [0, 879, 3399, 8424, 11267, 14647, 19041, 24753, 30942, 38677],
+  license_milestone: [0, 300, 200, 0, 0, 0, 0, 0, 0, 0],
+  commercial_revenue: [0, 579, 3199, 8424, 11267, 14647, 19041, 24753, 30942, 38677],
+  total_cogs:     [0, 64, 372, 999, 954, 4980, 6474, 8416, 10520, 13150],
+  cogs_rate:      [0, 0.07, 0.11, 0.12, 0.08, 0.34, 0.34, 0.34, 0.34, 0.34],
+  gross_profit:   [0, 815, 3027, 7425, 10313, 9667, 12567, 16337, 20421, 25527],
+  gross_margin:   [0, 0.93, 0.89, 0.88, 0.92, 0.66, 0.66, 0.66, 0.66, 0.66],
+  total_opex:     [578, 716, 1054, 1202, 1355, 1694, 2117, 2625, 3177, 3875],
+  ebitda:         [-578, 99, 1973, 6223, 8958, 7973, 10450, 13712, 17245, 21651],
+  ebitda_margin:  [0, 0.11, 0.58, 0.74, 0.80, 0.54, 0.55, 0.55, 0.56, 0.56],
+  net_profit:     [-598, 74, 1948, 6193, 8928, 7934, 10399, 13646, 17162, 21548],
+  arr:            [0, 718, 5368, 12158, 18035, 22408, 28403, 36415, 46155, 58140],
 };
 
-/** BP v2.2 SOM growth curve — from simulator neutral + best case timeline */
+/** Financial Plan v2.3 SOM growth curve */
 export const BP_SOM = {
-  cumulative_beds:  [0, 73, 78, 218, 398, 632, 936, 1331, 1825, 2443],
-  active_paying:    [0, 73, 56, 218, 360, 486, 644, 846, 1086, 1378],
-  som_penetration:  [0, 0.0017, 0.0012, 0.0032, 0.0044, 0.0058, 0.0075, 0.0098, 0.0122, 0.0152],
-  yoy_growth:       [0, 0, 0.30, 0.30, 0.30, 0.30, 0.30, 0.30, 0.25, 0.25],
+  cumulative_beds:  [0, 287, 2033, 4393, 7403, 11316, 16403, 23016, 31282, 41615],
+  active_paying:    [0, 287, 2147, 4863, 7214, 8963, 11361, 14566, 18462, 23256],
+  som_penetration:  [0, 0.0032, 0.0124, 0.0306, 0.0410, 0.0533, 0.0692, 0.0900, 0.1125, 0.1406],
+  yoy_growth:       [0, 0, 2.866, 1.478, 0.338, 0.30, 0.30, 0.30, 0.25, 0.25],
 };
 
 /** Channel parameters from BP §3.1 */
@@ -35,15 +35,15 @@ export const BP_CHANNEL = {
   milestone_fee: 200, // 万元
   hw_commission: 0.15,
   saas_commission: 0.35,
-  renewal_rate: 0.70,
-  saas_per_bed: 0.70, // 万元/bed/year
+  renewal_rate: 0.85,
+  saas_per_bed: 2.5, // 万元/bed/year
 };
 
-/** Funding plan from BP v2.2 §9.5 */
+/** Funding plan from Financial Plan v2.3 §7 */
 export const BP_FUNDING = {
-  seed: { min: 500, max: 600, desc: 'CDMO NRE+40台试点样机+薪资+CRO/注册/运营' },
-  preA: { min: 300, max: 500, desc: 'Y1–Y3累计净亏损¥466万，补充运营资金至Y4转正' },
-  seriesA: { min: 0, max: 500, desc: '加速扩张用，非必需' },
+  seed: { min: 600, max: 800, desc: '种子轮' },
+  preA: { min: 400, max: 600, desc: 'Pre-A' },
+  seriesA: { min: 0, max: 0, desc: 'A轮(可选)' },
 };
 
 /** Roadshow slide data points that should be live-linked to simulator output */
@@ -128,10 +128,10 @@ export const ROADSHOW_DATA_POINTS = [
 
 /** Document version constants — update here when files change */
 export const DOC_VERSIONS = {
-  bp: 'BP V2.2',         // ARIA_BP_External_clean.md
+  bp: 'BP V2.3',         // ARIA_BP_External_clean.md
   fp: 'FP V2.3',         // ARIA_Financial_Plan
   bpFile: 'ARIA_BP_External_clean.md',
-  fpFile: 'ARIA_Financial_Plan.md',
+  fpFile: 'ARIA_Financial_Plan_v2.3 (1).md',
   dataGovernance: 'Simulator is Single Source of Truth',
 };
 
@@ -456,7 +456,7 @@ export function generateAuditReport(conflicts: DataConflict[], scenario: string)
     `ARIA 数据一致性审计报告`,
     `生成时间: ${now}`,
     `情景模式: ${scenario}`,
-    `BP版本: v2.2 (2026-04-19) — Simulator is Source of Truth`,
+    `BP版本: v2.3 (2026-04-19) — Simulator is Source of Truth`,
     `═══════════════════════════════════════════`,
     ``,
   ];
@@ -486,7 +486,7 @@ export function generateAuditReport(conflicts: DataConflict[], scenario: string)
   }
 
   if (conflicts.length === 0) {
-    lines.push(`✓ 所有指标与BP v2.2一致，无冲突。（Simulator is Source of Truth）`);
+    lines.push(`✓ 所有指标与BP v2.3一致，无冲突。（Simulator is Source of Truth）`);
   }
 
   lines.push(`───────────────────────────────────────────`);
