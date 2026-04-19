@@ -214,11 +214,6 @@
       box-shadow: 0 0 20px rgba(85, 213, 255, 0.38);
     }
 
-    @page {
-      size: 960pt 540pt;
-      margin: 0;
-    }
-
     .slide {
       min-height: 100vh;
       display: flex;
@@ -2156,6 +2151,133 @@
         position: static;
         max-width: none;
         text-align: left;
+      }
+    }
+
+    /* ====== PRINT: one slide = one 16:9 page, pixel-perfect to screen ====== */
+    @media print {
+      /* Page geometry — 960×540 pt matches 16:9 */
+      @page {
+        size: 960pt 540pt;
+        margin: 0;
+      }
+
+      /* Reset body for paged media */
+      html, body {
+        margin: 0;
+        padding: 0;
+        background: #040812 !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+        color-adjust: exact !important;
+        overflow: visible !important;
+        scroll-snap-type: none !important;
+      }
+
+      /* Remove backgrounds that interfere */
+      body::before {
+        display: none !important;
+      }
+
+      /* Hide HUD, TOC, legend ribbon — not part of slide content */
+      .hud,
+      .legend-ribbon,
+      .toc,
+      .data-updated::after {
+        display: none !important;
+      }
+
+      /* Each .slide = exactly one page */
+      .slide {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 960pt !important;
+        height: 540pt !important;
+        min-height: 0 !important;
+        max-height: 540pt !important;
+        padding: 0 !important;
+        margin: 0 !important;
+        overflow: hidden !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+        scroll-snap-align: unset !important;
+        position: relative !important;
+        background: #040812 !important;
+      }
+
+      /* Last slide: no trailing blank page */
+      .slide:last-of-type {
+        page-break-after: auto !important;
+        break-after: auto !important;
+      }
+
+      /* Frame fills the page with small padding for visual breathing room */
+      .frame {
+        width: 920pt !important;
+        height: 510pt !important;
+        aspect-ratio: auto !important;
+        border-radius: 0 !important;
+        border: none !important;
+        box-shadow: none !important;
+        background:
+          radial-gradient(circle at 18% 12%, rgba(61, 240, 209, 0.1), transparent 22%),
+          radial-gradient(circle at 82% 12%, rgba(85, 213, 255, 0.12), transparent 28%),
+          linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%) !important;
+      }
+
+      .inner {
+        padding: 28pt 32pt 24pt 32pt !important;
+        gap: 14pt !important;
+        height: 100% !important;
+      }
+
+      /* Ensure grid layouts don't break across pages */
+      .metric-grid, .grid-5, .grid-4, .grid-3, .grid-2,
+      .kpi-strip, .flow, .timeline, .chain-line, .route-line,
+      .fin-bars, .review-list, .hc-grid, .ref-columns,
+      .hero-grid, .split-hero, .process-lane, .arch-grid,
+      .ai-grid, .value-chain, .quadrant-wrap, .reg-grid,
+      .pricing-grid, .gtm-grid, .fin-grid, .risk-grid,
+      .team-grid, .timeline-grid, .review-grid, .closing-grid {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /* Typography adjustments for print legibility at 960×540 */
+      .title {
+        font-size: 26pt !important;
+      }
+
+      .hero-card h2 {
+        font-size: 32pt !important;
+      }
+
+      /* Ensure all text/colors print faithfully */
+      * {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      /* Fix animations that won't render in print */
+      .fade-up, [class*="fade"] {
+        opacity: 1 !important;
+        transform: none !important;
+        animation: none !important;
+        transition: none !important;
+      }
+
+      /* Source boxes — keep position static for print */
+      .source-box {
+        position: static !important;
+        break-inside: avoid !important;
+      }
+
+      /* Links should not show URL in print */
+      a::after {
+        content: none !important;
       }
     }
   </style>
