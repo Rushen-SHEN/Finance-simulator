@@ -381,9 +381,9 @@ def style_docx(src_docx, dst_docx):
         if rFonts is None:
             rFonts = parse_xml(f'<w:rFonts {nsdecls("w")}/>')
             rPr.insert(0, rFonts)
-        rFonts.set(qn("w:eastAsia"), cn)
-        rFonts.set(qn("w:ascii"), en)
-        rFonts.set(qn("w:hAnsi"), en)
+        rFonts.set(qn("w:eastAsia"), CN_FONT)
+        rFonts.set(qn("w:ascii"), EN_FONT)
+        rFonts.set(qn("w:hAnsi"), EN_FONT)
 
     # ── Load ────────────────────────────────────────────────────
     doc = Document(src_docx)
