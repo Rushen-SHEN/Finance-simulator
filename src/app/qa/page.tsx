@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL, BP_TARGETS } from '@/lib/defaults';
 import { loadModel } from '@/lib/storage';
+import { useModelInit } from '@/lib/useModelInit';
 import {
   BP_MAIN_TABLE, BP_SOM,
   DataConflict, detectConflicts,
@@ -16,29 +17,32 @@ const FP_VERSION = 'Finance Plan v2.0';
 const BP_VERSION = 'BP v2.1 (2026-04-19)';
 
 export default function QAPage() {
-  const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
-  const [initialized, setInitialized] = useState(false);
+  const [model, setModel] = useModelInit();
   const [activeTab, setActiveTab] = useState<'linkage' | 'som' | 'scenarios'>('linkage');
 
-  if (!initialized && typeof window !== 'undefined') {
-    const saved = loadModel();
-    if (JSON.stringify(saved) !== JSON.stringify(model)) setModel(saved);
-    setInitialized(true);
-  }
+  const scenario = model.active_scenario || 'neutral';
+  const so = model.scenario_overrides?.[scenario];
 
   const resultBest: CalcResult = useMemo(
-    () => calculate(model.global, model.yearly, model.opex, model.milestones_best),
-    [model]
+    () => calculate(model.global, model.yearly, model.opex, model.milestones_best, so),
+    [model, so]
   );
 
+  const effectiveRR = so?.rr_base ?? model.global.rr_base;
   const growthRates = useMemo(
-    () => [model.global.growth_y6, model.global.growth_y7, model.global.growth_y8, model.global.growth_y9, model.global.growth_y10],
-    [model.global]
+    () => [
+      so?.growth_y6 ?? model.global.growth_y6,
+      so?.growth_y7 ?? model.global.growth_y7,
+      so?.growth_y8 ?? model.global.growth_y8,
+      so?.growth_y9 ?? model.global.growth_y9,
+      so?.growth_y10 ?? model.global.growth_y10,
+    ],
+    [model.global, so]
   );
 
   const conflicts: DataConflict[] = useMemo(
-    () => detectConflicts(resultBest, model.global.rr_base, growthRates),
-    [resultBest, model.global.rr_base, growthRates]
+    () => detectConflicts(resultBest, effectiveRR, growthRates),
+    [resultBest, effectiveRR, growthRates]
   );
 
   const liveData = useMemo(() => {

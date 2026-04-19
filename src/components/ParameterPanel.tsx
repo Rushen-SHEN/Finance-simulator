@@ -132,12 +132,25 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
   }, [model, onModelChange]);
 
   const setSO = useCallback((key: keyof ScenarioOverrides, val: number) => {
-    const nextOverrides = { ...model.scenario_overrides, [activeScenario]: { ...so, [key]: val } };
+    // Clamp scenario override values to safe ranges
+    let clamped = val;
+    if (key === 'rr_base') clamped = Math.max(0.1, Math.min(0.99, val));
+    else if (key === 'bed_growth_factor') clamped = Math.max(0.5, Math.min(2.0, val));
+    else if (key === 'cogs_rate_target') clamped = Math.max(0.05, Math.min(0.8, val));
+    else if (key.startsWith('growth_') || key.startsWith('opex_growth_')) clamped = Math.max(-0.5, Math.min(1.5, val));
+    const nextOverrides = { ...model.scenario_overrides, [activeScenario]: { ...so, [key]: clamped } };
     onModelChange({ ...model, scenario_overrides: nextOverrides });
   }, [model, onModelChange, activeScenario, so]);
 
   const setG = useCallback((key: keyof GlobalInputs, val: number) => {
-    onModelChange({ ...model, global: { ...model.global, [key]: val } });
+    // Clamp critical global inputs to prevent nonsensical values
+    let clamped = val;
+    if (key === 'rr_base') clamped = Math.max(0.1, Math.min(0.99, val));
+    else if (key.startsWith('price_')) clamped = Math.max(0, Math.min(1000000, val));
+    else if (key.startsWith('bom_') && key !== 'bom_c3_premium') clamped = Math.max(0, Math.min(500000, val));
+    else if (key.startsWith('growth_')) clamped = Math.max(-0.5, Math.min(1.5, val));
+    else if (key === 'baxter_hw_commission' || key === 'baxter_saas_commission') clamped = Math.max(0, Math.min(1, val));
+    onModelChange({ ...model, global: { ...model.global, [key]: clamped } });
   }, [model, onModelChange]);
 
   const setY = useCallback((key: keyof YearlyInputs, idx: number, val: number) => {

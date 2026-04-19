@@ -23,6 +23,19 @@ import Assumptions from '@/components/Assumptions';
 import ParameterPanel from '@/components/ParameterPanel';
 import ChangeBanner from '@/components/ChangeBanner';
 
+const BASE_PATH = process.env.NODE_ENV === 'production' ? '/Finance-simulator' : '';
+
+/** Trigger a browser download for a text file */
+function downloadFile(filename: string, content: string, mime = 'text/markdown') {
+  const blob = new Blob([content], { type: `${mime};charset=utf-8` });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 const CODE_HASH = 'c50281c3dd92d836d2ba7702fad19f778404cddd49059afc7b2e6e537f436ea7';
 
 async function sha256(text: string): Promise<string> {
@@ -77,6 +90,7 @@ export default function Home() {
   const [accepting, setAccepting] = useState(false);
   const [archiveVersion, setArchiveVersion] = useState(0);
   const [lastAcceptMsg, setLastAcceptMsg] = useState<string | null>(null);
+  const [generatedDocs, setGeneratedDocs] = useState<{ fp?: string; bp?: string; roadshow?: string; fpVersion?: string } | null>(null);
 
   // Initialize accepted model from localStorage
   if (!acceptedInit && typeof window !== 'undefined') {
@@ -110,19 +124,20 @@ export default function Home() {
 
       // 2. Patch BP document (read current, patch numbers)
       let bpContent = '';
+      let bpPatched: { content: string; version: string } | null = null;
       try {
-        const resp = await fetch('/docs/ARIA_BP_External.md');
+        const resp = await fetch(`${BASE_PATH}/docs/ARIA_BP_External.md`);
         if (resp.ok) bpContent = await resp.text();
       } catch { /* ignore — BP may not be fetchable in static build */ }
 
       if (bpContent) {
-        const bp = patchBPSections(bpContent, model, resultBest);
+        bpPatched = patchBPSections(bpContent, model, resultBest);
         await saveArchive({
           timestamp: now,
-          version: bp.version,
+          version: bpPatched.version,
           type: 'bp',
           label: `BP数字表格更新 — ${changeReport.affectedMappings.map(m => m.mappingId).join(', ')}`,
-          content: bp.content,
+          content: bpPatched.content,
           modelSnapshot: structuredClone(model),
         });
       }
@@ -141,12 +156,20 @@ export default function Home() {
       // 4. Update baseline
       setAcceptedModel(structuredClone(model));
       setArchiveVersion(v => v + 1);
-      setLastAcceptMsg(`✅ 已生成 Financial Plan ${fp.version}${bpContent ? ` + BP更新` : ''} + 路演数据快照`);
+      setGeneratedDocs({ fp: fp.content, bp: bpPatched?.content, roadshow: JSON.stringify(roadshowData, null, 2), fpVersion: fp.version });
+      setLastAcceptMsg(`✅ 已生成 Financial Plan ${fp.version}${bpPatched ? ` + BP更新` : ''} + 路演数据快照`);
     } catch (err) {
       setLastAcceptMsg(`❌ 导出失败: ${err instanceof Error ? err.message : String(err)}`);
     }
     setAccepting(false);
   }, [model, resultBest, resultBase, changeReport]);
+
+  const handleDownloadDocs = useCallback(() => {
+    if (!generatedDocs) return;
+    if (generatedDocs.fp) downloadFile(`ARIA_Financial_Plan_latest.md`, generatedDocs.fp);
+    if (generatedDocs.bp) downloadFile(`ARIA_BP_External_clean.md`, generatedDocs.bp);
+    if (generatedDocs.roadshow) downloadFile(`roadshow-data.json`, generatedDocs.roadshow, 'application/json');
+  }, [generatedDocs]);
 
   const handleModelChange = useCallback((m: ModelInputs) => {
     setModel(m);
@@ -250,8 +273,16 @@ export default function Home() {
           <div data-no-export>
             <ChangeBanner report={changeReport} onAccept={handleAcceptChanges} accepting={accepting} />
             {lastAcceptMsg && (
-              <div className="mx-4 sm:mx-8 mb-3 px-4 py-2 rounded-lg border border-slate-700/50 bg-slate-800/50 text-xs text-slate-300">
-                {lastAcceptMsg}
+              <div className="mx-4 sm:mx-8 mb-3 px-4 py-2 rounded-lg border border-slate-700/50 bg-slate-800/50 text-xs text-slate-300 flex items-center justify-between">
+                <span>{lastAcceptMsg}</span>
+                {generatedDocs && (
+                  <button
+                    onClick={handleDownloadDocs}
+                    className="ml-3 px-3 py-1 rounded bg-cyan-700 hover:bg-cyan-600 text-white text-xs font-medium transition-colors whitespace-nowrap"
+                  >
+                    📥 下载文档到本地
+                  </button>
+                )}
               </div>
             )}
           </div>

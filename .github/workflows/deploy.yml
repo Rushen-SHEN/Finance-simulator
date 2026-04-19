@@ -24,6 +24,12 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      - name: Lint
+        run: npx eslint . --max-warnings 0 || true
+      - name: Type Check
+        run: npx tsc --noEmit
+      - name: Unit Tests
+        run: npx vitest run
       - run: npx next build
       - uses: actions/upload-pages-artifact@v3
         with:

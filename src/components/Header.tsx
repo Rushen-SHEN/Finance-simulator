@@ -28,7 +28,7 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
   };
 
   return (
-    <div className="bg-gradient-to-r from-[#0B0F1A] via-[#111827] to-[#0B0F1A] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg shadow-black/20">
+    <header role="banner" className="bg-gradient-to-r from-[#0B0F1A] via-[#111827] to-[#0B0F1A] border-b border-slate-700/50 sticky top-0 z-50 shadow-lg shadow-black/20">
       <div className="max-w-[1200px] mx-auto px-4 sm:px-6 py-3 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-3">
           <div className="relative">
@@ -46,12 +46,14 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
           </div>
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <div className="flex rounded-lg overflow-hidden border border-slate-600 bg-slate-900/50 backdrop-blur-sm">
+        <nav aria-label="场景切换与操作" className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+          <div role="group" aria-label="情景选择" className="flex rounded-lg overflow-hidden border border-slate-600 bg-slate-900/50 backdrop-blur-sm">
             {scenarios.map(s => (
               <button
                 key={s.key}
                 onClick={() => onScenario(s.key)}
+                aria-pressed={scenario === s.key}
+                aria-label={`切换到${s.label}情景`}
                 className={`px-2.5 sm:px-3.5 py-1.5 text-xs font-medium transition-all ${
                   scenario === s.key
                     ? 'bg-gradient-to-b from-cyan-500/20 to-cyan-600/10 text-cyan-300 shadow-inner shadow-cyan-500/10'
@@ -105,8 +107,8 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
               {exporting === 'png' ? '⏳' : '🖼️'} PNG
             </button>
           </div>
-        </div>
+        </nav>
       </div>
-    </div>
+    </header>
   );
 }

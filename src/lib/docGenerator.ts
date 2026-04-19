@@ -1,5 +1,5 @@
 // Document generation: Financial Plan from model state + BP section patching
-import { ModelInputs, CalcResult, resolveMilestones, MAPPING_BLOCKS, PARAM_MAPPING, computeBOM } from './calculator';
+import { ModelInputs, CalcResult, resolveMilestones, MAPPING_BLOCKS, PARAM_MAPPING, computeBOM, calculate } from './calculator';
 
 // ============================================================
 // Helpers
@@ -506,5 +506,79 @@ export function extractRoadshowUpdates(model: ModelInputs, resultBest: CalcResul
     // --- SOM chart data ---
     'som-chart-beds': JSON.stringify(yrs.map(yr => yr.cumulative_beds)),
     'som-chart-revenue': JSON.stringify(yrs.map(yr => Math.round(yr.total_revenue / 10000))),
+
+    // --- Scenario comparison (三情景对比) ---
+    ...buildScenarioFields(model, resultBest),
+  };
+}
+
+/** Compute scenario comparison data-fields for the roadshow scenario slide */
+function buildScenarioFields(model: ModelInputs, neutralResult: CalcResult): Record<string, string> {
+  const so = model.scenario_overrides;
+  if (!so) return {};
+
+  const fmtW = (v: number) => `¥${Math.round(v / 10000).toLocaleString()} 万`;
+  const fmtPctR = (v: number) => `${(v * 100).toFixed(1)}%`;
+
+  // Compute all three scenarios
+  const scenarios: Record<string, { result: CalcResult; rr: number; cogsRate: number }> = {};
+  for (const key of ['neutral', 'optimistic', 'conservative'] as const) {
+    const override = so[key];
+    const result = calculate(model.global, model.yearly, model.opex, model.milestones_best, override);
+    scenarios[key] = { result, rr: override?.rr_base ?? model.global.rr_base, cogsRate: override?.cogs_rate_target ?? 0.34 };
+  }
+
+  const nY10 = scenarios.neutral.result.years[9];
+  const oY10 = scenarios.optimistic.result.years[9];
+  const cY10 = scenarios.conservative.result.years[9];
+  const nY5 = scenarios.neutral.result.years[4];
+  const oY5 = scenarios.optimistic.result.years[4];
+  const cY5 = scenarios.conservative.result.years[4];
+
+  const ebitdaMargin = (yr: { ebitda: number; total_revenue: number }) =>
+    yr.total_revenue > 0 ? `${((yr.ebitda / yr.total_revenue) * 100).toFixed(1)}%` : '—';
+
+  return {
+    // Neutral
+    'sc-neutral-rr': `${Math.round(scenarios.neutral.rr * 100)}%`,
+    'sc-neutral-cogs': `${Math.round(scenarios.neutral.cogsRate * 100)}%`,
+    'sc-neutral-y5-rev': fmtW(nY5.total_revenue),
+    'sc-neutral-y10-rev': fmtW(nY10.total_revenue),
+    'sc-neutral-y5-ebitda': fmtW(nY5.ebitda),
+    'sc-neutral-y10-ebitda': fmtW(nY10.ebitda),
+    'sc-neutral-y10-margin': ebitdaMargin(nY10),
+    'sc-neutral-y5-beds': `${nY5.cumulative_beds} 床`,
+    'sc-neutral-y10-beds': `${nY10.cumulative_beds} 床`,
+
+    // Optimistic
+    'sc-opt-rr': `${Math.round(scenarios.optimistic.rr * 100)}%`,
+    'sc-opt-cogs': `${Math.round(scenarios.optimistic.cogsRate * 100)}%`,
+    'sc-opt-y5-rev': fmtW(oY5.total_revenue),
+    'sc-opt-y10-rev': fmtW(oY10.total_revenue),
+    'sc-opt-y5-ebitda': fmtW(oY5.ebitda),
+    'sc-opt-y10-ebitda': fmtW(oY10.ebitda),
+    'sc-opt-y10-margin': ebitdaMargin(oY10),
+    'sc-opt-y5-beds': `${oY5.cumulative_beds} 床`,
+    'sc-opt-y10-beds': `${oY10.cumulative_beds} 床`,
+    'sc-opt-rev-delta': `+${Math.round((oY10.total_revenue / nY10.total_revenue - 1) * 100)}%`,
+    'sc-opt-ebitda-delta': `+${Math.round((oY10.ebitda / Math.max(nY10.ebitda, 1) - 1) * 100)}%`,
+
+    // Conservative
+    'sc-con-rr': `${Math.round(scenarios.conservative.rr * 100)}%`,
+    'sc-con-cogs': `${Math.round(scenarios.conservative.cogsRate * 100)}%`,
+    'sc-con-y5-rev': fmtW(cY5.total_revenue),
+    'sc-con-y10-rev': fmtW(cY10.total_revenue),
+    'sc-con-y5-ebitda': fmtW(cY5.ebitda),
+    'sc-con-y10-ebitda': fmtW(cY10.ebitda),
+    'sc-con-y10-margin': ebitdaMargin(cY10),
+    'sc-con-y5-beds': `${cY5.cumulative_beds} 床`,
+    'sc-con-y10-beds': `${cY10.cumulative_beds} 床`,
+    'sc-con-rev-delta': `${Math.round((cY10.total_revenue / nY10.total_revenue - 1) * 100)}%`,
+    'sc-con-ebitda-delta': cY10.ebitda < 0 ? '亏损' : `${Math.round((cY10.ebitda / Math.max(nY10.ebitda, 1) - 1) * 100)}%`,
+
+    // Growth rates
+    'sc-neutral-growth': `${Math.round((so.neutral?.growth_y6 ?? 0.30) * 100)}%→${Math.round((so.neutral?.growth_y10 ?? 0.25) * 100)}%`,
+    'sc-opt-growth': `${Math.round((so.optimistic?.growth_y6 ?? 0.40) * 100)}%→${Math.round((so.optimistic?.growth_y10 ?? 0.30) * 100)}%`,
+    'sc-con-growth': `${Math.round((so.conservative?.growth_y6 ?? 0.20) * 100)}%→${Math.round((so.conservative?.growth_y10 ?? 0.15) * 100)}%`,
   };
 }

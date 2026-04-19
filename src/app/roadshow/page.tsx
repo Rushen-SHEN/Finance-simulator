@@ -190,6 +190,9 @@ export default function RoadshowPage() {
 
   useEffect(() => {
     const handler = (event: MessageEvent) => {
+      // Security: only accept messages from same origin
+      if (event.origin !== window.location.origin) return;
+
       if (event.data?.type === 'aria-pending-count') {
         setPendingCount(event.data.count);
       }
@@ -214,9 +217,12 @@ export default function RoadshowPage() {
     iframeRef.current.contentWindow.postMessage({ type: 'aria-theme-sync', state: themeState }, '*');
   }, [iframeReady, themeManifest, themeState]);
 
+  const scenario = model.active_scenario || 'neutral';
+  const so = model.scenario_overrides?.[scenario];
+
   const resultBest: CalcResult = useMemo(
-    () => calculate(model.global, model.yearly, model.opex, model.milestones_best),
-    [model]
+    () => calculate(model.global, model.yearly, model.opex, model.milestones_best, so),
+    [model, so]
   );
 
   // Derive data updates to send to iframe (using shared generator)

@@ -1,0 +1,41 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot — Neutral Best Case financial metrics > Y1-Y5 EBITDA snapshot (万) 1`] = `
+[
+  -200,
+  -67,
+  -139,
+  237,
+  502,
+]
+`;
+
+exports[`Snapshot — Neutral Best Case financial metrics > Y1-Y5 cumulative beds snapshot 1`] = `
+[
+  0,
+  73,
+  78,
+  218,
+  398,
+]
+`;
+
+exports[`Snapshot — Neutral Best Case financial metrics > Y1-Y5 revenue snapshot (万) 1`] = `
+[
+  300,
+  464,
+  341,
+  883,
+  1220,
+]
+`;
+
+exports[`Snapshot — Neutral Best Case financial metrics > Y6-Y10 revenue snapshot (万) 1`] = `
+[
+  1586,
+  2062,
+  2681,
+  3351,
+  4189,
+]
+`;

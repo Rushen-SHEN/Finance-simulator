@@ -4,6 +4,7 @@ import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL, YEAR_LABELS_SHORT } from '@/lib/defaults';
 import { loadModel, loadAuditLog, AuditEntry } from '@/lib/storage';
+import { useModelInit } from '@/lib/useModelInit';
 import { listArchives } from '@/lib/archiveStore';
 import { detectChanges } from '@/lib/changeTracker';
 import {
@@ -117,23 +118,17 @@ function RoadshowMappingSection({ model, resultBest }: { model: ModelInputs; res
 }
 
 export default function BPMappingPage() {
-  const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
-  const [initialized, setInitialized] = useState(false);
+  const [model, setModel] = useModelInit();
   const [activeBlock, setActiveBlock] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
-  const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [auditLog, setAuditLog] = useState<AuditEntry[]>(() => {
+    if (typeof window === 'undefined') return [];
+    return loadAuditLog();
+  });
   const [staleWarning, setStaleWarning] = useState<string | null>(null);
-
-  if (!initialized && typeof window !== 'undefined') {
-    const saved = loadModel();
-    if (JSON.stringify(saved) !== JSON.stringify(model)) setModel(saved);
-    setAuditLog(loadAuditLog());
-    setInitialized(true);
-  }
 
   // Check if BP/FP archives are stale vs current model
   useEffect(() => {
-    if (!initialized) return;
     (async () => {
       try {
         const bpArchives = await listArchives('bp');
@@ -160,7 +155,7 @@ export default function BPMappingPage() {
         // IndexedDB unavailable — skip
       }
     })();
-  }, [initialized, model]);
+  }, [model]);
 
   const scenario = model.active_scenario || 'neutral';
   const so = model.scenario_overrides?.[scenario];

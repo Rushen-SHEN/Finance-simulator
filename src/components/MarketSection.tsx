@@ -116,6 +116,9 @@ export default function MarketSection({ resultBest, resultBase }: Props) {
         <p className="text-[10px] text-gray-400 mt-1.5">Y6-Y10 标注 ⁺ 为增长率外推值，基于参数面板设定增长率</p>
       </div>
 
+      {/* SOM Revenue Curve Chart */}
+      <SOMChart bestRev={bestRev} baseRev={baseRev} />
+
       {/* Benchmark: China AI Medical Device Companies */}
       <div className="mt-6 bg-gradient-to-r from-slate-50 to-gray-50 rounded-xl border border-gray-200 p-4">
         <h3 className="text-[13px] font-bold text-gray-700 mb-2.5">📌 对标中国AI医疗器械公司</h3>
@@ -167,5 +170,135 @@ function BenchmarkRow({ company, product, growth, comparability, highlight }: { 
       <td className={`px-2 py-2 font-bold ${highlightColors[highlight] || 'text-gray-700'}`}>{growth}</td>
       <td className="px-2 py-2 text-gray-500">{comparability}</td>
     </tr>
+  );
+}
+
+/* =============== SOM Revenue Curve Chart =============== */
+
+function SOMChart({ bestRev, baseRev }: { bestRev: number[]; baseRev: number[] }) {
+  // Convert to 百万 (millions)
+  const bestM = bestRev.map(v => v / 1_000_000);
+  const baseM = baseRev.map(v => v / 1_000_000);
+  const allVals = [...bestM, ...baseM];
+  const maxVal = Math.max(...allVals, 1);
+
+  // Chart layout constants
+  const W = 680, H = 300;
+  const pad = { top: 20, right: 30, bottom: 40, left: 60 };
+  const plotW = W - pad.left - pad.right;
+  const plotH = H - pad.top - pad.bottom;
+
+  // Scales
+  const xStep = plotW / 9; // 10 points, 9 intervals
+  const x = (i: number) => pad.left + i * xStep;
+
+  // Round up max to a nice tick
+  const niceMax = Math.ceil(maxVal / 5) * 5 || 5;
+  const y = (v: number) => pad.top + plotH - (v / niceMax) * plotH;
+
+  // Y-axis ticks
+  const tickCount = 5;
+  const yTicks = Array.from({ length: tickCount + 1 }, (_, i) => (niceMax / tickCount) * i);
+
+  // Build polyline points
+  const pts = (arr: number[]) => arr.map((v, i) => `${x(i)},${y(v)}`).join(' ');
+
+  // TAM/SAM reference bands (in 百万)
+  const tamLow = 5400, tamHigh = 15000; // ¥54-150亿 = 5400-15000百万
+  const samLow = 1500, samHigh = 4000;  // ¥15-40亿 = 1500-4000百万
+  // Only show SAM if it fits in chart, otherwise show a marker at top
+  const samInChart = samLow < niceMax;
+
+  return (
+    <div className="mt-8">
+      <h3 className="text-[15px] font-bold text-gray-800 mb-3">SOM 收入曲线 — Best Case vs Base Case</h3>
+      <div className="overflow-x-auto">
+        <svg viewBox={`0 0 ${W} ${H}`} className="w-full max-w-[720px]" style={{ minWidth: 480 }}>
+          {/* Grid lines */}
+          {yTicks.map(t => (
+            <g key={t}>
+              <line x1={pad.left} y1={y(t)} x2={W - pad.right} y2={y(t)} stroke="#e5e7eb" strokeWidth={0.7} />
+              <text x={pad.left - 6} y={y(t) + 3.5} textAnchor="end" fontSize={10} fill="#9ca3af">
+                {t >= 100 ? `${(t / 100).toFixed(0)}亿` : `${t.toFixed(0)}`}
+              </text>
+            </g>
+          ))}
+
+          {/* SAM band (if visible) */}
+          {samInChart && (
+            <g>
+              <rect x={pad.left} y={y(Math.min(samHigh, niceMax))} width={plotW}
+                height={Math.max(y(samLow) - y(Math.min(samHigh, niceMax)), 0)}
+                fill="#a78bfa" opacity={0.07} />
+              <line x1={pad.left} y1={y(Math.min(samLow, niceMax))} x2={W - pad.right} y2={y(Math.min(samLow, niceMax))}
+                stroke="#a78bfa" strokeWidth={0.8} strokeDasharray="4,3" />
+              <text x={W - pad.right - 2} y={y(Math.min(samLow, niceMax)) - 4} textAnchor="end" fontSize={9} fill="#7c3aed">
+                SAM 下限 ¥15亿
+              </text>
+            </g>
+          )}
+
+          {/* Best Case line */}
+          <polyline points={pts(bestM)} fill="none" stroke="#16a34a" strokeWidth={2.2} strokeLinejoin="round" />
+          {bestM.map((v, i) => (
+            <circle key={`b${i}`} cx={x(i)} cy={y(v)} r={3} fill="#16a34a" stroke="white" strokeWidth={1.2} />
+          ))}
+
+          {/* Base Case line */}
+          <polyline points={pts(baseM)} fill="none" stroke="#2563eb" strokeWidth={2} strokeLinejoin="round" strokeDasharray="6,3" />
+          {baseM.map((v, i) => (
+            <circle key={`a${i}`} cx={x(i)} cy={y(v)} r={2.5} fill="#2563eb" stroke="white" strokeWidth={1} />
+          ))}
+
+          {/* Value labels at Y5 and Y10 for Best */}
+          {[4, 9].map(i => (
+            <text key={`lb${i}`} x={x(i)} y={y(bestM[i]) - 10} textAnchor="middle" fontSize={10} fontWeight={700} fill="#16a34a">
+              ¥{bestM[i] >= 100 ? `${(bestM[i] / 100).toFixed(2)}亿` : `${bestM[i].toFixed(1)}百万`}
+            </text>
+          ))}
+          {/* Value labels at Y5 and Y10 for Base */}
+          {[4, 9].map(i => (
+            <text key={`la${i}`} x={x(i)} y={y(baseM[i]) + 16} textAnchor="middle" fontSize={10} fontWeight={600} fill="#2563eb">
+              ¥{baseM[i] >= 100 ? `${(baseM[i] / 100).toFixed(2)}亿` : `${baseM[i].toFixed(1)}百万`}
+            </text>
+          ))}
+
+          {/* X-axis labels */}
+          {['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'].map((l, i) => (
+            <text key={l} x={x(i)} y={H - pad.bottom + 18} textAnchor="middle" fontSize={10}
+              fill={i >= 5 ? '#ea580c' : '#6b7280'} fontWeight={i === 4 || i === 9 ? 700 : 400}>
+              {l}
+            </text>
+          ))}
+
+          {/* Projection zone marker */}
+          <rect x={x(5) - xStep / 2} y={pad.top} width={plotW - 4.5 * xStep} height={plotH} fill="#f97316" opacity={0.04} rx={4} />
+          <text x={x(7)} y={pad.top + 12} textAnchor="middle" fontSize={9} fill="#ea580c" opacity={0.6}>Y6-Y10 外推区间</text>
+
+          {/* Legend */}
+          <g transform={`translate(${pad.left + 8}, ${pad.top + 6})`}>
+            <line x1={0} y1={0} x2={18} y2={0} stroke="#16a34a" strokeWidth={2.2} />
+            <circle cx={9} cy={0} r={2.5} fill="#16a34a" />
+            <text x={22} y={3.5} fontSize={10} fill="#16a34a" fontWeight={600}>Best Case SOM</text>
+
+            <line x1={0} y1={16} x2={18} y2={16} stroke="#2563eb" strokeWidth={2} strokeDasharray="6,3" />
+            <circle cx={9} cy={16} r={2} fill="#2563eb" />
+            <text x={22} y={19.5} fontSize={10} fill="#2563eb" fontWeight={600}>Base Case SOM</text>
+
+            <line x1={0} y1={32} x2={18} y2={32} stroke="#a78bfa" strokeWidth={0.8} strokeDasharray="4,3" />
+            <text x={22} y={35.5} fontSize={10} fill="#7c3aed">SAM 可及市场</text>
+          </g>
+
+          {/* Axis labels */}
+          <text x={4} y={pad.top + plotH / 2} textAnchor="middle" fontSize={10} fill="#9ca3af"
+            transform={`rotate(-90, 4, ${pad.top + plotH / 2})`}>
+            年收入 (百万元)
+          </text>
+        </svg>
+      </div>
+      <p className="text-[10px] text-gray-400 mt-1.5 leading-relaxed">
+        TAM ¥54–150亿/年（中国ICU广义床位15–25万张 × 年化收入） · SAM ¥15–40亿/年（三级医院口径 × 支付/数据/临床过滤） · SOM = 模型实际计算收入 · Y6-Y10为增长率外推
+      </p>
+    </div>
   );
 }

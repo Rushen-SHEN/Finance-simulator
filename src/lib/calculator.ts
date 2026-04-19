@@ -107,7 +107,14 @@ export interface MilestoneItem {
   manualStart: boolean;  // true = user-set start; false = auto from predecessor
 }
 
-/** Resolve milestone schedule: propagate predecessor chains */
+/**
+ * Resolve milestone schedule by propagating predecessor dependency chains.
+ * Uses iterative topological resolution (max 20 passes) to handle arbitrary
+ * predecessor DAGs. Items with `manualStart: true` are anchored and not moved.
+ *
+ * @param items - Array of milestone items with optional predecessor references
+ * @returns New array with resolved start/end months preserving original durations
+ */
 export function resolveMilestones(items: MilestoneItem[]): MilestoneItem[] {
   const resolved = items.map(m => ({ ...m }));
   // Topological resolve — iterate until stable (max 20 passes for safety)
@@ -293,6 +300,13 @@ export function deriveDeploymentGating(milestones: MilestoneItem[]): { c2Gate: n
   return { c2Gate, c3Gate };
 }
 
+/**
+ * Compute Bill of Materials costs from sub-component inputs.
+ * C2 = sum of 6 sub-components; C3 = C2 base + c3_premium; Upgrade = 60% base + premium.
+ *
+ * @param g - Global inputs containing BOM sub-component costs
+ * @returns Object with c2, c3, and upgrade BOM totals (元/bed)
+ */
 export function computeBOM(g: GlobalInputs) {
   const base = g.bom_sensor + g.bom_edge_compute + g.bom_housing + g.bom_cable_pcb + g.bom_assembly + g.bom_packaging;
   return {
@@ -321,6 +335,21 @@ export function deriveLicenseArray(g: GlobalInputs): number[] {
   return arr;
 }
 
+/**
+ * Core financial model engine. Computes 10-year projections:
+ * - Y1-Y5: Bottom-up from deployment schedules, milestone gating, cohort-based SaaS renewal
+ * - Y6-Y10: Top-down growth-rate projection from Y5 baseline
+ *
+ * COGS is charged only on direct-sale beds (not Baxter/distributor channel).
+ * Revenue includes: HW direct, HW Baxter commission, upgrade, SaaS direct, SaaS Baxter, license fees.
+ *
+ * @param g - Global pricing, BOM, rate, and channel parameters
+ * @param y - Yearly deployment schedules (5 years)
+ * @param opex - Operating expense breakdown (8 categories × 5 years)
+ * @param milestones - Optional milestone schedule for deployment gating and first-year factor derivation
+ * @param scenarioOverride - Optional scenario override (neutral/optimistic/conservative) for rr, growth, COGS
+ * @returns CalcResult with 10 YearlyCalc entries and cumulative metrics
+ */
 export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, milestones?: MilestoneItem[], scenarioOverride?: ScenarioOverrides): CalcResult {
   const bom = computeBOM(g);
   const rr = scenarioOverride ? scenarioOverride.rr_base : g.rr_base;
@@ -437,6 +466,7 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
   }
 
   // === Y6-Y10: Growth-rate projection from Y5 baseline ===
+  // Use unrounded intermediate values to prevent cumulative rounding drift
   const growthRates = scenarioOverride
     ? [scenarioOverride.growth_y6, scenarioOverride.growth_y7, scenarioOverride.growth_y8, scenarioOverride.growth_y9, scenarioOverride.growth_y10]
     : [g.growth_y6, g.growth_y7, g.growth_y8, g.growth_y9, g.growth_y10];
@@ -444,17 +474,38 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     ? [scenarioOverride.opex_growth_y6, scenarioOverride.opex_growth_y7, scenarioOverride.opex_growth_y8, scenarioOverride.opex_growth_y9, scenarioOverride.opex_growth_y10]
     : growthRates.map(r => r * 0.5); // fallback: half revenue growth
   const cogsRate = scenarioOverride ? scenarioOverride.cogs_rate_target : -1; // -1 = use auto from Y5
+
+  // Carry unrounded intermediate values to prevent compounding rounding errors
+  let raw_hwDirect = years[4].hw_direct;
+  let raw_hwBaxter = years[4].hw_baxter;
+  let raw_upgradeRev = years[4].upgrade_revenue;
+  let raw_saasDirect = years[4].saas_direct;
+  let raw_saasBaxter = years[4].saas_baxter;
+  let raw_salary = years[4].opex_detail.salary;
+  let raw_reg = years[4].opex_detail.reg;
+  let raw_compliance = years[4].opex_detail.compliance;
+  let raw_patent_ai = years[4].opex_detail.patent_ai;
+  let raw_travel_ops = years[4].opex_detail.travel_ops;
+  let raw_dep = years[4].depreciation;
+  let raw_newBeds = years[4].total_new;
+
   for (let p = 0; p < 5; p++) {
     const prev = years[4 + p];
     const gr = growthRates[p];
     const scale = 1 + gr;
 
-    // Scale revenue components proportionally
-    const hwDirect = Math.round(prev.hw_direct * scale);
-    const hwBaxter = Math.round(prev.hw_baxter * scale);
-    const upgradeRev = Math.round(prev.upgrade_revenue * scale);
-    const saasDirect = Math.round(prev.saas_direct * scale);
-    const saasBaxter = Math.round(prev.saas_baxter * scale);
+    // Scale unrounded revenue components, then round for display
+    raw_hwDirect *= scale;
+    raw_hwBaxter *= scale;
+    raw_upgradeRev *= scale;
+    raw_saasDirect *= scale;
+    raw_saasBaxter *= scale;
+
+    const hwDirect = Math.round(raw_hwDirect);
+    const hwBaxter = Math.round(raw_hwBaxter);
+    const upgradeRev = Math.round(raw_upgradeRev);
+    const saasDirect = Math.round(raw_saasDirect);
+    const saasBaxter = Math.round(raw_saasBaxter);
     const license = 0; // no one-off license fees in projection years
     const totalRevenue = hwDirect + hwBaxter + upgradeRev + saasDirect + saasBaxter + license;
 
@@ -463,26 +514,33 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     const cogs = Math.round(totalRevenue * effectiveCogsRate);
     const grossProfit = totalRevenue - cogs;
 
-    // OpEx: use independent OpEx growth rates
+    // OpEx: use independent OpEx growth rates with unrounded intermediates
     const opexGr = 1 + opexGrowths[p];
+    raw_salary *= opexGr;
+    raw_reg *= opexGr;
+    raw_compliance *= opexGr;
+    raw_patent_ai *= opexGr;
+    raw_travel_ops *= opexGr;
     const od = {
-      salary: Math.round(prev.opex_detail.salary * opexGr),
+      salary: Math.round(raw_salary),
       cdmo_nre: 0,
       pilot_bom: 0,
       cro: 0,
-      reg: Math.round(prev.opex_detail.reg * opexGr),
-      compliance: Math.round(prev.opex_detail.compliance * opexGr),
-      patent_ai: Math.round(prev.opex_detail.patent_ai * opexGr),
-      travel_ops: Math.round(prev.opex_detail.travel_ops * opexGr),
+      reg: Math.round(raw_reg),
+      compliance: Math.round(raw_compliance),
+      patent_ai: Math.round(raw_patent_ai),
+      travel_ops: Math.round(raw_travel_ops),
     };
     const totalOpex = od.salary + od.cdmo_nre + od.pilot_bom + od.cro + od.reg + od.compliance + od.patent_ai + od.travel_ops;
 
     const ebitda = grossProfit - totalOpex;
-    const dep = Math.round(prev.depreciation * scale);
+    raw_dep *= scale;
+    const dep = Math.round(raw_dep);
     const netProfit = ebitda - dep;
 
-    // Beds: estimate new beds from revenue growth
-    const newBeds = Math.round(prev.total_new * scale);
+    // Beds: estimate new beds from revenue growth (unrounded intermediate)
+    raw_newBeds *= scale;
+    const newBeds = Math.round(raw_newBeds);
     cumBeds += newBeds;
     const activePaying = Math.round(prev.active_paying * rr + newBeds);
 
@@ -563,6 +621,13 @@ export interface ValidationWarning {
   severity: 'error' | 'warning';
 }
 
+/**
+ * Validate model inputs against reasonable business bounds.
+ * Checks pricing ranges, renewal rate, commission rates, growth rates, and deployment totals.
+ *
+ * @param model - Complete model inputs to validate
+ * @returns Array of validation warnings with field name, message, and severity
+ */
 export function validateModel(model: ModelInputs): ValidationWarning[] {
   const w: ValidationWarning[] = [];
   const g = model.global;
