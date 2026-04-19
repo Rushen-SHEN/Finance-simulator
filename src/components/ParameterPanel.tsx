@@ -736,7 +736,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                     <div className={`rounded-lg p-3 text-[11px] leading-relaxed ${seedBuffer < 50 ? 'bg-red-500/10 border border-red-500/30' : 'bg-blue-500/10 border border-blue-500/30'}`}>
                       <div className="font-bold text-blue-400 mb-1">🏦 种子轮 SEED — M1~M3到账</div>
                       <div className="text-slate-300">
-                        <span className="text-red-400 font-bold">Y1亏损 ¥{w(y1Loss * 10000)}万</span> ← 种子轮需完全覆盖
+                        <span className="text-red-400 font-bold">Y1亏损 ¥{w(y1Loss)}万</span> ← 种子轮需完全覆盖
                       </div>
                       <div className="text-slate-400 mt-1">
                         建议<b className="text-slate-200">分两期到账</b>：
@@ -744,10 +744,10 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                         <span className="text-cyan-400"> 第2期 M6: ¥{Math.round(seedMax - seedMin * 0.6)}万</span> (试点部署+CRO启动)
                       </div>
                       {seedBuffer < 50 && seedBuffer >= 0 && (
-                        <div className="text-amber-400 mt-1 font-medium">⚠️ 种子轮上限¥{seedMax.toFixed(0)}万 ≥ Y1亏损¥{w(y1Loss * 10000)}万，但余量仅¥{seedBuffer.toFixed(0)}万，建议增加种子轮金额</div>
+                        <div className="text-amber-400 mt-1 font-medium">⚠️ 种子轮上限¥{seedMax.toFixed(0)}万 ≥ Y1亏损¥{w(y1Loss)}万，但余量仅¥{seedBuffer.toFixed(0)}万，建议增加种子轮金额</div>
                       )}
                       {seedBuffer < 0 && (
-                        <div className="text-red-400 mt-1 font-bold">🚨 种子轮上限¥{seedMax.toFixed(0)}万 &lt; Y1亏损¥{w(y1Loss * 10000)}万！缺口¥{Math.abs(seedBuffer).toFixed(0)}万，必须增加种子轮金额或压缩Y1支出</div>
+                        <div className="text-red-400 mt-1 font-bold">🚨 种子轮上限¥{seedMax.toFixed(0)}万 &lt; Y1亏损¥{w(y1Loss)}万！缺口¥{Math.abs(seedBuffer).toFixed(0)}万，必须增加种子轮金额或压缩Y1支出</div>
                       )}
                     </div>
 
