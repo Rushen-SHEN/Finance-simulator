@@ -3928,12 +3928,99 @@
 
   <script>
     /* === ARIA Data Binding === */
+
+    /* Redraw SOM chart SVG from a beds array [Y1..Y10] */
+    function redrawSOMChart(beds) {
+      var chart = document.querySelector('.som-chart');
+      if (!chart) return;
+      var svg = chart.querySelector('svg');
+      if (!svg) return;
+
+      var maxVal = Math.max.apply(null, beds);
+      /* Round up to nearest nice step */
+      var step = maxVal <= 200 ? 50 : maxVal <= 500 ? 100 : maxVal <= 1000 ? 200 : maxVal <= 2000 ? 400 : maxVal <= 5000 ? 1000 : 2000;
+      var yMax = Math.ceil(maxVal * 1.15 / step) * step;
+      if (yMax === 0) yMax = step;
+
+      var xStart = 90, xStep = 90;
+      var yBottom = 240, yTop = 40, yRange = yBottom - yTop;
+
+      function toY(v) { return yBottom - (v / yMax) * yRange; }
+      function toX(i) { return xStart + i * xStep; }
+
+      /* Build grid + axis labels */
+      var html = '';
+      for (var g = 0; g <= 4; g++) {
+        var gy = yBottom - g * (yRange / 4);
+        var gv = Math.round((g / 4) * yMax);
+        var opacity = g === 0 ? '0.18' : '0.12';
+        var sw = g === 0 ? '1.5' : '1';
+        html += '<line x1="62" y1="' + gy + '" x2="962" y2="' + gy + '" stroke="rgba(130,188,255,' + opacity + ')" stroke-width="' + sw + '"></line>';
+        var tx = gv >= 1000 ? 2 : gv >= 100 ? 8 : 18;
+        var cls = g === 0 ? 'axis-text' : 'axis-text soft';
+        html += '<text x="' + tx + '" y="' + (gy + 4) + '" class="' + cls + '">' + gv + '</text>';
+      }
+
+      /* Solid line (Y1-Y5) */
+      var solidPts = [];
+      for (var i = 0; i < 5; i++) solidPts.push(toX(i) + ',' + toY(beds[i]));
+      html += '<polyline class="solid-line" points="' + solidPts.join(' ') + '"></polyline>';
+
+      /* Dashed line (Y5-Y10) */
+      var dashPts = [toX(4) + ',' + toY(beds[4])];
+      for (var j = 5; j < 10; j++) dashPts.push(toX(j) + ',' + toY(beds[j]));
+      html += '<polyline class="dashed-line" points="' + dashPts.join(' ') + '"></polyline>';
+
+      /* Dots */
+      for (var s = 0; s < 5; s++) html += '<circle class="solid-dot" cx="' + toX(s) + '" cy="' + toY(beds[s]) + '" r="7"></circle>';
+      for (var d = 5; d < 10; d++) html += '<circle class="dashed-dot" cx="' + toX(d) + '" cy="' + toY(beds[d]) + '" r="6"></circle>';
+
+      /* Point labels (Y1-Y5 only) */
+      for (var p = 0; p < 5; p++) {
+        html += '<text x="' + (toX(p) - 12) + '" y="' + (toY(beds[p]) - 12) + '" class="point-label">' + beds[p] + '</text>';
+      }
+
+      /* X-axis labels */
+      for (var a = 0; a < 10; a++) {
+        var acls = a < 5 ? 'axis-text' : 'axis-text soft';
+        html += '<text x="' + (toX(a) - 8) + '" y="280" class="' + acls + '">Y' + (a + 1) + '</text>';
+      }
+
+      svg.innerHTML = html;
+
+      /* Update note text */
+      var note = chart.parentElement.querySelector('.som-chart-note');
+      if (note) {
+        var spans = note.querySelectorAll('span');
+        if (spans[0]) spans[0].textContent = 'Y1-Y5 采用五年模型中的累计商业床位：' + beds.slice(0, 5).join(' → ') + '。';
+      }
+
+      /* Flash the chart border to indicate update */
+      chart.style.outline = '2px solid rgba(255,191,0,0.6)';
+      chart.style.borderRadius = '12px';
+      setTimeout(function() { chart.style.outline = 'none'; }, 2000);
+    }
+
     window.addEventListener('message', function(e) {
       if (!e.data || !e.data.type) return;
 
       if (e.data.type === 'aria-data-update') {
         var updates = e.data.updates || {};
+
+        /* Handle SOM chart redraw if bed data is present */
+        if (updates['som-chart-beds']) {
+          try {
+            var beds = JSON.parse(updates['som-chart-beds']);
+            if (Array.isArray(beds) && beds.length === 10) {
+              redrawSOMChart(beds);
+            }
+          } catch(ex) { /* ignore parse error */ }
+        }
+
         Object.keys(updates).forEach(function(field) {
+          /* Skip chart data keys — handled above */
+          if (field === 'som-chart-beds' || field === 'som-chart-revenue') return;
+
           var el = document.querySelector('[data-field="' + field + '"]');
           if (!el) return;
           var newVal = updates[field];

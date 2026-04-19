@@ -414,5 +414,8 @@ export function extractRoadshowUpdates(model: ModelInputs, resultBest: CalcResul
     'renewal-rate': `${Math.round(model.global.rr_base * 100)}%`,
     'hw-commission': `${Math.round(model.global.baxter_hw_commission * 100)}%`,
     'saas-commission': `${Math.round(model.global.baxter_saas_commission * 100)}%`,
+    // SOM chart data: JSON-encoded array of cumulative beds for Y1-Y10
+    'som-chart-beds': JSON.stringify(yrs.map(yr => yr.cumulative_beds)),
+    'som-chart-revenue': JSON.stringify(yrs.map(yr => Math.round(yr.total_revenue / 10000))),
   };
 }
