@@ -134,7 +134,16 @@ export default function BPMappingPage() {
         const bpArchives = await listArchives('bp');
         const fpArchives = await listArchives('financial_plan');
         if (bpArchives.length === 0 && fpArchives.length === 0) {
-          setStaleWarning('尚未生成 BP/财务计划快照。请返回模拟器点击"接受变更"生成文档。');
+          // No archives — check if model is still at defaults.
+          // If so, no warning needed (defaults = canonical source of truth).
+          const vsDefault = detectChanges(DEFAULT_MODEL, model);
+          if (vsDefault.changedGroups.length === 0) {
+            setStaleWarning(null);
+          } else {
+            setStaleWarning(
+              `参数已修改但尚未生成快照。请返回模拟器点击"接受变更"生成文档。`
+            );
+          }
           return;
         }
         const latest = [...bpArchives, ...fpArchives].sort((a, b) =>
