@@ -292,7 +292,7 @@ export default function BPMappingPage() {
               </div>
             </div>
             <div className="text-xs text-slate-500">
-              Source of Truth: {DOC_VERSIONS.bpFile} ({DOC_VERSIONS.bp})
+              Source of Truth: 模拟器参数面板 (Simulator)
             </div>
           </div>
         </div>
@@ -376,7 +376,7 @@ export default function BPMappingPage() {
                               影响BP章节: {BP_MAPPING_BLOCKS.filter(b => c.mappingBlocks.includes(b.id)).map(b => b.bpSection).join(' / ')}
                             </div>
                             <div className="text-slate-500 mt-0.5">
-                              建议: 以ARIA_Financial_Plan_latest.md为准，调整模拟器参数
+                              建议: 以模拟器参数面板为准 (Simulator is Source of Truth)，更新BP文档
                             </div>
                           </div>
                         ))}
@@ -665,8 +665,8 @@ export default function BPMappingPage() {
 
         {/* Footer note */}
         <div className="text-center py-6 border-t border-slate-600/50 text-xs text-slate-400">
-          <div>ARIA BP映射审计 · 数据源: ARIA_Financial_Plan_latest.md v2.1 (2026-04-19)</div>
-          <div className="text-amber-300 mt-1">冲突数据以 ARIA_Financial_Plan_latest.md 为 Source of Truth</div>
+          <div>ARIA BP映射审计 · Source of Truth: 模拟器参数面板 · 对标: {DOC_VERSIONS.bpFile} ({DOC_VERSIONS.bp})</div>
+          <div className="text-amber-300 mt-1">冲突数据以模拟器参数面板计算结果为准 (Simulator is Single Source of Truth)</div>
         </div>
       </div>
     </div>
