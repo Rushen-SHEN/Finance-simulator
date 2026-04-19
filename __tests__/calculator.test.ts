@@ -200,14 +200,14 @@ describe('calculate — Neutral Best Case', () => {
     expect(y2.total_revenue).toBeGreaterThan(0);
   });
 
-  it('EBITDA turns positive by Y4', () => {
-    expect(result.years[3].ebitda).toBeGreaterThan(0);
+  it('EBITDA turns positive by Y3', () => {
+    expect(result.years[2].ebitda).toBeGreaterThan(0);
   });
 
-  it('Y5 revenue aligns with v2.3 profile', () => {
+  it('Y5 revenue aligns with v2.4 profile', () => {
     const y5Rev = Math.round(result.years[4].total_revenue / 10000);
-    expect(y5Rev).toBeGreaterThanOrEqual(10600);
-    expect(y5Rev).toBeLessThanOrEqual(11600);
+    expect(y5Rev).toBeGreaterThanOrEqual(9000);
+    expect(y5Rev).toBeLessThanOrEqual(10000);
   });
 
   it('Y10 revenue grows from Y5 at 25-30% rates', () => {
