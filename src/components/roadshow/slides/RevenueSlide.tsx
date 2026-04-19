@@ -140,13 +140,8 @@ export default function RevenueSlide({ model, result }: RevenueSlideProps) {
       </div>
 
       <div className={styles.sourceBox}>
-        <strong>本页引用：</strong>
-        <span className={styles.sourceLine}>
-          BPccR2 §5.4 收入模型 · §9.3 Best Case 十年财务测算
-        </span>
-        <span className={`${styles.sourceLine} ${styles.sourceNote}`}>
-          所有数字为模型输出值，非审计结果。
-        </span>
+        <strong>本页引用：</strong><span className={styles.sourceLine}>BPcc §5.4·§9.3</span>
+        <span className={`${styles.sourceLine} ${styles.sourceNote}`}>所有数字为模型输出值，非审计结果。</span>
       </div>
     </Slide>
   );

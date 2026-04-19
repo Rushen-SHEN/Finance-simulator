@@ -114,16 +114,8 @@ export default function MarketSlide({ model, result }: MarketSlideProps) {
 
       {/* Source citations */}
       <div className={styles.sourceBox}>
-        <strong>本页引用：</strong>
-        <span className={styles.sourceLine}>
-          [30] 中国重症医学学科发展报告（2024）；国家卫生健康委员会 ICU 床位配置标准
-        </span>
-        <span className={styles.sourceLine}>
-          [31] Royalty Rates for Licensing Intellectual Property — TAM/SAM 估算方法
-        </span>
-        <span className={`${styles.sourceLine} ${styles.sourceNote}`}>
-          SOM 增长曲线基于模型部署假设，非承诺数据。
-        </span>
+        <strong>本页引用：</strong><span className={styles.sourceLine}>[30][31]</span>
+        <span className={`${styles.sourceLine} ${styles.sourceNote}`}>SOM 增长曲线基于模型部署假设，非承诺数据。</span>
       </div>
     </Slide>
   );

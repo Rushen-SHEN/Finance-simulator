@@ -173,21 +173,8 @@ export default function PricingSlide({ model, result }: PricingSlideProps) {
 
       {/* Source citations */}
       <div className={styles.sourceBox}>
-        <strong>本页引用：</strong>
-        <span className={styles.sourceLine}>
-          [14] Effectiveness of multicomponent nonpharmacological delirium
-          interventions
-        </span>
-        <span className={styles.sourceLine}>
-          [30] 中国重症医学学科发展报告（2024）；国家卫生健康委员会 ICU
-          床位配置标准
-        </span>
-        <span className={styles.sourceLine}>
-          [31] Royalty Rates for Licensing Intellectual Property
-        </span>
-        <span className={`${styles.sourceLine} ${styles.sourceNote}`}>
-          ROI 与渠道条款为经营测算，详细逻辑见关键假设页。
-        </span>
+        <strong>本页引用：</strong><span className={styles.sourceLine}>[14][30][31]</span>
+        <span className={`${styles.sourceLine} ${styles.sourceNote}`}>ROI 与渠道条款为经营测算，详细逻辑见关键假设页。</span>
       </div>
     </Slide>
   );
