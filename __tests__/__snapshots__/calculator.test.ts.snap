@@ -3,39 +3,39 @@
 exports[`Snapshot — Neutral Best Case financial metrics > Y1-Y5 EBITDA snapshot (万) 1`] = `
 [
   -578,
-  103,
-  1945,
-  6086,
-  8851,
+  98,
+  1925,
+  6049,
+  8913,
 ]
 `;
 
 exports[`Snapshot — Neutral Best Case financial metrics > Y1-Y5 cumulative beds snapshot 1`] = `
 [
   0,
-  288,
-  2034,
-  4394,
-  7404,
+  287,
+  2033,
+  4393,
+  7403,
 ]
 `;
 
 exports[`Snapshot — Neutral Best Case financial metrics > Y1-Y5 revenue snapshot (万) 1`] = `
 [
   0,
-  868,
-  3429,
-  8447,
-  11258,
+  859,
+  3568,
+  8714,
+  10766,
 ]
 `;
 
 exports[`Snapshot — Neutral Best Case financial metrics > Y6-Y10 revenue snapshot (万) 1`] = `
 [
-  14635,
-  19026,
-  24734,
-  30917,
-  38647,
+  13996,
+  18195,
+  23654,
+  29567,
+  36959,
 ]
 `;
