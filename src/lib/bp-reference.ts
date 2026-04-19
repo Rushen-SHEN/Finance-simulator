@@ -1,7 +1,7 @@
 // Finance Simulator is the Single Source of Truth (2026-04-19)
 // BP / Financial Plan are downstream documents that must align with simulator output.
-// This module holds Financial Plan v2.3 reference data for conflict detection.
-// for conflict detection and audit.
+// This module holds Financial Plan v2.4 reference data (parameters panel auto-generated)
+// for conflict detection and audit of roadshow + BP mapping pages.
 
 import { CalcResult } from './calculator';
 
@@ -128,11 +128,11 @@ export const ROADSHOW_DATA_POINTS = [
 
 /** Document version constants — update here when files change */
 export const DOC_VERSIONS = {
-  bp: 'BP V2.3',         // ARIA_BP_External_clean.md
-  fp: 'FP V2.3',         // ARIA_Financial_Plan
-  bpFile: 'ARIA_BP_External_clean.md',
-  fpFile: 'ARIA_Financial_Plan_v2.3 (1).md',
-  dataGovernance: 'Simulator is Single Source of Truth',
+  bp: 'BP V2.4',         // ARIA_BP_External_v2.4.md
+  fp: 'FP V2.4',         // ARIA_Financial_Plan_v2.4.md
+  bpFile: 'ARIA_BP_External_v2.4.md',
+  fpFile: 'ARIA_Financial_Plan_v2.4.md',
+  dataGovernance: 'Simulator is Single Source of Truth (2026-04-19)',
 };
 
 /** Source → BP Section mapping block definitions with full detail from BP */
