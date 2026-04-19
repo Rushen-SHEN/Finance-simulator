@@ -45,11 +45,11 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
 // Best Case yearly inputs (BPccR2 §5.4 / §9.3)
 export const DEFAULT_YEARLY: YearlyInputs = {
   // v2.3 cumulative commercial beds target: Y2 287, Y3 2033, Y4 4393, Y5 7403
-  direct_c2:       [   0,   19,  115,    0,    0],
+  direct_c2:       [   0,   18,  115,    0,    0],
   direct_c3:       [   0,    0,    0,  308,  170],
-  baxter_c2:       [   0,  412, 1631,    0,    0],
+  baxter_c2:       [   0,  413, 1631,    0,    0],
   baxter_c3:       [   0,    0,    0, 2052, 2840],
-  planned_upgrade: [   0,    0,    0,  379,  615],
+  planned_upgrade: [   0,    0,  157,  678,   70],
   depreciation:    [200000, 260000, 338000, 438000, 130000],
   baxter_license:  [0, 3000000, 2000000, 0, 0],
 };
@@ -144,7 +144,7 @@ export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
     rr_base: 0.85,
     growth_y6: 0.30, growth_y7: 0.30, growth_y8: 0.30, growth_y9: 0.25, growth_y10: 0.25,
     bed_growth_factor: 1.0,
-    opex_growth_y6: 0.743, opex_growth_y7: 1.055, opex_growth_y8: 0.582, opex_growth_y9: 0.426, opex_growth_y10: 0.286,
+    opex_growth_y6: 0.768, opex_growth_y7: 0.890, opex_growth_y8: 0.574, opex_growth_y9: 0.324, opex_growth_y10: 0.109,
     cogs_rate_target: 0.34014,
     salary_growth: 0.133,
     overhead_multiplier: 1.168,
