@@ -513,6 +513,173 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
             <div className="rounded-lg p-2 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500">
               📐 COGS = Σ(直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM_升级) · 经销商渠道=佣金模式,不计BOM · 毛利 = 总收入−COGS
             </div>
+
+            {/* ===== Y6-Y10 COGS / OpEx Projection ===== */}
+            <SectionTitle>COGS / OpEx 外推 (Y6–10) — {activeScenario === 'optimistic' ? '🟢乐观' : activeScenario === 'conservative' ? '🟠保守' : '🔵中性'}</SectionTitle>
+            <p className="text-[11px] text-slate-400">Y6-Y10 不再按BOM精算，改为 COGS比率 × 总收入 推演。OpEx按独立增长率推演。</p>
+
+            <ScenarioBlock scenario={activeScenario} title="COGS比率 & OpEx增长率">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <ScenarioDarkInput label="Y6-Y10 COGS目标比率" value={so.cogs_rate_target} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].cogs_rate_target} onChange={v => setSO('cogs_rate_target', v)} step={0.01} scenario={activeScenario} />
+              </div>
+              <div className="grid grid-cols-5 gap-3 mt-3">
+                <ScenarioDarkInput label="Y6 OpEx增长" value={so.opex_growth_y6} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y6} onChange={v => setSO('opex_growth_y6', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y7 OpEx增长" value={so.opex_growth_y7} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y7} onChange={v => setSO('opex_growth_y7', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y8 OpEx增长" value={so.opex_growth_y8} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y8} onChange={v => setSO('opex_growth_y8', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y9 OpEx增长" value={so.opex_growth_y9} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y9} onChange={v => setSO('opex_growth_y9', v)} step={0.01} scenario={activeScenario} />
+                <ScenarioDarkInput label="Y10 OpEx增长" value={so.opex_growth_y10} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].opex_growth_y10} onChange={v => setSO('opex_growth_y10', v)} step={0.01} scenario={activeScenario} />
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">
+                {activeScenario === 'optimistic' ? '🟢 乐观: COGS 32% (规模化+供应链议价) · OpEx增速 30%→18% (高效运营)' :
+                 activeScenario === 'conservative' ? '🟠 保守: COGS 36% (供应链未优化) · OpEx增速 35%→24% (扩张成本居高)' :
+                 '🔵 中性: COGS 34% (行业基准) · OpEx增速 33%→22% (标准扩张)'}
+              </div>
+            </ScenarioBlock>
+
+            {/* Y6-Y10 COGS/OpEx/EBITDA detail table */}
+            {(() => {
+              const fmtW = (n: number) => { const v = n / 10000; return v === 0 ? '—' : `${Math.round(v)}`; };
+              const y6_10 = scenarioResult.years.slice(5);
+              return (
+                <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+                  <table className="w-full text-xs">
+                    <thead>
+                      <tr className="bg-slate-800/80">
+                        <th className="text-left px-3 py-2 text-orange-400 font-semibold w-[120px]">Y6-Y10 明细</th>
+                        {['Y6','Y7','Y8','Y9','Y10'].map(l => <th key={l} className="text-right px-2 py-2 text-orange-400 font-semibold">{l}</th>)}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-slate-400">总收入 (万)</td>
+                        {y6_10.map((yr, i) => (
+                          <td key={i} className="text-right px-2 py-2 font-mono text-slate-200">{fmtW(yr.total_revenue)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-amber-400/80">COGS比率</td>
+                        {y6_10.map((yr, i) => {
+                          const rate = yr.total_revenue > 0 ? (yr.cogs / yr.total_revenue * 100) : 0;
+                          return (
+                            <td key={i} className={`text-right px-2 py-2 font-mono ${rate > 40 ? 'text-amber-400' : 'text-green-400'}`}>
+                              {yr.total_revenue > 0 ? `${rate.toFixed(0)}%` : '—'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-slate-400">COGS (万)</td>
+                        {y6_10.map((yr, i) => (
+                          <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.cogs)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-slate-400 font-medium">毛利 (万)</td>
+                        {y6_10.map((yr, i) => (
+                          <td key={i} className={`text-right px-2 py-2 font-mono font-medium ${yr.gross_profit >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtW(yr.gross_profit)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-slate-400">OpEx (万)</td>
+                        {y6_10.map((yr, i) => (
+                          <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtW(yr.opex)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-slate-500 text-[10px] pl-5">┗ OpEx YoY</td>
+                        {y6_10.map((yr, i) => {
+                          const prev = scenarioResult.years[4 + i];
+                          const pct = prev.opex > 0 ? ((yr.opex / prev.opex - 1) * 100) : 0;
+                          return <td key={i} className="text-right px-2 py-2 font-mono text-slate-500 text-[10px]">{pct > 0 ? '+' : ''}{pct.toFixed(0)}%</td>;
+                        })}
+                      </tr>
+                      <tr className="border-t border-cyan-500/20 bg-cyan-500/5">
+                        <td className="px-3 py-2 text-cyan-300 font-bold">EBITDA (万)</td>
+                        {y6_10.map((yr, i) => (
+                          <td key={i} className={`text-right px-2 py-2 font-mono font-bold ${yr.ebitda >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtW(yr.ebitda)}</td>
+                        ))}
+                      </tr>
+                      <tr className="border-t border-slate-700/30">
+                        <td className="px-3 py-2 text-slate-500 text-[10px]">EBITDA利润率</td>
+                        {y6_10.map((yr, i) => {
+                          const margin = yr.total_revenue > 0 ? (yr.ebitda / yr.total_revenue * 100) : 0;
+                          return (
+                            <td key={i} className={`text-right px-2 py-2 font-mono text-[10px] ${margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                              {yr.total_revenue > 0 ? `${margin.toFixed(1)}%` : '—'}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+
+            {/* Three-scenario COGS/EBITDA comparison at Y10 */}
+            {(() => {
+              const allScenarios = (['neutral', 'optimistic', 'conservative'] as const).map(sk => {
+                const sOver = model.scenario_overrides?.[sk] || DEFAULT_SCENARIO_OVERRIDES[sk];
+                const res = calculate(model.global, currentYearly, model.opex, currentMs, sOver);
+                const y10 = res.years[9];
+                return { key: sk, label: sk === 'neutral' ? '🔵 中性' : sk === 'optimistic' ? '🟢 乐观' : '🟠 保守',
+                  cogsRate: sOver.cogs_rate_target, opexG6: sOver.opex_growth_y6, opexG10: sOver.opex_growth_y10,
+                  y10Rev: y10.total_revenue, y10Cogs: y10.cogs, y10Opex: y10.opex, y10Ebitda: y10.ebitda, y10Margin: y10.total_revenue > 0 ? (y10.ebitda / y10.total_revenue * 100) : 0 };
+              });
+              const fmtW = (n: number) => { const v = n / 10000; return v === 0 ? '—' : `¥${Math.round(v).toLocaleString()}万`; };
+              return (
+                <>
+                  <SectionTitle>三情景 Y10 COGS/EBITDA 对比</SectionTitle>
+                  <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+                    <table className="w-full text-xs">
+                      <thead>
+                        <tr className="bg-slate-800/80">
+                          <th className="text-left px-3 py-2 text-slate-400 font-semibold w-[100px]">指标</th>
+                          {allScenarios.map(s => <th key={s.key} className="text-right px-3 py-2 text-slate-300 font-semibold">{s.label}</th>)}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        <tr className="border-t border-slate-700/30">
+                          <td className="px-3 py-2 text-slate-400">COGS目标比率</td>
+                          {allScenarios.map(s => <td key={s.key} className="text-right px-3 py-2 font-mono text-amber-300">{(s.cogsRate * 100).toFixed(0)}%</td>)}
+                        </tr>
+                        <tr className="border-t border-slate-700/30">
+                          <td className="px-3 py-2 text-slate-400">OpEx增长率</td>
+                          {allScenarios.map(s => <td key={s.key} className="text-right px-3 py-2 font-mono text-slate-300">{(s.opexG6 * 100).toFixed(0)}%→{(s.opexG10 * 100).toFixed(0)}%</td>)}
+                        </tr>
+                        <tr className="border-t border-slate-700/30">
+                          <td className="px-3 py-2 text-slate-400">Y10 收入</td>
+                          {allScenarios.map(s => <td key={s.key} className="text-right px-3 py-2 font-mono text-slate-200">{fmtW(s.y10Rev)}</td>)}
+                        </tr>
+                        <tr className="border-t border-slate-700/30">
+                          <td className="px-3 py-2 text-slate-400">Y10 COGS</td>
+                          {allScenarios.map(s => <td key={s.key} className="text-right px-3 py-2 font-mono text-slate-300">{fmtW(s.y10Cogs)}</td>)}
+                        </tr>
+                        <tr className="border-t border-slate-700/30">
+                          <td className="px-3 py-2 text-slate-400">Y10 OpEx</td>
+                          {allScenarios.map(s => <td key={s.key} className="text-right px-3 py-2 font-mono text-slate-300">{fmtW(s.y10Opex)}</td>)}
+                        </tr>
+                        <tr className="border-t border-cyan-500/20 bg-cyan-500/5">
+                          <td className="px-3 py-2 text-cyan-300 font-bold">Y10 EBITDA</td>
+                          {allScenarios.map(s => <td key={s.key} className={`text-right px-3 py-2 font-mono font-bold ${s.y10Ebitda >= 0 ? 'text-green-400' : 'text-red-400'}`}>{fmtW(s.y10Ebitda)}</td>)}
+                        </tr>
+                        <tr className="border-t border-slate-700/30">
+                          <td className="px-3 py-2 text-slate-400">EBITDA利润率</td>
+                          {allScenarios.map(s => <td key={s.key} className={`text-right px-3 py-2 font-mono font-bold ${s.y10Margin >= 0 ? 'text-green-400' : 'text-red-400'}`}>{s.y10Margin.toFixed(1)}%</td>)}
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              );
+            })()}
+
+            <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500 leading-relaxed space-y-1">
+              <div>📐 <strong>Y6-Y10 COGS</strong> = 总收入 × COGS目标比率（不再按BOM逐台精算）</div>
+              <div>📐 <strong>Y6-Y10 OpEx</strong> = 上年OpEx × (1 + OpEx增长率)，逐年独立设定</div>
+              <div>📐 <strong>EBITDA</strong> = 毛利(总收入−COGS) − OpEx合计</div>
+              <div>⚠ 保守情景EBITDA为负：续约率55%(SaaS复利弱) + COGS 36%(未优化) + 低增速(20%→15%) + 高OpEx增速(35%→24%) → 成本增长快于收入增长，Y10入不敷出</div>
+            </div>
           </div>
         )}
 
