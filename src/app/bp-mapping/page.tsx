@@ -8,9 +8,113 @@ import { listArchives } from '@/lib/archiveStore';
 import { detectChanges } from '@/lib/changeTracker';
 import {
   BP_MAIN_TABLE, BP_SOM, BP_CHANNEL,
-  BP_MAPPING_BLOCKS, BP_SENSITIVITY, DOC_VERSIONS,
+  BP_MAPPING_BLOCKS, ROADSHOW_MAPPING_BLOCKS, ROADSHOW_DATA_POINTS,
+  BP_SENSITIVITY, DOC_VERSIONS,
   DataConflict, detectConflicts, generateAuditReport,
 } from '@/lib/bp-reference';
+import { extractRoadshowUpdates } from '@/lib/docGenerator';
+
+/** Roadshow-to-Simulator mapping section with live conflict detection */
+function RoadshowMappingSection({ model, resultBest }: { model: ModelInputs; resultBest: CalcResult }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const liveUpdates = useMemo(
+    () => extractRoadshowUpdates(model, resultBest),
+    [model, resultBest]
+  );
+
+  // Group ROADSHOW_DATA_POINTS by slideId, compare bpValue vs liveValue
+  const slideGroups = useMemo(() => {
+    const groups: Record<string, { point: typeof ROADSHOW_DATA_POINTS[0]; liveValue: string; changed: boolean }[]> = {};
+    for (const pt of ROADSHOW_DATA_POINTS) {
+      const live = liveUpdates[pt.field] ?? '';
+      const changed = live !== pt.bpValue;
+      if (!groups[pt.slideId]) groups[pt.slideId] = [];
+      groups[pt.slideId].push({ point: pt, liveValue: live, changed });
+    }
+    return groups;
+  }, [liveUpdates]);
+
+  return (
+    <div className="mb-8">
+      <h2 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">路演 ↔ Simulator 数据映射</h2>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {ROADSHOW_MAPPING_BLOCKS.map(block => {
+          const slidePoints = slideGroups[block.source] || [];
+          const changedCount = slidePoints.filter(p => p.changed).length;
+          const isExpanded = expanded === block.id;
+
+          return (
+            <div
+              key={block.id}
+              className={`rounded-xl border p-4 cursor-pointer transition-all ${
+                changedCount > 0
+                  ? 'border-amber-500/30 bg-amber-500/5 hover:border-amber-500/50'
+                  : 'border-slate-700 bg-slate-900/50 hover:border-slate-600'
+              }`}
+              onClick={() => setExpanded(isExpanded ? null : block.id)}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded ${
+                      changedCount > 0 ? 'bg-amber-500/20 text-amber-400' : 'bg-green-500/20 text-green-400'
+                    }`}>{block.id}</span>
+                    <span className="text-sm font-bold text-white">{block.content}</span>
+                    {changedCount > 0 ? (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400">
+                        {changedCount} 项变更
+                      </span>
+                    ) : (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-green-500/20 text-green-400">✓ 同步</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-slate-300 font-medium mt-1.5 px-2 py-1 rounded bg-slate-800/60 border border-slate-700/40 inline-block">
+                    <span className="text-purple-400/80">{block.sourceLabel}</span>
+                    <span className="text-slate-500 mx-1.5">↔</span>
+                    <span className="text-cyan-400/80">{block.targetLabel}</span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-1.5">触发: {block.trigger}</div>
+                </div>
+                <span className="text-slate-500 text-xs">{isExpanded ? '▼' : '▶'}</span>
+              </div>
+
+              {isExpanded && (
+                <div className="mt-4 pt-3 border-t border-slate-700/50">
+                  {slidePoints.length === 0 ? (
+                    <div className="text-xs text-slate-500">无映射数据点。</div>
+                  ) : (
+                    <div className="space-y-1.5 max-h-[300px] overflow-y-auto">
+                      {slidePoints.map((sp, i) => (
+                        <div key={i} className={`flex items-center gap-2 text-xs px-2 py-1 rounded ${
+                          sp.changed ? 'bg-amber-500/10' : 'bg-slate-800/30'
+                        }`}>
+                          <span className="text-slate-400 w-[140px] truncate" title={sp.point.field}>{sp.point.label}</span>
+                          <span className={`font-mono ${sp.changed ? 'text-red-400 line-through' : 'text-slate-500'}`}>
+                            {sp.point.bpValue.length > 30 ? sp.point.bpValue.slice(0, 30) + '…' : sp.point.bpValue}
+                          </span>
+                          {sp.changed && (
+                            <>
+                              <span className="text-slate-600">→</span>
+                              <span className="font-mono text-green-400">
+                                {sp.liveValue.length > 30 ? sp.liveValue.slice(0, 30) + '…' : sp.liveValue}
+                              </span>
+                            </>
+                          )}
+                          {!sp.changed && <span className="text-green-500">✓</span>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 export default function BPMappingPage() {
   const [model, setModel] = useState<ModelInputs>(structuredClone(DEFAULT_MODEL));
@@ -281,6 +385,8 @@ export default function BPMappingPage() {
         </div>
 
         {/* 10-year financial main table comparison */}
+        <RoadshowMappingSection model={model} resultBest={resultBest} />
+
         <div className="mb-8">
           <h2 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">§5.2 十年财务主表 — BP vs 模拟器</h2>
           <div className="rounded-xl border border-slate-700 overflow-x-auto">

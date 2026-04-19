@@ -46,16 +46,82 @@ export const BP_FUNDING = {
 
 /** Roadshow slide data points that should be live-linked */
 export const ROADSHOW_DATA_POINTS = [
-  { slideId: 's9',  field: 'ebitda_positive_year', label: 'EBITDA转正时点', bpValue: 'Year 2', unit: '' },
-  { slideId: 's16', field: 'y5_revenue',           label: 'Y5总收入',      bpValue: '¥1,665万', unit: '万' },
-  { slideId: 's16', field: 'som_y1_beds',          label: 'Y1累计床位',    bpValue: '0',  unit: '床' },
-  { slideId: 's16', field: 'som_y2_beds',          label: 'Y2累计床位',    bpValue: '110',  unit: '床' },
-  { slideId: 's16', field: 'som_y3_beds',          label: 'Y3累计床位',    bpValue: '290',  unit: '床' },
-  { slideId: 's16', field: 'som_y4_beds',          label: 'Y4累计床位',    bpValue: '520',  unit: '床' },
-  { slideId: 's16', field: 'som_y5_beds',          label: 'Y5累计床位',    bpValue: '780',  unit: '床' },
-  { slideId: 's17', field: 'y2_revenue',           label: 'Y2总收入',      bpValue: '¥932万', unit: '万' },
-  { slideId: 's17', field: 'y3_revenue',           label: 'Y3总收入',      bpValue: '¥1,259万', unit: '万' },
-  { slideId: 's17', field: 'y5_revenue_detail',    label: 'Y5总收入(详情页)', bpValue: '¥1,665万', unit: '万' },
+  // EBITDA
+  { slideId: 's9',  field: 'ebitda-positive',      label: 'EBITDA转正时点',        bpValue: '第 2 年' },
+  { slideId: 's16', field: 'ebitda-year-inline',    label: 'EBITDA转正(内联)',       bpValue: 'Year 2' },
+  // Revenue totals
+  { slideId: 's17', field: 'y2-revenue',            label: 'Y2总收入',              bpValue: '¥932 万' },
+  { slideId: 's17', field: 'y3-revenue',            label: 'Y3总收入',              bpValue: '¥1,259 万' },
+  { slideId: 's17', field: 'y4-revenue',            label: 'Y4总收入',              bpValue: '¥1,398 万' },
+  { slideId: 's16', field: 'y5-revenue',            label: 'Y5总收入',              bpValue: '¥1,665 万' },
+  { slideId: 's17', field: 'y5-revenue-detail',     label: 'Y5总收入(详情)',         bpValue: '¥1,665 万' },
+  { slideId: 's16', field: 'y10-revenue',           label: 'Y10总收入',             bpValue: '¥6,180 万' },
+  { slideId: 's16', field: 'y10-ebitda',            label: 'Y10 EBITDA',            bpValue: '¥2,420 万' },
+  // Y2 revenue description
+  { slideId: 's17', field: 'y2-revenue-desc',       label: 'Y2收入结构描述',         bpValue: '硬件直销 ¥520 万；授权金 + 里程碑 ¥300 万；SaaS 及分成收入开始形成。' },
+  // Bed counts
+  { slideId: 's17', field: 'y2-beds',               label: 'Y2累计床位',            bpValue: '110 床' },
+  { slideId: 's17', field: 'y3-beds',               label: 'Y3累计床位',            bpValue: '290 床' },
+  { slideId: 's17', field: 'y4-beds',               label: 'Y4累计床位',            bpValue: '520 床' },
+  { slideId: 's17', field: 'y5-beds',               label: 'Y5累计床位',            bpValue: '780 床' },
+  { slideId: 's9',  field: 'y2-beds-inline',        label: 'Y2床位(内联)',           bpValue: '110' },
+  { slideId: 's9',  field: 'beds-expansion-desc',   label: '床位扩张描述',           bpValue: '290 → 520 → 780' },
+  // Bar chart percentages
+  { slideId: 's17', field: 'y2-beds-pct',           label: 'Y2进度条%',             bpValue: '14' },
+  { slideId: 's17', field: 'y3-beds-pct',           label: 'Y3进度条%',             bpValue: '37' },
+  { slideId: 's17', field: 'y4-beds-pct',           label: 'Y4进度条%',             bpValue: '67' },
+  { slideId: 's17', field: 'y5-beds-pct',           label: 'Y5进度条%',             bpValue: '100' },
+  // Pricing
+  { slideId: 's10', field: 'c2-hw-price',           label: 'C2硬件定价',            bpValue: '¥6.5 万 / 床' },
+  { slideId: 's10', field: 'c2-saas-price',         label: 'C2 SaaS定价',           bpValue: '¥2.5 万 / 床 / 年' },
+  { slideId: 's10', field: 'c3-hw-price',           label: 'C3硬件定价',            bpValue: '¥8.5 万 / 床' },
+  { slideId: 's10', field: 'c3-saas-price',         label: 'C3 SaaS定价',           bpValue: '¥4.0 万 / 床 / 年' },
+  { slideId: 's10', field: 'c3-saas-bulk',          label: 'C3 SaaS五年期折扣',     bpValue: '¥3.5 万' },
+  { slideId: 's10', field: 'c2-hw-tbl',             label: 'C2硬件(表)',            bpValue: '¥6.5 万' },
+  { slideId: 's10', field: 'c3-hw-tbl',             label: 'C3硬件(表)',            bpValue: '¥8.5 万' },
+  { slideId: 's10', field: 'c2-saas-tbl',           label: 'C2 SaaS(表)',           bpValue: '¥2.5 万 / 年' },
+  { slideId: 's10', field: 'c3-saas-tbl',           label: 'C3 SaaS(表)',           bpValue: '¥4.0 万 / 年' },
+  { slideId: 's10', field: 'upgrade-tbl',           label: '升级定价(表)',           bpValue: '¥2.5 万 / 床' },
+  // ROI
+  { slideId: 's10', field: 'roi-c2-new',            label: 'C2新购ROI',             bpValue: '+34%' },
+  { slideId: 's10', field: 'roi-c2-cost',           label: 'C2年化费用',            bpValue: '年化费用 ¥4.7 万 / 床' },
+  { slideId: 's10', field: 'roi-c2-anchor',         label: 'C2价值锚点',            bpValue: '价值锚点 ¥6.3 万 / 床 / 年' },
+  { slideId: 's10', field: 'roi-c3-new',            label: 'C3新购ROI',             bpValue: '+17%' },
+  { slideId: 's10', field: 'roi-c3-cost',           label: 'C3年化费用',            bpValue: '年化费用 ¥6.8 万 / 床' },
+  { slideId: 's10', field: 'roi-c3-anchor',         label: 'C3价值锚点',            bpValue: '价值锚点 ¥8.0 万 / 床 / 年' },
+  { slideId: 's10', field: 'roi-c3u',               label: 'C3升级ROI',             bpValue: '+66%' },
+  { slideId: 's10', field: 'roi-c3u-cost',          label: 'C3升级年化费用',         bpValue: '年化费用 ¥4.8 万 / 床' },
+  { slideId: 's10', field: 'roi-c3u-anchor',        label: 'C3升级价值锚点',         bpValue: '价值锚点 ¥8.0 万 / 床 / 年' },
+  { slideId: 's10', field: 'roi-c3-5yr',            label: 'C3五年期ROI',            bpValue: '+20%' },
+  // Revenue breakdown
+  { slideId: 's17', field: 'rev-hw-y2',             label: 'Y2硬件直销',            bpValue: '¥520 万' },
+  { slideId: 's17', field: 'rev-hw-y3',             label: 'Y3硬件直销',            bpValue: '¥580 万' },
+  { slideId: 's17', field: 'rev-hw-y5',             label: 'Y5硬件直销',            bpValue: '¥510 万' },
+  { slideId: 's17', field: 'rev-hwshare-y2',        label: 'Y2硬件分成',            bpValue: '¥29 万' },
+  { slideId: 's17', field: 'rev-hwshare-y3',        label: 'Y3硬件分成',            bpValue: '¥77 万' },
+  { slideId: 's17', field: 'rev-hwshare-y5',        label: 'Y5硬件分成',            bpValue: '¥255 万' },
+  { slideId: 's17', field: 'rev-upgrade-y2',        label: 'Y2升级收入',            bpValue: '¥0' },
+  { slideId: 's17', field: 'rev-upgrade-y3',        label: 'Y3升级收入',            bpValue: '¥100 万' },
+  { slideId: 's17', field: 'rev-upgrade-y5',        label: 'Y5升级收入',            bpValue: '¥0' },
+  { slideId: 's17', field: 'rev-saas-y2',           label: 'Y2 SaaS直销',           bpValue: '¥75 万' },
+  { slideId: 's17', field: 'rev-saas-y3',           label: 'Y3 SaaS直销',           bpValue: '¥260 万' },
+  { slideId: 's17', field: 'rev-saas-y5',           label: 'Y5 SaaS直销',           bpValue: '¥640 万' },
+  { slideId: 's17', field: 'rev-saasshare-y2',      label: 'Y2 SaaS分成',           bpValue: '¥8 万' },
+  { slideId: 's17', field: 'rev-saasshare-y3',      label: 'Y3 SaaS分成',           bpValue: '¥42 万' },
+  { slideId: 's17', field: 'rev-saasshare-y5',      label: 'Y5 SaaS分成',           bpValue: '¥260 万' },
+  { slideId: 's17', field: 'rev-license-y2',        label: 'Y2授权金+里程碑',        bpValue: '¥300 万' },
+  { slideId: 's17', field: 'rev-license-y3',        label: 'Y3授权金+里程碑',        bpValue: '¥200 万' },
+  { slideId: 's17', field: 'rev-license-y5',        label: 'Y5授权金+里程碑',        bpValue: '¥0' },
+  // Funding
+  { slideId: 's16', field: 'seed-range',            label: '种子轮金额',            bpValue: '¥500-600 万' },
+  { slideId: 's16', field: 'preA-range',            label: 'Pre-A金额',             bpValue: '¥300-500 万' },
+  { slideId: 's16', field: 'seriesA-range',         label: 'A轮金额',               bpValue: '¥0-500 万' },
+  // Rates
+  { slideId: 's10', field: 'renewal-rate',          label: '续约率',                bpValue: '70%' },
+  { slideId: 's10', field: 'hw-commission',         label: '硬件分成比例',           bpValue: '15%' },
+  { slideId: 's10', field: 'saas-commission',       label: 'SaaS分成比例',           bpValue: '35%' },
+  // SOM chart
+  { slideId: 's16', field: 'som-chart-beds',        label: 'SOM曲线(床位)',          bpValue: '[0,110,290,520,780,1014,1318,1714,2228,2896]' },
 ];
 
 /** Document version constants — update here when files change */
@@ -143,6 +209,46 @@ export const BP_MAPPING_BLOCKS: MappingBlockDetail[] = [
     content: 'ARR = 活跃付费床位 × 年化单床SaaS收入',
     trigger: '续约率/单价变化',
     checkFields: ['arr', 'renewal_rate', 'saas_per_bed'],
+  },
+];
+
+/** Roadshow → Simulator mapping blocks for audit display */
+export const ROADSHOW_MAPPING_BLOCKS: MappingBlockDetail[] = [
+  {
+    id: 'RS-s9',
+    displayLabel: '路演 s9 市场机会 → Simulator',
+    source: 's9', sourceLabel: '路演 s9 市场机会',
+    bpSection: 'EBITDA + SOM', targetLabel: 'Simulator 财务主表',
+    content: 'EBITDA转正时点、Y2首轮床位数、Y3-Y5床位扩张曲线描述',
+    trigger: '部署计划/EBITDA变化',
+    checkFields: ['ebitda-positive', 'y2-beds-inline', 'beds-expansion-desc'],
+  },
+  {
+    id: 'RS-s10',
+    displayLabel: '路演 s10 商业模式 → Simulator',
+    source: 's10', sourceLabel: '路演 s10 商业模式',
+    bpSection: '定价 + ROI', targetLabel: 'Simulator 定价参数',
+    content: 'C2/C3硬件定价、SaaS定价、升级定价、ROI、渠道分成比例',
+    trigger: '定价/渠道条款变化',
+    checkFields: ['c2-hw-price', 'c3-hw-price', 'c2-saas-price', 'c3-saas-price', 'roi-c2-new', 'roi-c3-new', 'roi-c3u'],
+  },
+  {
+    id: 'RS-s16',
+    displayLabel: '路演 s16 融资与SOM → Simulator',
+    source: 's16', sourceLabel: '路演 s16 融资与SOM曲线',
+    bpSection: 'SOM + 融资', targetLabel: 'Simulator SOM + 融资参数',
+    content: 'SOM十年曲线、融资轮次金额、EBITDA转正年份、Y5总收入',
+    trigger: 'SOM/融资/收入变化',
+    checkFields: ['som-chart-beds', 'seed-range', 'preA-range', 'y5-revenue', 'ebitda-year-inline'],
+  },
+  {
+    id: 'RS-s17',
+    displayLabel: '路演 s17 收入结构 → Simulator',
+    source: 's17', sourceLabel: '路演 s17 收入结构与盈利路径',
+    bpSection: '收入拆解', targetLabel: 'Simulator 收入计算',
+    content: 'Y2-Y5收入总额、床位部署节奏条形图、六项收入明细(Y2/Y3/Y5)',
+    trigger: '任何收入/床位参数变化',
+    checkFields: ['y2-revenue', 'y3-revenue', 'y5-revenue-detail', 'y2-beds', 'y5-beds', 'rev-hw-y2', 'rev-saas-y5'],
   },
 ];
 

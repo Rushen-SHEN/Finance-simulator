@@ -395,26 +395,114 @@ export function patchBPSections(
 /** Extract data updates for the roadshow HTML slides from model + results */
 export function extractRoadshowUpdates(model: ModelInputs, resultBest: CalcResult): Record<string, string> {
   const yrs = resultBest.years;
+  const g = model.global;
   const fmt = (v: number) => `¥${Math.round(v / 10000).toLocaleString()} 万`;
+  const fmt0 = (v: number) => v === 0 ? '¥0' : fmt(v);
+  const fmtP = (v: number) => `¥${(v / 10000).toFixed(1)} 万`;
   const ebitdaYear = yrs.findIndex(y => y.ebitda > 0);
+  const y5Beds = yrs[4].cumulative_beds || 1; // avoid division by zero
+
+  // ROI calculation: annualized cost vs value anchor over 3-year period
+  const c2AnnualCost = (g.price_hw_c2 / 3 + g.price_saas_c2);
+  const c3AnnualCost = (g.price_hw_c3 / 3 + g.price_saas_c3);
+  const c3uAnnualCost = (g.price_upgrade / 3 + g.price_saas_c3);
+  const c2ROI = g.value_anchor_c2 > 0 ? Math.round((g.value_anchor_c2 / c2AnnualCost - 1) * 100) : 0;
+  const c3ROI = g.value_anchor_c3 > 0 ? Math.round((g.value_anchor_c3 / c3AnnualCost - 1) * 100) : 0;
+  const c3uROI = g.value_anchor_c3 > 0 ? Math.round((g.value_anchor_c3 / c3uAnnualCost - 1) * 100) : 0;
+  // 5-year bulk discount ROI
+  const c3_5yrAnnualCost = (g.price_hw_c3 / 5 + g.price_saas_c3_bulk);
+  const c3_5yrROI = g.value_anchor_c3 > 0 ? Math.round((g.value_anchor_c3 / c3_5yrAnnualCost - 1) * 100) : 0;
 
   return {
+    // --- EBITDA ---
     'ebitda-positive': ebitdaYear >= 0 ? `第 ${ebitdaYear + 1} 年` : '未转正',
+    'ebitda-year-inline': ebitdaYear >= 0 ? `Year ${ebitdaYear + 1}` : 'N/A',
+
+    // --- Revenue totals ---
     'y2-revenue': fmt(yrs[1].total_revenue),
     'y3-revenue': fmt(yrs[2].total_revenue),
     'y4-revenue': fmt(yrs[3].total_revenue),
     'y5-revenue': fmt(yrs[4].total_revenue),
     'y5-revenue-detail': fmt(yrs[4].total_revenue),
+    'y10-revenue': fmt(yrs[9].total_revenue),
+    'y10-ebitda': fmt(yrs[9].ebitda),
+
+    // --- Y2 revenue description ---
+    'y2-revenue-desc': `硬件直销 ${fmt(yrs[1].hw_direct)}；授权金 + 里程碑 ${fmt(yrs[1].baxter_license)}；SaaS 及分成收入开始形成。`,
+
+    // --- Bed counts ---
     'y2-beds': `${yrs[1].cumulative_beds} 床`,
     'y3-beds': `${yrs[2].cumulative_beds} 床`,
     'y4-beds': `${yrs[3].cumulative_beds} 床`,
     'y5-beds': `${yrs[4].cumulative_beds} 床`,
-    'y10-revenue': fmt(yrs[9].total_revenue),
-    'y10-ebitda': fmt(yrs[9].ebitda),
-    'renewal-rate': `${Math.round(model.global.rr_base * 100)}%`,
-    'hw-commission': `${Math.round(model.global.baxter_hw_commission * 100)}%`,
-    'saas-commission': `${Math.round(model.global.baxter_saas_commission * 100)}%`,
-    // SOM chart data: JSON-encoded array of cumulative beds for Y1-Y10
+
+    // --- Inline bed descriptions ---
+    'y2-beds-inline': `${yrs[1].cumulative_beds}`,
+    'beds-expansion-desc': `${yrs[2].cumulative_beds} → ${yrs[3].cumulative_beds} → ${yrs[4].cumulative_beds}`,
+
+    // --- Bar chart percentages (relative to Y5 beds) ---
+    'y2-beds-pct': `${Math.round((yrs[1].cumulative_beds / y5Beds) * 100)}`,
+    'y3-beds-pct': `${Math.round((yrs[2].cumulative_beds / y5Beds) * 100)}`,
+    'y4-beds-pct': `${Math.round((yrs[3].cumulative_beds / y5Beds) * 100)}`,
+    'y5-beds-pct': '100',
+
+    // --- Pricing ---
+    'c2-hw-price': `¥${(g.price_hw_c2 / 10000).toFixed(1)} 万 / 床`,
+    'c2-saas-price': `¥${(g.price_saas_c2 / 10000).toFixed(1)} 万 / 床 / 年`,
+    'c3-hw-price': `¥${(g.price_hw_c3 / 10000).toFixed(1)} 万 / 床`,
+    'c3-saas-price': `¥${(g.price_saas_c3 / 10000).toFixed(1)} 万 / 床 / 年`,
+    'c3-saas-bulk': `¥${(g.price_saas_c3_bulk / 10000).toFixed(1)} 万`,
+
+    // --- Pricing summary table ---
+    'c2-hw-tbl': `¥${(g.price_hw_c2 / 10000).toFixed(1)} 万`,
+    'c3-hw-tbl': `¥${(g.price_hw_c3 / 10000).toFixed(1)} 万`,
+    'c2-saas-tbl': `¥${(g.price_saas_c2 / 10000).toFixed(1)} 万 / 年`,
+    'c3-saas-tbl': `¥${(g.price_saas_c3 / 10000).toFixed(1)} 万 / 年`,
+    'upgrade-tbl': `¥${(g.price_upgrade / 10000).toFixed(1)} 万 / 床`,
+
+    // --- ROI ---
+    'roi-c2-new': `+${c2ROI}%`,
+    'roi-c2-cost': `年化费用 ${fmtP(c2AnnualCost)} / 床`,
+    'roi-c2-anchor': `价值锚点 ${fmtP(g.value_anchor_c2)} / 床 / 年`,
+    'roi-c3-new': `+${c3ROI}%`,
+    'roi-c3-cost': `年化费用 ${fmtP(c3AnnualCost)} / 床`,
+    'roi-c3-anchor': `价值锚点 ${fmtP(g.value_anchor_c3)} / 床 / 年`,
+    'roi-c3u': `+${c3uROI}%`,
+    'roi-c3u-cost': `年化费用 ${fmtP(c3uAnnualCost)} / 床`,
+    'roi-c3u-anchor': `价值锚点 ${fmtP(g.value_anchor_c3)} / 床 / 年`,
+    'roi-c3-5yr': `+${c3_5yrROI}%`,
+
+    // --- Revenue breakdown table (Y2, Y3, Y5) ---
+    'rev-hw-y2': fmt0(yrs[1].hw_direct),
+    'rev-hw-y3': fmt0(yrs[2].hw_direct),
+    'rev-hw-y5': fmt0(yrs[4].hw_direct),
+    'rev-hwshare-y2': fmt0(yrs[1].hw_baxter),
+    'rev-hwshare-y3': fmt0(yrs[2].hw_baxter),
+    'rev-hwshare-y5': fmt0(yrs[4].hw_baxter),
+    'rev-upgrade-y2': fmt0(yrs[1].upgrade_revenue),
+    'rev-upgrade-y3': fmt0(yrs[2].upgrade_revenue),
+    'rev-upgrade-y5': fmt0(yrs[4].upgrade_revenue),
+    'rev-saas-y2': fmt0(yrs[1].saas_direct),
+    'rev-saas-y3': fmt0(yrs[2].saas_direct),
+    'rev-saas-y5': fmt0(yrs[4].saas_direct),
+    'rev-saasshare-y2': fmt0(yrs[1].saas_baxter),
+    'rev-saasshare-y3': fmt0(yrs[2].saas_baxter),
+    'rev-saasshare-y5': fmt0(yrs[4].saas_baxter),
+    'rev-license-y2': fmt0(yrs[1].baxter_license),
+    'rev-license-y3': fmt0(yrs[2].baxter_license),
+    'rev-license-y5': fmt0(yrs[4].baxter_license),
+
+    // --- Funding ---
+    'seed-range': `¥${Math.round(model.funding.seed_min / 10000)}-${Math.round(model.funding.seed_max / 10000)} 万`,
+    'preA-range': `¥${Math.round(model.funding.preA_min / 10000)}-${Math.round(model.funding.preA_max / 10000)} 万`,
+    'seriesA-range': `¥${Math.round(model.funding.seriesA_min / 10000)}-${Math.round(model.funding.seriesA_max / 10000)} 万`,
+
+    // --- Rates ---
+    'renewal-rate': `${Math.round(g.rr_base * 100)}%`,
+    'hw-commission': `${Math.round(g.baxter_hw_commission * 100)}%`,
+    'saas-commission': `${Math.round(g.baxter_saas_commission * 100)}%`,
+
+    // --- SOM chart data ---
     'som-chart-beds': JSON.stringify(yrs.map(yr => yr.cumulative_beds)),
     'som-chart-revenue': JSON.stringify(yrs.map(yr => Math.round(yr.total_revenue / 10000))),
   };
