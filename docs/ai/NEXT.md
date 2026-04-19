@@ -5,13 +5,23 @@
 ## 当前切入点
 
 **Phase**: 5（Launch Prep）
-**Task**: 完成 audit log 连接，然后进入发布准备。Source-of-Truth + 变更检测 + IndexedDB存档 已完成。
+**Task**: 完成 `/roadshow` 主题系统可视回归检查与 audit log 连接，然后进入发布准备。Source-of-Truth + 变更检测 + IndexedDB存档 已完成。
 **Agent**: GitHub Copilot / NEXUS orchestration
 **验收标准**:
+- [x] `ARIA` 作为默认/基线/回退主题独立存在，且切回后不受其他主题污染
+- [x] `/roadshow` 具备五套预设主题、风格定义面板、微调、恢复默认、导入导出与 localStorage 容错
+- [ ] 在真实浏览器中完成五套主题切换、抽屉面板、刷新恢复、异常 localStorage 回退的人工走查
 - [ ] `appendAuditEntry()` 在 ParameterPanel 参数修改时被调用，Notes tab 显示修改历史
 - [x] ~~参数修改时显示实时数值影响 diff~~ → ChangeBanner 显示受影响BP章节+路演页
 - [x] ~~Dashboard 支持 baseline vs scenario 并排灵敏度对比面板~~ → SAM中值+敏感性摆幅参数已加入定价tab
 - [x] `npm run build` 通过，无阻塞性错误
+
+### 路演主题系统接手须知（2026-04-19）
+
+- 主题清单在 `public/roadshow-theme-presets.json`，`aria` 是只读基线主题，任何后续实验主题都不能覆盖它。
+- iframe 内主题应用在 `public/roadshow-theme-engine.js` + `public/roadshow-theme-system.css`，外层控制台在 `src/app/roadshow/page.tsx`。
+- 当前存储键为 `aria-roadshow-theme-state-v1`；如果主题状态损坏或字段缺失，设计上必须自动回退到 `ARIA`。
+- `roadshow-slides.html` 正文结构没有重写，后续如果改视觉，优先补 preset/token 和覆盖层，不要直接漂移 ARIA 原始 CSS。
 
 ---
 
