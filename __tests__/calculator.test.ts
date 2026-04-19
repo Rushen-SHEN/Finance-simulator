@@ -3,7 +3,7 @@
  * Covers: calculate(), computeBOM(), deriveFirstYearFactor(), deriveDeploymentGating(),
  *         resolveMilestones(), mergeScenario(), deriveLicenseArray(), validateModel()
  */
-import { describe, it, expect } from 'vitest';
+import { beforeAll, describe, it, expect } from 'vitest';
 import {
   calculate,
   computeBOM,
