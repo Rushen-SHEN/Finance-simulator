@@ -1696,6 +1696,70 @@
       color: var(--fg);
     }
 
+    /* ========== S17 four-chart grid ========== */
+    .s17-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      flex: 1;
+      min-height: 0;
+    }
+    .s17-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px 8px;
+      display: flex;
+      flex-direction: column;
+    }
+    .s17-card-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--fg);
+      margin-bottom: 2px;
+    }
+    .s17-subtitle {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 2px;
+    }
+    .s17-chart {
+      flex: 1;
+      min-height: 0;
+      position: relative;
+    }
+    .s17-chart svg {
+      width: 100%;
+      height: 100%;
+    }
+    .s17-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      padding-top: 4px;
+    }
+    .s17-leg {
+      font-size: 10px;
+      color: var(--muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .s17-leg::before {
+      content: "";
+      display: inline-block;
+      width: 0;
+      height: 0;
+    }
+    /* override the square symbol color via --lc */
+    .s17-leg { color: var(--lc, var(--muted)); }
+    .s17-leg { color: var(--muted); }
+
+    /* SVG text classes for s17 charts */
+    .s17-axis { fill: var(--muted); font-size: 10px; font-family: var(--mono); }
+    .s17-axis-soft { fill: var(--muted); font-size: 10px; font-family: var(--mono); opacity: 0.6; }
+    .s17-val-label { fill: var(--fg); font-size: 9px; font-family: var(--mono); text-anchor: middle; }
+
     /* ========== S16 two-column layout ========== */
     .s16-layout {
       display: grid;
@@ -2385,6 +2449,7 @@
       .fin-grid,
       .s16-layout,
       .biz-layout,
+      .s17-grid,
       .risk-grid,
       .team-grid,
       .timeline-grid,
@@ -2562,7 +2627,7 @@
       .fin-bars, .review-list, .hc-grid, .ref-columns,
       .hero-grid, .split-hero, .process-lane, .arch-grid,
       .ai-grid, .value-chain, .quadrant-wrap, .reg-grid,
-      .pricing-grid, .gtm-grid, .fin-grid, .s16-layout, .biz-layout, .risk-grid,
+      .pricing-grid, .gtm-grid, .fin-grid, .s16-layout, .s17-grid, .biz-layout, .risk-grid,
       .team-grid, .timeline-grid, .review-grid, .closing-grid {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
@@ -4433,6 +4498,292 @@
       setTimeout(function() { chart.style.outline = 'none'; }, 2000);
     }
 
+
+    /* ========== S17 Chart Drawing Functions ========== */
+
+    /* Shared SVG helpers */
+    function s17Grid(yMax, step, xStart, yBottom, yTop, xEnd) {
+      var yRange = yBottom - yTop;
+      var h = '';
+      var nLines = Math.round(yMax / step);
+      for (var g = 0; g <= nLines; g++) {
+        var val = g * step;
+        var gy = yBottom - (val / yMax) * yRange;
+        var op = g === 0 ? '0.18' : '0.10';
+        h += '<line x1="' + (xStart - 4) + '" y1="' + gy + '" x2="' + xEnd + '" y2="' + gy + '" stroke="rgba(130,188,255,' + op + ')" stroke-width="1"></line>';
+        var label = val >= 10000 ? (val / 10000).toFixed(1) + '\u4EBF' : val >= 1000 ? (val / 1000).toFixed(0) + 'K' : String(val);
+        h += '<text x="' + (xStart - 8) + '" y="' + (gy + 3) + '" class="s17-axis" text-anchor="end">' + label + '</text>';
+      }
+      return h;
+    }
+
+    function s17GridPct(yBottom, yTop, xStart, xEnd) {
+      var yRange = yBottom - yTop;
+      var h = '';
+      for (var p = 0; p <= 4; p++) {
+        var val = p * 25;
+        var gy = yBottom - (val / 100) * yRange;
+        var op = p === 0 ? '0.18' : '0.10';
+        h += '<line x1="' + (xStart - 4) + '" y1="' + gy + '" x2="' + xEnd + '" y2="' + gy + '" stroke="rgba(130,188,255,' + op + ')" stroke-width="1"></line>';
+        h += '<text x="' + (xStart - 8) + '" y="' + (gy + 3) + '" class="s17-axis" text-anchor="end">' + val + '%</text>';
+      }
+      return h;
+    }
+
+    function s17XLabels(xStart, barW, gap, yBottom, n) {
+      var h = '';
+      for (var i = 0; i < n; i++) {
+        var cx = xStart + i * (barW + gap) + barW / 2;
+        h += '<text x="' + cx + '" y="' + (yBottom + 14) + '" class="s17-axis" text-anchor="middle">Y' + (i + 1) + '</text>';
+      }
+      return h;
+    }
+
+    function s17NiceMax(arr, minVal) {
+      var mx = Math.max.apply(null, arr.map(function(v) { return Math.abs(v); }));
+      mx = Math.max(mx, minVal || 100);
+      var step = mx <= 500 ? 100 : mx <= 1000 ? 200 : mx <= 2000 ? 500 : mx <= 5000 ? 1000 : mx <= 10000 ? 2000 : mx <= 20000 ? 5000 : 10000;
+      return { yMax: Math.ceil(mx * 1.15 / step) * step, step: step };
+    }
+
+    /* --- Chart 1: Revenue Composition Stacked Bar + Total Line --- */
+    function redrawS17RevStack(hwD, hwB, upg, saasD, saasB, lic, total) {
+      var chart = document.querySelector('.s17-chart-rev-stack');
+      if (!chart) return;
+      var svg = chart.querySelector('svg');
+      if (!svg) return;
+
+      var n = 10;
+      var xStart = 55, barW = 36, gap = 10, xEnd = xStart + n * (barW + gap);
+      var yBottom = 248, yTop = 20, yRange = yBottom - yTop;
+
+      // compute stacked max
+      var stackMax = 0;
+      for (var i = 0; i < n; i++) {
+        var s = (hwD[i]||0) + (hwB[i]||0) + (upg[i]||0) + (saasD[i]||0) + (saasB[i]||0) + (lic[i]||0);
+        if (s > stackMax) stackMax = s;
+      }
+      var totalMax = Math.max.apply(null, total);
+      var dataMax = Math.max(stackMax, totalMax, 100);
+      var nice = s17NiceMax([dataMax], 100);
+      var yMax = nice.yMax;
+
+      function toY(v) { return yBottom - (v / yMax) * yRange; }
+      function barX(idx) { return xStart + idx * (barW + gap); }
+
+      var colors = ['#5B8DEF', '#8BB4F0', '#F0A050', '#6BC5A0', '#9B7FD4', '#4AC0B0'];
+      var stacks = [hwD, hwB, upg, saasD, saasB, lic];
+
+      var h = '';
+      h += s17Grid(yMax, nice.step, xStart, yBottom, yTop, xEnd);
+
+      // Draw stacked bars
+      for (var i2 = 0; i2 < n; i2++) {
+        var cumY = yBottom;
+        for (var s2 = 0; s2 < stacks.length; s2++) {
+          var val = stacks[s2][i2] || 0;
+          if (val <= 0) continue;
+          var barH = (val / yMax) * yRange;
+          var by = cumY - barH;
+          h += '<rect x="' + barX(i2) + '" y="' + by + '" width="' + barW + '" height="' + barH + '" fill="' + colors[s2] + '" rx="1" opacity="0.85"></rect>';
+          cumY = by;
+        }
+      }
+
+      // Draw total revenue line
+      var pts = [];
+      for (var i3 = 0; i3 < n; i3++) {
+        pts.push((barX(i3) + barW / 2) + ',' + toY(total[i3]));
+      }
+      h += '<polyline points="' + pts.join(' ') + '" fill="none" stroke="var(--muted)" stroke-width="2" stroke-dasharray="4 3" opacity="0.7"></polyline>';
+      for (var i4 = 0; i4 < n; i4++) {
+        h += '<circle cx="' + (barX(i4) + barW / 2) + '" cy="' + toY(total[i4]) + '" r="3" fill="var(--fg)" opacity="0.6"></circle>';
+      }
+
+      h += s17XLabels(xStart, barW, gap, yBottom, n);
+
+      // Y-axis label
+      h += '<text x="8" y="' + ((yTop + yBottom) / 2) + '" class="s17-axis" text-anchor="middle" transform="rotate(-90,8,' + ((yTop + yBottom) / 2) + ')">\u4E07\u5143</text>';
+
+      svg.innerHTML = h;
+    }
+
+    /* --- Chart 2: Channel Structure % Stacked Bar --- */
+    function redrawS17Channel(directPct, dealerPct, licensePct) {
+      var chart = document.querySelector('.s17-chart-channel');
+      if (!chart) return;
+      var svg = chart.querySelector('svg');
+      if (!svg) return;
+
+      var n = 10;
+      var xStart = 55, barW = 36, gap = 10, xEnd = xStart + n * (barW + gap);
+      var yBottom = 248, yTop = 20, yRange = yBottom - yTop;
+
+      var h = '';
+      h += s17GridPct(yBottom, yTop, xStart, xEnd);
+
+      var colors = ['#7EB6F0', '#9B7FD4', '#4AC0B0'];
+      for (var i = 0; i < n; i++) {
+        var d = directPct[i] || 0;
+        var dl = dealerPct[i] || 0;
+        var li = licensePct[i] || 0;
+        // normalize to 100
+        var sum = d + dl + li;
+        if (sum <= 0) continue;
+        var nd = d / sum * 100, ndl = dl / sum * 100, nli = li / sum * 100;
+        var vals = [nd, ndl, nli];
+        var cumY = yBottom;
+        for (var s = 0; s < 3; s++) {
+          if (vals[s] <= 0) continue;
+          var barH = (vals[s] / 100) * yRange;
+          var by = cumY - barH;
+          h += '<rect x="' + (xStart + i * (barW + gap)) + '" y="' + by + '" width="' + barW + '" height="' + barH + '" fill="' + colors[s] + '" rx="1" opacity="0.85"></rect>';
+          cumY = by;
+        }
+      }
+
+      h += s17XLabels(xStart, barW, gap, yBottom, n);
+      h += '<text x="8" y="' + ((yTop + yBottom) / 2) + '" class="s17-axis" text-anchor="middle" transform="rotate(-90,8,' + ((yTop + yBottom) / 2) + ')">%</text>';
+
+      svg.innerHTML = h;
+    }
+
+    /* --- Chart 3: EBITDA & Net Profit Bar --- */
+    function redrawS17Profit(ebitda, netProfit) {
+      var chart = document.querySelector('.s17-chart-profit');
+      if (!chart) return;
+      var svg = chart.querySelector('svg');
+      if (!svg) return;
+
+      var n = 10;
+      var xStart = 55, barW = 16, gap = 6, groupW = barW * 2 + gap, groupGap = 14;
+      var xEnd = xStart + n * (groupW + groupGap);
+      var yBottom = 228, yTop = 20, yRange = yBottom - yTop;
+
+      // Need to handle negative values
+      var allVals = ebitda.concat(netProfit);
+      var maxPos = 0, maxNeg = 0;
+      for (var i = 0; i < allVals.length; i++) {
+        if (allVals[i] > maxPos) maxPos = allVals[i];
+        if (allVals[i] < maxNeg) maxNeg = allVals[i];
+      }
+      maxPos = Math.max(maxPos, 100);
+      var absNeg = Math.abs(maxNeg);
+
+      var niceP = s17NiceMax([maxPos], 100);
+      var yMaxPos = niceP.yMax;
+      var step = niceP.step;
+      var yMaxNeg = absNeg > 0 ? Math.ceil(absNeg / step) * step : 0;
+
+      var totalRange = yMaxPos + yMaxNeg;
+      var zeroY = yTop + (yMaxPos / totalRange) * yRange;
+
+      function toY(v) { return zeroY - (v / totalRange) * yRange; }
+      function groupX(idx) { return xStart + idx * (groupW + groupGap); }
+
+      var h = '';
+
+      // Grid lines for positive
+      for (var g = 0; g <= Math.round(yMaxPos / step); g++) {
+        var val = g * step;
+        var gy = toY(val);
+        var op = val === 0 ? '0.22' : '0.10';
+        h += '<line x1="' + (xStart - 4) + '" y1="' + gy + '" x2="' + xEnd + '" y2="' + gy + '" stroke="rgba(130,188,255,' + op + ')" stroke-width="1"></line>';
+        var label = val >= 10000 ? (val / 10000).toFixed(1) + '\u4EBF' : val >= 1000 ? (val / 1000).toFixed(0) + 'K' : String(val);
+        h += '<text x="' + (xStart - 8) + '" y="' + (gy + 3) + '" class="s17-axis" text-anchor="end">' + label + '</text>';
+      }
+      // Grid lines for negative
+      for (var gn = 1; gn <= Math.round(yMaxNeg / step); gn++) {
+        var valN = -gn * step;
+        var gyN = toY(valN);
+        h += '<line x1="' + (xStart - 4) + '" y1="' + gyN + '" x2="' + xEnd + '" y2="' + gyN + '" stroke="rgba(255,100,100,0.10)" stroke-width="1"></line>';
+        var labelN = '-' + (gn * step >= 1000 ? (gn * step / 1000).toFixed(0) + 'K' : String(gn * step));
+        h += '<text x="' + (xStart - 8) + '" y="' + (gyN + 3) + '" class="s17-axis" text-anchor="end">' + labelN + '</text>';
+      }
+      // Zero line
+      h += '<line x1="' + (xStart - 4) + '" y1="' + zeroY + '" x2="' + xEnd + '" y2="' + zeroY + '" stroke="rgba(130,188,255,0.3)" stroke-width="1.5"></line>';
+
+      // Draw bars
+      for (var i2 = 0; i2 < n; i2++) {
+        var gx = groupX(i2);
+        // EBITDA bar
+        var ev = ebitda[i2] || 0;
+        if (ev >= 0) {
+          var eh = (ev / totalRange) * yRange;
+          h += '<rect x="' + gx + '" y="' + (zeroY - eh) + '" width="' + barW + '" height="' + Math.max(eh, 1) + '" fill="#F06060" rx="2" opacity="0.85"></rect>';
+        } else {
+          var eh2 = (Math.abs(ev) / totalRange) * yRange;
+          h += '<rect x="' + gx + '" y="' + zeroY + '" width="' + barW + '" height="' + Math.max(eh2, 1) + '" fill="#F06060" rx="2" opacity="0.5"></rect>';
+        }
+        // Net Profit bar
+        var nv = netProfit[i2] || 0;
+        var nx = gx + barW + gap;
+        if (nv >= 0) {
+          var nh = (nv / totalRange) * yRange;
+          h += '<rect x="' + nx + '" y="' + (zeroY - nh) + '" width="' + barW + '" height="' + Math.max(nh, 1) + '" fill="#4AC0B0" rx="2" opacity="0.85"></rect>';
+        } else {
+          var nh2 = (Math.abs(nv) / totalRange) * yRange;
+          h += '<rect x="' + nx + '" y="' + zeroY + '" width="' + barW + '" height="' + Math.max(nh2, 1) + '" fill="#4AC0B0" rx="2" opacity="0.5"></rect>';
+        }
+      }
+
+      // X-axis labels
+      for (var i3 = 0; i3 < n; i3++) {
+        var cx = groupX(i3) + groupW / 2;
+        h += '<text x="' + cx + '" y="' + (yBottom + 14) + '" class="s17-axis" text-anchor="middle">Y' + (i3 + 1) + '</text>';
+      }
+
+      h += '<text x="8" y="' + ((yTop + yBottom) / 2) + '" class="s17-axis" text-anchor="middle" transform="rotate(-90,8,' + ((yTop + yBottom) / 2) + ')">\u4E07\u5143</text>';
+
+      svg.innerHTML = h;
+    }
+
+    /* --- Chart 4: Cumulative Deployed vs Active Paying Beds --- */
+    function redrawS17Beds(cumBeds, activeBeds) {
+      var chart = document.querySelector('.s17-chart-beds');
+      if (!chart) return;
+      var svg = chart.querySelector('svg');
+      if (!svg) return;
+
+      var n = 10;
+      var xStart = 55, barW = 16, gap = 6, groupW = barW * 2 + gap, groupGap = 14;
+      var xEnd = xStart + n * (groupW + groupGap);
+      var yBottom = 248, yTop = 20, yRange = yBottom - yTop;
+
+      var allVals = cumBeds.concat(activeBeds);
+      var nice = s17NiceMax(allVals, 100);
+      var yMax = nice.yMax;
+
+      function toY(v) { return yBottom - (v / yMax) * yRange; }
+      function groupX(idx) { return xStart + idx * (groupW + groupGap); }
+
+      var h = '';
+      h += s17Grid(yMax, nice.step, xStart, yBottom, yTop, xEnd);
+
+      for (var i = 0; i < n; i++) {
+        var gx = groupX(i);
+        // Cumulative beds (blue)
+        var cv = cumBeds[i] || 0;
+        var ch = (cv / yMax) * yRange;
+        h += '<rect x="' + gx + '" y="' + (yBottom - ch) + '" width="' + barW + '" height="' + Math.max(ch, 1) + '" fill="#7EB6F0" rx="2" opacity="0.7"></rect>';
+        // Active paying (green)
+        var av = activeBeds[i] || 0;
+        var ah = (av / yMax) * yRange;
+        var ax = gx + barW + gap;
+        h += '<rect x="' + ax + '" y="' + (yBottom - ah) + '" width="' + barW + '" height="' + Math.max(ah, 1) + '" fill="#4AC0B0" rx="2" opacity="0.85"></rect>';
+      }
+
+      // X-axis labels
+      for (var i2 = 0; i2 < n; i2++) {
+        var cx = groupX(i2) + groupW / 2;
+        h += '<text x="' + cx + '" y="' + (yBottom + 14) + '" class="s17-axis" text-anchor="middle">Y' + (i2 + 1) + '</text>';
+      }
+
+      h += '<text x="8" y="' + ((yTop + yBottom) / 2) + '" class="s17-axis" text-anchor="middle" transform="rotate(-90,8,' + ((yTop + yBottom) / 2) + ')">\u5E8A\u4F4D</text>';
+
+      svg.innerHTML = h;
+    }
+
     window.addEventListener('message', function(e) {
       if (!e.data || !e.data.type) return;
 
@@ -4458,11 +4809,47 @@
               redrawSOMRevenueChart(bestRev, baseRev);
             }
           } catch(ex) { /* ignore parse error */ }
+
+        /* Handle S17 chart redraws */
+        if (updates['s17-rev-hw-direct']) {
+          try {
+            var hwD = JSON.parse(updates['s17-rev-hw-direct'] || '[]');
+            var hwB = JSON.parse(updates['s17-rev-hw-baxter'] || '[]');
+            var upg = JSON.parse(updates['s17-rev-upgrade'] || '[]');
+            var saasD = JSON.parse(updates['s17-rev-saas-direct'] || '[]');
+            var saasB = JSON.parse(updates['s17-rev-saas-baxter'] || '[]');
+            var lic = JSON.parse(updates['s17-rev-license'] || '[]');
+            var total = JSON.parse(updates['s17-rev-total'] || '[]');
+            if (hwD.length === 10) redrawS17RevStack(hwD, hwB, upg, saasD, saasB, lic, total);
+          } catch(ex) { /* ignore */ }
+        }
+        if (updates['s17-channel-direct-pct']) {
+          try {
+            var dirP = JSON.parse(updates['s17-channel-direct-pct'] || '[]');
+            var dlrP = JSON.parse(updates['s17-channel-dealer-pct'] || '[]');
+            var licP = JSON.parse(updates['s17-channel-license-pct'] || '[]');
+            if (dirP.length === 10) redrawS17Channel(dirP, dlrP, licP);
+          } catch(ex) { /* ignore */ }
+        }
+        if (updates['s17-ebitda']) {
+          try {
+            var ebi = JSON.parse(updates['s17-ebitda'] || '[]');
+            var np = JSON.parse(updates['s17-net-profit'] || '[]');
+            if (ebi.length === 10) redrawS17Profit(ebi, np);
+          } catch(ex) { /* ignore */ }
+        }
+        if (updates['s17-beds-cumulative']) {
+          try {
+            var cb = JSON.parse(updates['s17-beds-cumulative'] || '[]');
+            var ab = JSON.parse(updates['s17-beds-active'] || '[]');
+            if (cb.length === 10) redrawS17Beds(cb, ab);
+          } catch(ex) { /* ignore */ }
+        }
         }
 
         Object.keys(updates).forEach(function(field) {
           /* Skip chart data keys — handled above */
-          if (field === 'som-chart-beds' || field === 'som-chart-revenue' || field === 'som-chart-best-revenue' || field === 'som-chart-base-revenue') return;
+          if (field === 'som-chart-beds' || field === 'som-chart-revenue' || field === 'som-chart-best-revenue' || field === 'som-chart-base-revenue' || field.startsWith('s17-rev-') || field.startsWith('s17-channel-') || field === 's17-ebitda' || field === 's17-net-profit' || field === 's17-beds-cumulative' || field === 's17-beds-active') return;
 
           /* Handle bar chart --pct updates via data-pct-field */
           var pctEl = document.querySelector('[data-pct-field="' + field + '"]');
