@@ -44,23 +44,22 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
 
 // Best Case yearly inputs (BPccR2 §5.4 / §9.3)
 export const DEFAULT_YEARLY: YearlyInputs = {
-  // Current simulator cumulative commercial beds target: Y2 287, Y3 2033, Y4 4393, Y5 7403
-  direct_c2:       [   0,   18,  115,    0,    0],
-  direct_c3:       [   0,    0,    0,  308,  170],
-  baxter_c2:       [   0,  413, 1631,    0,    0],
-  baxter_c3:       [   0,    0,    0, 2052, 2840],
-  planned_upgrade: [   0,    0,  157,  678,   70],
+  direct_c2:       [   0,   40,   80,    0,    0],
+  direct_c3:       [   0,    0,    0,  120,  160],
+  baxter_c2:       [   0,  200, 1000,  800,  800],
+  baxter_c3:       [   0,    0,    0, 1300, 1601],
+  planned_upgrade: [   0,    0,  800, 1000, 1000],
   depreciation:    [200000, 260000, 338000, 438000, 130000],
   baxter_license:  [0, 3000000, 2000000, 0, 0],
 };
 
 // Base Case yearly inputs (BPccR2 §5.4 / §9.2)
 export const DEFAULT_YEARLY_BASE: YearlyInputs = {
-  direct_c2:       [  0, 140,  980,    0,    0],
-  direct_c3:       [  0,   0,    0, 1250, 1600],
-  baxter_c2:       [  0,  60,  420,    0,    0],
-  baxter_c3:       [  0,   0,    0,  540,  680],
-  planned_upgrade: [  0,   0,    0,  280,  500],
+  direct_c2:       [  0,   0,   40,   80,    0],
+  direct_c3:       [  0,   0,    0,    0,  120],
+  baxter_c2:       [  0,   0,  200, 1000,  800],
+  baxter_c3:       [  0,   0,    0,    0, 1300],
+  planned_upgrade: [  0,   0,    0,  800, 1000],
   depreciation:    [180000, 220000, 260000, 300000, 350000],
   baxter_license:  [0, 3000000, 2000000, 0, 0],
 };
@@ -90,49 +89,45 @@ export const DEFAULT_FUNDING: FundingInputs = {
 
 // Best Case milestones (BPccR2 §11.1)
 export const DEFAULT_MILESTONES_BEST: MilestoneItem[] = [
-  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥400–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 3,  predecessorId: null,     lagMonths: 0, manualStart: true },
-  { id: 'cdmo',        desc: 'CDMO签约+功能原型',                 kpi: '原型验收通过',          type: '研发',   bold: false, startM: 4,  endM: 7,  predecessorId: null,     lagMonths: 0, manualStart: true },
-  { id: 'iso',         desc: 'ISO13485质量体系联调',              kpi: '体系审核通过',          type: '注册',   bold: false, startM: 5,  endM: 7,  predecessorId: null,     lagMonths: 0, manualStart: true },
-  { id: 'ms_mo462be',  desc: '注册检验 Class II',                 kpi: '',                      type: '商业化', bold: false, startM: 8,  endM: 9,  predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
-  { id: 'pilot',       desc: '2家医院40床科研部署',               kpi: '三模态数据采集通过',    type: '研发',   bold: false, startM: 10, endM: 12, predecessorId: 'cdmo',   lagMonths: 2, manualStart: false },
-  { id: 'algo',        desc: '算法训练与测试',                    kpi: 'AUROC≥0.78',           type: '研发',   bold: false, startM: 8,  endM: 13, predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
-  { id: 'baxter_sign', desc: '合作经销商渠道授权签约',            kpi: '授权金¥300万到账',      type: '商业化', bold: true,  startM: 8,  endM: 10, predecessorId: 'iso',    lagMonths: 0, manualStart: false },
-  { id: 'c2_reg',      desc: '★ 二类医疗器械证获批',             kpi: '注册证到手 · 创新通道', type: '注册',   bold: true,  startM: 15, endM: 16, predecessorId: 'algo',   lagMonths: 1, manualStart: false },
-  { id: 'c2_deploy',   desc: '110床C2商业化(直销80+经销商30)',    kpi: '累计287床',             type: '商业化', bold: false, startM: 17, endM: 25, predecessorId: 'c2_reg', lagMonths: 0, manualStart: false },
-  { id: 'baxter_m2',   desc: '经销商里程碑¥200万',               kpi: '里程碑付款',            type: '商业化', bold: false, startM: 26, endM: 28, predecessorId: 'c2_deploy', lagMonths: 0, manualStart: false },
-  { id: 'ms_mo48iq0i', desc: '真实世界回顾性临床研究',            kpi: '',                      type: '商业化', bold: false, startM: 19, endM: 26, predecessorId: 'c2_reg', lagMonths: 0, manualStart: false },
-  { id: 'c3_reg',      desc: '★ 三类注册证获批',                 kpi: '注册证到手',            type: '注册',   bold: true,  startM: 27, endM: 35, predecessorId: 'ms_mo48iq0i', lagMonths: 0, manualStart: false },
-  { id: 'c3_deploy1',  desc: 'C3商业化 · 新增+升级',              kpi: '累计2033床',            type: '商业化', bold: false, startM: 36, endM: 47, predecessorId: 'c3_reg',    lagMonths: 0, manualStart: false },
-  { id: 'c3_scale',    desc: '规模放量 · 新增+升级',              kpi: '累计4393床',            type: '商业化', bold: false, startM: 48, endM: 59, predecessorId: 'c3_deploy1', lagMonths: 0, manualStart: false },
-  { id: 'c3_expand',   desc: '全面扩张 · 新增',                   kpi: '累计7403床',            type: '商业化', bold: false, startM: 60, endM: 71, predecessorId: 'c3_scale', lagMonths: 0, manualStart: false },
+  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥400–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 3,  predecessorId: null,          lagMonths: 0, manualStart: true },
+  { id: 'cdmo',        desc: 'CDMO签约+功能原型',                 kpi: '原型验收通过',          type: '研发',   bold: false, startM: 4,  endM: 7,  predecessorId: 'seed',        lagMonths: 0, manualStart: false },
+  { id: 'iso',         desc: 'ISO13485质量体系联调',              kpi: '体系审核通过',          type: '注册',   bold: false, startM: 4,  endM: 6,  predecessorId: 'seed',        lagMonths: 0, manualStart: false },
+  { id: 'ms_mo462be',  desc: '注册检验 Class II',                 kpi: '',                      type: '商业化', bold: false, startM: 8,  endM: 9,  predecessorId: 'cdmo',        lagMonths: 0, manualStart: false },
+  { id: 'pilot',       desc: '2家医院40床科研部署',               kpi: '三模态数据采集通过',    type: '研发',   bold: false, startM: 10, endM: 12, predecessorId: 'ms_mo462be',  lagMonths: 0, manualStart: false },
+  { id: 'algo',        desc: '算法训练与测试',                    kpi: 'AUROC≥0.78',           type: '研发',   bold: false, startM: 8,  endM: 13, predecessorId: 'cdmo',        lagMonths: 0, manualStart: false },
+  { id: 'baxter_sign', desc: '合作经销商渠道授权签约',            kpi: '授权金¥300万到账',      type: '商业化', bold: true,  startM: 7,  endM: 9,  predecessorId: 'iso',         lagMonths: 0, manualStart: false },
+  { id: 'c2_reg',      desc: '★ 二类医疗器械证获批',             kpi: '注册证到手 · 创新通道', type: '注册',   bold: true,  startM: 15, endM: 16, predecessorId: 'algo',        lagMonths: 1, manualStart: false },
+  { id: 'baxter_m2',   desc: '经销商里程碑¥200万',               kpi: '里程碑付款',            type: '商业化', bold: false, startM: 17, endM: 19, predecessorId: 'c2_reg',      lagMonths: 0, manualStart: false },
+  { id: 'ms_mo48iq0i', desc: '真实世界回顾性临床研究',            kpi: '',                      type: '商业化', bold: false, startM: 17, endM: 24, predecessorId: 'c2_reg',      lagMonths: 0, manualStart: false },
+  { id: 'c3_reg',      desc: '★ 三类注册证获批',                 kpi: '注册证到手',            type: '注册',   bold: true,  startM: 25, endM: 36, predecessorId: 'ms_mo48iq0i', lagMonths: 0, manualStart: false },
+  { id: 'c3_scale',    desc: '规模放量 · 升级+新增',              kpi: '累计520床',             type: '商业化', bold: false, startM: 37, endM: 48, predecessorId: 'c3_reg',      lagMonths: 0, manualStart: false },
+  { id: 'c3_expand',   desc: '全面扩张 ·',                        kpi: '累计780床',             type: '商业化', bold: false, startM: 49, endM: 60, predecessorId: 'c3_scale',    lagMonths: 0, manualStart: false },
 ];
 
 // Base Case milestones (BPccR2 §11.1)
 export const DEFAULT_MILESTONES_BASE: MilestoneItem[] = [
-  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥500–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 4,  predecessorId: null,     lagMonths: 0, manualStart: true },
-  { id: 'cdmo',        desc: 'CDMO签约+功能原型',                 kpi: '原型验收通过',          type: '研发',   bold: false, startM: 5,  endM: 10, predecessorId: null,     lagMonths: 0, manualStart: true },
-  { id: 'iso',         desc: 'ISO13485质量体系联调',              kpi: '体系审核通过',          type: '注册',   bold: false, startM: 11, endM: 16, predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
-  { id: 'pilot',       desc: '2家医院40床科研部署',               kpi: '三模态数据采集通过',    type: '研发',   bold: false, startM: 11, endM: 13, predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
-  { id: 'algo',        desc: '算法训练与测试',                    kpi: 'AUROC≥0.78',           type: '研发',   bold: false, startM: 11, endM: 18, predecessorId: 'cdmo',   lagMonths: 0, manualStart: false },
-  { id: 'baxter_sign', desc: '合作经销商渠道授权签约',            kpi: '授权金¥300万到账',      type: '商业化', bold: true,  startM: 17, endM: 22, predecessorId: 'iso',    lagMonths: 0, manualStart: false },
-  { id: 'c2_reg',      desc: '★ 二类医疗器械证获批',             kpi: '注册证到手 · 常规审评', type: '注册',   bold: true,  startM: 19, endM: 24, predecessorId: 'algo',   lagMonths: 0, manualStart: false },
-  { id: 'c2_deploy',   desc: '90床C2商业化(直销60+经销商30)',     kpi: '累计287床',             type: '商业化', bold: false, startM: 25, endM: 33, predecessorId: 'c2_reg', lagMonths: 0, manualStart: false },
-  { id: 'baxter_m2',   desc: '经销商里程碑¥200万',               kpi: '里程碑付款',            type: '商业化', bold: false, startM: 34, endM: 36, predecessorId: 'c2_deploy', lagMonths: 0, manualStart: false },
-  { id: 'c3_reg',      desc: '★ 三类注册证获批',                 kpi: '注册证到手',            type: '注册',   bold: true,  startM: 38, endM: 49, predecessorId: 'c2_deploy', lagMonths: 4, manualStart: false },
-  { id: 'c3_deploy1',  desc: 'C3商业化 · 新增+升级',              kpi: '累计2033床',            type: '商业化', bold: false, startM: 50, endM: 61, predecessorId: 'c3_reg',    lagMonths: 0, manualStart: false },
-  { id: 'c3_scale',    desc: '规模放量 · 新增+升级',              kpi: '累计4393床',            type: '商业化', bold: false, startM: 62, endM: 73, predecessorId: 'c3_deploy1', lagMonths: 0, manualStart: false },
-  { id: 'c3_expand',   desc: '全面扩张 · 新增',                   kpi: '累计7403床',            type: '商业化', bold: false, startM: 74, endM: 85, predecessorId: 'c3_scale', lagMonths: 0, manualStart: false },
+  { id: 'seed',        desc: '种子轮融资完成',                    kpi: '¥500–600万到账',        type: '融资',   bold: false, startM: 1,  endM: 4,  predecessorId: null,          lagMonths: 0, manualStart: true },
+  { id: 'cdmo',        desc: 'CDMO签约+功能原型',                 kpi: '原型验收通过',          type: '研发',   bold: false, startM: 5,  endM: 10, predecessorId: 'seed',        lagMonths: 0, manualStart: false },
+  { id: 'iso',         desc: 'ISO13485质量体系联调',              kpi: '体系审核通过',          type: '注册',   bold: false, startM: 11, endM: 14, predecessorId: 'cdmo',        lagMonths: 0, manualStart: false },
+  { id: 'pilot',       desc: '2家医院40床科研部署',               kpi: '三模态数据采集通过',    type: '研发',   bold: false, startM: 11, endM: 12, predecessorId: 'cdmo',        lagMonths: 0, manualStart: false },
+  { id: 'algo',        desc: '算法训练与测试',                    kpi: 'AUROC≥0.78',           type: '研发',   bold: false, startM: 11, endM: 16, predecessorId: 'cdmo',        lagMonths: 0, manualStart: false },
+  { id: 'baxter_sign', desc: '合作经销商渠道授权签约',            kpi: '授权金¥300万到账',      type: '商业化', bold: true,  startM: 15, endM: 20, predecessorId: 'iso',         lagMonths: 0, manualStart: false },
+  { id: 'c2_reg',      desc: '★ 二类医疗器械证获批',             kpi: '注册证到手 · 常规审评', type: '注册',   bold: true,  startM: 17, endM: 22, predecessorId: 'algo',        lagMonths: 0, manualStart: false },
+  { id: 'baxter_m2',   desc: '经销商里程碑¥200万',               kpi: '里程碑付款',            type: '商业化', bold: false, startM: 23, endM: 25, predecessorId: 'c2_reg',      lagMonths: 0, manualStart: false },
+  { id: 'c3_reg',      desc: '★ 三类注册证获批',                 kpi: '注册证到手',            type: '注册',   bold: true,  startM: 35, endM: 46, predecessorId: 'c2_reg',      lagMonths: 12, manualStart: false },
+  { id: 'c3_scale',    desc: '规模放量 · ',                        kpi: '',                      type: '商业化', bold: false, startM: 47, endM: 58, predecessorId: 'c3_reg',      lagMonths: 0, manualStart: false },
+  { id: 'c3_expand',   desc: '全面扩张 · ',                        kpi: '',                      type: '商业化', bold: false, startM: 59, endM: 70, predecessorId: 'c3_scale',    lagMonths: 0, manualStart: false },
 ];
 
 export const DEFAULT_ANNOTATIONS: Record<string, string> = {
   'pricing': 'BPccR2 §5.2 价值定价法 · C2按ICU监测市场替代定价 · C3按预警诊断增值溢价 · 大客户5年期享¥3.5万折扣',
   'bom': 'C2小批量BOM ¥3.2万 · C3量产BOM ¥2.15万(含传感器+边缘计算+外壳+PCB+组装+包装) · CDMO代工模式',
-  'renewal': '当前simulator基线：固定续约率85% · ARR按活跃付费床位计算',
+  'renewal': 'v2.3 固定续约率85% · ARR按活跃付费床位计算',
   'baxter': '多经销商渠道: HW分成15% SaaS分成35% · 授权金¥300万+里程碑¥200万 · Best M8-10签约/Base M17-22',
-  'opex': '当前simulator基线 §9.2 OpEx拆分 · Y1含CDMO NRE ¥80万+样机BOM ¥128万 · 薪资按6→12→18→20→20人',
-  'funding': '当前simulator基线 §7 融资区间: 种子轮¥600-800万, Pre-A ¥400-600万, A轮可选0',
+  'opex': 'v2.3 §9.2 OpEx拆分 · Y1含CDMO NRE ¥80万+样机BOM ¥128万 · 薪资按6→12→18→20→20人',
+  'funding': 'v2.3 §7 融资区间: 种子轮¥600-800万, Pre-A ¥400-600万, A轮可选0',
   'milestones': 'BPccR2 §11.1 · Best M16二类获批→M35三类 · Base M24二类→M49三类 · M1=2026年7月',
-  'deployment': '当前simulator目标累计床位: Y2 287, Y3 2033, Y4 4393, Y5 7403',
+  'deployment': 'v2.3 目标累计床位: Y2 287, Y3 2033, Y4 4393, Y5 7403',
   'roi': 'C2 ¥6.25万/床/年(ICU平均减少1.2天住院+降低并发症) · C3 ¥8万/床/年(预警+诊断双重价值)',
 };
 
@@ -144,10 +139,10 @@ export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
     rr_base: 0.85,
     growth_y6: 0.30, growth_y7: 0.30, growth_y8: 0.30, growth_y9: 0.25, growth_y10: 0.25,
     bed_growth_factor: 1.0,
-    opex_growth_y6: 0.768, opex_growth_y7: 0.890, opex_growth_y8: 0.574, opex_growth_y9: 0.324, opex_growth_y10: 0.109,
+    opex_growth_y6: 0.2, opex_growth_y7: 0.2, opex_growth_y8: 0.2, opex_growth_y9: 0.2, opex_growth_y10: 0.2,
     cogs_rate_target: 0.34014,
-    salary_growth: 0.133,
-    overhead_multiplier: 1.168,
+    salary_growth: 0.08,
+    overhead_multiplier: 2.5,
   },
   optimistic: {
     rr_base: 0.85,
@@ -164,7 +159,7 @@ export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
     bed_growth_factor: 0.85,
     opex_growth_y6: 0.35, opex_growth_y7: 0.28, opex_growth_y8: 0.26, opex_growth_y9: 0.24, opex_growth_y10: 0.24,
     cogs_rate_target: 0.36,
-    salary_growth: 0.10,
+    salary_growth: 0.05,
     overhead_multiplier: 3.2,
   },
 };
