@@ -17,7 +17,7 @@
       --muted: #9db0c9;
       --soft: #7590b2;
       --cyan: #55d5ff;
-      --teal: #3df0d1;
+      --teal: #55d5ff;
       --blue: #6ea2ff;
       --amber: #ffbf66;
       --rose: #ff8a94;
@@ -42,7 +42,7 @@
       font-family: var(--sans);
       color: var(--text);
       background:
-        radial-gradient(circle at 15% 10%, rgba(61, 240, 209, 0.1), transparent 24%),
+        radial-gradient(circle at 15% 10%, rgba(85, 213, 255, 0.1), transparent 24%),
         radial-gradient(circle at 84% 18%, rgba(85, 213, 255, 0.12), transparent 26%),
         radial-gradient(circle at 50% 85%, rgba(110, 162, 255, 0.08), transparent 32%),
         linear-gradient(180deg, #03070f 0%, #06101d 42%, #040811 100%);
@@ -101,6 +101,65 @@
       color: var(--text);
       font-weight: 700;
       letter-spacing: 0.04em;
+    }
+
+    .hud-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      pointer-events: auto;
+    }
+
+    .hud-export-btn {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 16px;
+      border-radius: 999px;
+      background: rgba(85, 213, 255, 0.12);
+      border: 1px solid rgba(85, 213, 255, 0.3);
+      color: var(--text);
+      font-family: var(--sans);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      cursor: pointer;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.22);
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .hud-export-btn:hover {
+      background: rgba(85, 213, 255, 0.2);
+      border-color: rgba(85, 213, 255, 0.5);
+      transform: translateY(-1px);
+    }
+
+    .hud-export-btn:active {
+      transform: translateY(0);
+    }
+
+    .hud-export-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .hud-export-btn .spinner {
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      border: 2px solid rgba(85, 213, 255, 0.3);
+      border-top-color: var(--cyan);
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
     }
 
     .legend-ribbon {
@@ -209,7 +268,7 @@
 
     .toc a.active {
       transform: scale(1.22);
-      background: linear-gradient(135deg, rgba(85, 213, 255, 0.96), rgba(61, 240, 209, 0.92));
+      background: linear-gradient(135deg, rgba(85, 213, 255, 0.96), rgba(85, 213, 255, 0.92));
       border-color: transparent;
       box-shadow: 0 0 20px rgba(85, 213, 255, 0.38);
     }
@@ -232,7 +291,7 @@
       border-radius: 28px;
       overflow: hidden;
       background:
-        radial-gradient(circle at 18% 12%, rgba(61, 240, 209, 0.1), transparent 22%),
+        radial-gradient(circle at 18% 12%, rgba(85, 213, 255, 0.1), transparent 22%),
         radial-gradient(circle at 82% 12%, rgba(85, 213, 255, 0.12), transparent 28%),
         linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%);
       border: 1px solid rgba(130, 188, 255, 0.18);
@@ -378,8 +437,8 @@
     .chip.projected {
       color: var(--teal);
       border-style: dashed;
-      border-color: rgba(61, 240, 209, 0.34);
-      background: rgba(61, 240, 209, 0.06);
+      border-color: rgba(85, 213, 255, 0.34);
+      background: rgba(85, 213, 255, 0.06);
     }
 
     .tag.plan,
@@ -548,7 +607,7 @@
       width: 240px;
       height: 240px;
       border-radius: 50%;
-      background: radial-gradient(circle, rgba(61, 240, 209, 0.18), transparent 68%);
+      background: radial-gradient(circle, rgba(85, 213, 255, 0.18), transparent 68%);
       filter: blur(8px);
     }
 
@@ -990,7 +1049,7 @@
     .bar-fill {
       height: 100%;
       border-radius: 999px;
-      background: linear-gradient(90deg, rgba(85, 213, 255, 0.82), rgba(61, 240, 209, 0.82));
+      background: linear-gradient(90deg, rgba(85, 213, 255, 0.82), rgba(85, 213, 255, 0.82));
       box-shadow: 0 0 16px rgba(85, 213, 255, 0.24);
       width: calc(var(--pct) * 1%);
     }
@@ -1274,8 +1333,8 @@
     .roi-row .fill {
       height: 100%;
       width: calc(var(--pct) * 1%);
-      background: linear-gradient(90deg, rgba(61, 240, 209, 0.85), rgba(85, 213, 255, 0.85));
-      box-shadow: 0 0 18px rgba(61, 240, 209, 0.24);
+      background: linear-gradient(90deg, rgba(85, 213, 255, 0.85), rgba(85, 213, 255, 0.85));
+      box-shadow: 0 0 18px rgba(85, 213, 255, 0.24);
     }
 
     .roi-card-grid {
@@ -1435,8 +1494,8 @@
     }
 
     .fin-bar.ebitda {
-      background: linear-gradient(180deg, rgba(61, 240, 209, 0.88), rgba(23, 118, 116, 0.72));
-      box-shadow: 0 10px 28px rgba(61, 240, 209, 0.14);
+      background: linear-gradient(180deg, rgba(85, 213, 255, 0.88), rgba(23, 118, 116, 0.72));
+      box-shadow: 0 10px 28px rgba(85, 213, 255, 0.14);
     }
 
     .fin-bar.loss {
@@ -2159,7 +2218,7 @@
     }
 
     .phase-card:nth-child(3)::before {
-      background: radial-gradient(circle, rgba(61, 240, 209, 0.14), transparent 72%);
+      background: radial-gradient(circle, rgba(85, 213, 255, 0.14), transparent 72%);
     }
 
     .phase-card:nth-child(4)::before {
@@ -2565,7 +2624,7 @@
         top: auto !important;
         left: auto !important;
         background:
-          radial-gradient(circle at 18% 12%, rgba(61, 240, 209, 0.1), transparent 22%),
+          radial-gradient(circle at 18% 12%, rgba(85, 213, 255, 0.1), transparent 22%),
           radial-gradient(circle at 82% 12%, rgba(85, 213, 255, 0.12), transparent 28%),
           linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%) !important;
       }
@@ -2665,11 +2724,16 @@
   </style>
   <link rel="stylesheet" href="roadshow-theme-system.css" />
   <script defer src="roadshow-theme-engine.js"></script>
+  <script src="html2canvas.min.js"></script>
+  <script src="jspdf.umd.min.js"></script>
 </head>
 <body>
   <div class="hud">
     <div class="hud-badge"><strong>ICU谵妄智能监测系统</strong><span>项目编号 2610865</span></div>
-    <div class="hud-page"><strong id="pageNow">01</strong><span>/</span><span id="pageTotal">18</span></div>
+    <div class="hud-right">
+      <button id="exportPdfBtn" class="hud-export-btn" title="导出 PDF">导出 PDF</button>
+      <div class="hud-page"><strong id="pageNow">01</strong><span>/</span><span id="pageTotal">18</span></div>
+    </div>
   </div>
 
   <div class="legend-ribbon" aria-hidden="true">
@@ -4962,6 +5026,181 @@
     // 备用：监听 beforeprint 事件
     window.addEventListener('beforeprint', function() {
       setTimeout(applyPrintFix, 50);
+    });
+
+    // ============================================================
+    // PDF 导出：逐页渲染 → 拼成横向 PDF（绕过浏览器打印引擎）
+    // ============================================================
+    var PDF_EXPORT_READY = false;
+    var PDF_EXPORT_IN_PROGRESS = false;
+
+    // 等待 theme engine 执行完毕（它用 DOMContentLoaded + defer）
+    // 用 IntersectionObserver 确认 CSS 变量已注入
+    (function waitForThemeThenEnable() {
+      var count = 0;
+      function check() {
+        count++;
+        var slides = Array.from(document.querySelectorAll('.slide'));
+        if (!slides.length) return;
+        var first = slides[0];
+        var style = getComputedStyle(first);
+        // 等 theme-engine 覆盖了 CSS 变量（body 背景不再是默认值）
+        var bodyBg = getComputedStyle(document.body).backgroundColor;
+        if (bodyBg && bodyBg !== 'rgba(0, 0, 0, 0)' && bodyBg !== 'transparent') {
+          enableExport();
+        } else if (count < 20) {
+          setTimeout(check, 250);
+        } else {
+          enableExport(); // fallback: 无论如何都启用
+        }
+      }
+      check();
+    })();
+
+    function enableExport() {
+      PDF_EXPORT_READY = true;
+      var btn = document.getElementById('exportPdfBtn');
+      if (btn) {
+        btn.addEventListener('click', exportSlidesToPDF);
+      }
+    }
+
+    function buildExportCaptureStyle(doc) {
+      var style = doc.createElement('style');
+      style.setAttribute('data-export-capture-style', 'true');
+      style.textContent = [
+        'html, body { overflow: hidden !important; }',
+        '* { animation: none !important; transition: none !important; }',
+        '.fade-up, [class*="fade"] { opacity: 1 !important; transform: none !important; }',
+        '.hud, .legend-ribbon, #toc, .data-updated::after { display: none !important; }',
+        '* { -webkit-backdrop-filter: none !important; backdrop-filter: none !important; }',
+        '* { -webkit-mask-image: none !important; mask-image: none !important; }',
+        '.hero-card::before, .statement::before, .metric::before, .frame::before, body::before { content: none !important; display: none !important; }',
+        '.hero-card, .statement, .metric, .panel, .kpi, .lane, .signal-card, .evidence-card, .chain-card, .quadrant, .time-node, .price-card, .som-curve-panel, .score-card, .phase-card, .source-box, .source-note, .review-item, .risk-item, .route-stop, .lane-step, .table-row, .feature-item, .pill, .roi-row, .ref-entry { filter: none !important; box-shadow: none !important; }',
+        '.frame { box-shadow: none !important; }',
+        '.plot .dot, .status-dot, .bar-fill, .roi-row .fill { box-shadow: none !important; }'
+      ].join('\n');
+      doc.head.appendChild(style);
+      return style;
+    }
+
+    async function exportSlidesToPDF() {
+      var btn = document.getElementById('exportPdfBtn');
+      if (!PDF_EXPORT_READY || PDF_EXPORT_IN_PROGRESS) return;
+      var slides = Array.from(document.querySelectorAll('.slide'));
+      if (!slides.length) return;
+      PDF_EXPORT_IN_PROGRESS = true;
+
+      // 禁用按钮，显示进度
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner"></span> 渲染中...';
+
+      // 保存当前滚动位置
+      var origScrollY = window.scrollY;
+      var origOverflow = document.body.style.overflow;
+
+      // 隐藏 HUD、目录、图例、data-updated 标记
+      var hud = document.querySelector('.hud');
+      var toc = document.getElementById('toc');
+      var legend = document.querySelector('.legend-ribbon');
+      var saveHud = hud ? hud.style.display : '';
+      var saveToc = toc ? toc.style.display : '';
+      var saveLegend = legend ? legend.style.display : '';
+      if (hud) hud.style.display = 'none';
+      if (toc) toc.style.display = 'none';
+      if (legend) legend.style.display = 'none';
+
+      // 隐藏 data-updated 装饰
+      var dataUpdated = Array.from(document.querySelectorAll('.data-updated::after'));
+      var updatedStyle = document.createElement('style');
+      updatedStyle.textContent = '.data-updated::after { display: none !important; }';
+      document.head.appendChild(updatedStyle);
+
+      // 确保 body 无滚动限制
+      document.body.style.overflow = 'visible';
+
+      // 16:9 canvas 尺寸（pt）
+      var W = 960;
+      var H = 540;
+      var scale = 2; // 2x 渲染，输出 1920×1080 px，再缩放进 PDF
+
+      var { jsPDF } = window.jspdf;
+      var pdf = new jsPDF({ orientation: 'landscape', unit: 'pt', format: [W, H] });
+
+      // 预热：先滚动到第一页，让 theme engine 完全就绪
+      slides[0].scrollIntoView();
+      await delay(400);
+
+      var total = slides.length;
+      try {
+        for (var i = 0; i < total; i++) {
+          var slide = slides[i];
+          slide.scrollIntoView({ block: 'start' });
+          await delay(350);
+
+          btn.textContent = (i + 1) + ' / ' + total;
+
+          try {
+            var canvas = await html2canvas(slide, {
+              scale: scale,
+              useCORS: true,
+              allowTaint: false,
+              backgroundColor: '#03070f',
+              width: slide.offsetWidth,
+              height: slide.offsetHeight,
+              windowWidth: document.documentElement.offsetWidth,
+              windowHeight: document.documentElement.offsetHeight,
+              logging: false,
+              onclone: function(clonedDoc) {
+                var captureStyle = buildExportCaptureStyle(clonedDoc);
+                var h = clonedDoc.querySelector('.hud');
+                if (h) h.style.display = 'none';
+                var t = clonedDoc.getElementById('toc');
+                if (t) t.style.display = 'none';
+                var l = clonedDoc.querySelector('.legend-ribbon');
+                if (l) l.style.display = 'none';
+                clonedDoc.body.setAttribute('data-export-capture', 'true');
+                return captureStyle;
+              }
+            });
+
+            if (i > 0) {
+              pdf.addPage([W, H]);
+            }
+
+            var imgData = canvas.toDataURL('image/png');
+            pdf.addImage(imgData, 'PNG', 0, 0, W, H, undefined, 'FAST');
+          } catch (err) {
+            console.warn('Slide', i, 'capture failed:', err);
+          }
+        }
+      } finally {
+        if (hud) hud.style.display = saveHud;
+        if (toc) toc.style.display = saveToc;
+        if (legend) legend.style.display = saveLegend;
+        document.head.removeChild(updatedStyle);
+        document.body.style.overflow = origOverflow;
+        slides[0].scrollIntoView();
+        window.scrollTo(0, origScrollY);
+
+        btn.disabled = false;
+        btn.innerHTML = '导出 PDF';
+        PDF_EXPORT_IN_PROGRESS = false;
+      }
+
+      // 保存 PDF
+      pdf.save('ARIA_roadshow.pdf');
+    }
+
+    function delay(ms) {
+      return new Promise(function(resolve) { setTimeout(resolve, ms); });
+    }
+
+    window.addEventListener('message', function(e) {
+      if (!e.data || !e.data.type) return;
+      if (e.data.type === 'aria-export-pdf') {
+        exportSlidesToPDF();
+      }
     });
   })();
   </script>

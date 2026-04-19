@@ -46,7 +46,7 @@ const ARIA_FALLBACK_MANIFEST: RoadshowThemeManifest = {
       ],
       defaults: {
         accentPrimary: '#55d5ff',
-        accentSecondary: '#3df0d1',
+        accentSecondary: '#55d5ff',
         bgDepth: 78,
         cardOpacity: 84,
         borderStrength: 58,
@@ -62,12 +62,12 @@ const ARIA_FALLBACK_MANIFEST: RoadshowThemeManifest = {
         backgroundStart: '#03070f',
         backgroundMid: '#06101d',
         backgroundEnd: '#040811',
-        backgroundGlowA: 'rgba(61, 240, 209, 0.10)',
+        backgroundGlowA: 'rgba(85, 213, 255, 0.10)',
         backgroundGlowB: 'rgba(85, 213, 255, 0.12)',
         backgroundGlowC: 'rgba(110, 162, 255, 0.08)',
         frameStart: 'rgba(7, 15, 29, 0.98)',
         frameEnd: 'rgba(5, 10, 20, 0.98)',
-        frameGlowA: 'rgba(61, 240, 209, 0.10)',
+        frameGlowA: 'rgba(85, 213, 255, 0.10)',
         frameGlowB: 'rgba(85, 213, 255, 0.12)',
         panelBase: 'rgba(10, 21, 39, 0.84)',
         panelStrong: 'rgba(9, 19, 36, 0.94)',
@@ -241,21 +241,20 @@ export default function RoadshowPage() {
   );
   const currentAccent = activeAdjustments?.accentPrimary ?? '#55d5ff';
   const currentAccentSoft = `${currentAccent}22`;
-  const currentSecondary = activeAdjustments?.accentSecondary ?? '#3df0d1';
+  const currentSecondary = activeAdjustments?.accentSecondary ?? '#55d5ff';
 
   const handleAcceptAll = () => {
     iframeRef.current?.contentWindow?.postMessage({ type: 'aria-accept-all' }, '*');
   };
 
   const handlePrint = () => {
-    const url = `${BASE_PATH}/roadshow-slides.html`;
-    const printWindow = window.open(url, '_blank');
-    if (printWindow) {
-      printWindow.addEventListener('load', () => {
-        printWindow.print();
-      });
-    } else {
-      // 弹窗被拦截时，回退：直接打印当前页
+    if (iframeRef.current?.contentWindow) {
+      iframeRef.current.contentWindow.postMessage({ type: 'aria-export-pdf' }, '*');
+      return;
+    }
+
+    const fallbackWindow = window.open(`${BASE_PATH}/roadshow-slides.html`, '_blank');
+    if (!fallbackWindow) {
       window.print();
     }
   };
