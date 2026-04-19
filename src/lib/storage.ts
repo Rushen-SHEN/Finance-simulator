@@ -35,6 +35,8 @@ export function saveModel(m: ModelInputs) {
 export function clearModel() {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(KEY_ACTIVE);
+  localStorage.removeItem(KEY_PROFILES);
+  localStorage.removeItem(KEY_AUDIT);
 }
 
 // ---- Profile Management ----

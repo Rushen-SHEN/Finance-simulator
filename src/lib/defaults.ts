@@ -19,7 +19,7 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   bom_c3: 21500,
   bom_upgrade: 28000,
   bom_c3_premium: -10500,  // mass production saves; net C3 = base + premium
-  rr_base: 0.70,
+  rr_base: 0.85,
   baxter_hw_commission: 0.15,
   baxter_saas_commission: 0.35,
   // Channel structured inputs
@@ -38,34 +38,35 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   sam_midpoint: 275000,           // 万元 = 27.5亿
   sensitivity_bed_swing: 0.15,    // ±15%
   // Salary breakdown
-  headcount: [6, 12, 18, 25, 30],
-  avg_salary: [270000, 144167, 152222, 144800, 137000],
+  headcount: [6, 12, 18, 20, 20],
+  avg_salary: [400000, 440000, 480000, 530000, 600000],
 };
 
 // Best Case yearly inputs (BPccR2 §5.4 / §9.3)
 export const DEFAULT_YEARLY: YearlyInputs = {
-  direct_c2:       [  0,  80,   5,   0,   0],
-  direct_c3:       [  0,   0,   0,  50,  60],
-  baxter_c2:       [  0,  30,   0,   0,   0],
-  baxter_c3:       [  0,   0,   0,  90, 120],
-  planned_upgrade: [  0,   0,   0,  40,  50],
-  depreciation:    [200000, 200000, 200000, 250000, 250000],
-  baxter_license:  [3000000, 0, 2000000, 0, 0],
+  // v2.3 cumulative commercial beds target: Y2 287, Y3 2033, Y4 4393, Y5 7403
+  direct_c2:       [   0,  302, 1222,    0,    0],
+  direct_c3:       [   0,    0,    0, 1652, 2107],
+  baxter_c2:       [   0,  129,  524,    0,    0],
+  baxter_c3:       [   0,    0,    0,  708,  903],
+  planned_upgrade: [   0,    0,    0,  400,  700],
+  depreciation:    [200000, 250000, 300000, 350000, 400000],
+  baxter_license:  [0, 3000000, 2000000, 0, 0],
 };
 
 // Base Case yearly inputs (BPccR2 §5.4 / §9.2)
 export const DEFAULT_YEARLY_BASE: YearlyInputs = {
-  direct_c2:       [  0,   0,  60,   0,   0],
-  direct_c3:       [  0,   0,   0,   0,  40],
-  baxter_c2:       [  0,   0,  30,   0,   0],
-  baxter_c3:       [  0,   0,   0,   0,  80],
-  planned_upgrade: [  0,   0,   0,   0,  30],
-  depreciation:    [200000, 200000, 200000, 200000, 250000],
+  direct_c2:       [  0, 140,  980,    0,    0],
+  direct_c3:       [  0,   0,    0, 1250, 1600],
+  baxter_c2:       [  0,  60,  420,    0,    0],
+  baxter_c3:       [  0,   0,    0,  540,  680],
+  planned_upgrade: [  0,   0,    0,  280,  500],
+  depreciation:    [180000, 220000, 260000, 300000, 350000],
   baxter_license:  [0, 3000000, 2000000, 0, 0],
 };
 
 export const DEFAULT_OPEX: OpExDetail = {
-  salary:     [1620000, 1730000, 2740000, 3620000, 4110000],
+  salary:     [2400000, 5280000, 8640000, 10600000, 12000000],
   cdmo_nre:   [ 800000,       0,       0,       0,       0],
   pilot_bom:  [1280000,       0,       0,       0,       0],
   cro:        [ 300000,  800000,  400000,       0,       0],
@@ -138,7 +139,7 @@ export const DEFAULT_ANNOTATIONS: Record<string, string> = {
 // ============================================================
 export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
   neutral: {
-    rr_base: 0.70,
+    rr_base: 0.85,
     growth_y6: 0.30, growth_y7: 0.30, growth_y8: 0.30, growth_y9: 0.25, growth_y10: 0.25,
     bed_growth_factor: 1.0,
     opex_growth_y6: 0.33, opex_growth_y7: 0.25, opex_growth_y8: 0.24, opex_growth_y9: 0.21, opex_growth_y10: 0.22,

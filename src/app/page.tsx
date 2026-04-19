@@ -188,9 +188,15 @@ export default function Home() {
 
     clearModel();
     const fresh = structuredClone(DEFAULT_MODEL);
+    saveModel(fresh);
     setModel(fresh);
     setAcceptedModel(structuredClone(fresh));
     setLastAcceptMsg('✅ 已恢复默认值。所有参数已重置，新的制造Overhead乘数已应用 (neutral=2.8×)');
+
+    // Force a full refresh so all views rehydrate from the new default snapshot.
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 80);
   }, []);
 
   const handleScenario = useCallback((s: string) => {
