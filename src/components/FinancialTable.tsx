@@ -160,9 +160,9 @@ export default function FinancialTable({ resultBest, resultBase, scenario }: Pro
           return (
             <div className="mt-4 rounded-lg p-3 px-4 text-[12px] flex items-start gap-2 bg-green-50 border border-green-300 text-green-800 leading-relaxed">
               💡 <b>盈利节点</b>：
-              EBITDA {ebitdaIdx >= 0 ? `Year ${ebitdaIdx + 1} 转正` : '五年内未转正'} ·
-              净利润 {netIdx >= 0 ? `Year ${netIdx + 1} 转正` : '五年内未转正'} ·
-              累计净利润 {wan(cumNetProfits[4])}
+              EBITDA {ebitdaIdx >= 0 ? `Year ${ebitdaIdx + 1} 转正` : '十年内未转正'} ·
+              净利润 {netIdx >= 0 ? `Year ${netIdx + 1} 转正` : '十年内未转正'} ·
+              累计净利润 {wan(cumNetProfits[cumNetProfits.length - 1])}
             </div>
           );
         })()}
@@ -173,7 +173,7 @@ export default function FinancialTable({ resultBest, resultBase, scenario }: Pro
 
 function SectionRow({ label }: { label: string }) {
   return (
-    <tr><td colSpan={6} className="bg-blue-50 text-[11px] text-blue-600 uppercase tracking-wider font-semibold py-1.5 px-3.5">{label}</td></tr>
+    <tr><td colSpan={11} className="bg-blue-50 text-[11px] text-blue-600 uppercase tracking-wider font-semibold py-1.5 px-3.5">{label}</td></tr>
   );
 }
 

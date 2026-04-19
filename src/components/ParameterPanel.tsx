@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, CalcResult, resolveMilestones } from '@/lib/calculator';
+import { GlobalInputs, YearlyInputs, OpExDetail, FundingInputs, MilestoneItem, ModelInputs, CalcResult, resolveMilestones, PARAM_MAPPING, MAPPING_BLOCKS, validateModel } from '@/lib/calculator';
 import { DEFAULT_MODEL, YEAR_LABELS, OPEX_LABELS, COGS_LABELS, DEFAULT_ANNOTATIONS } from '@/lib/defaults';
 import { listProfiles, saveProfile, loadProfile, deleteProfile, ProfileEntry, saveModel } from '@/lib/storage';
 
@@ -28,6 +28,11 @@ const TABS: { key: TabKey; label: string; icon: string }[] = [
   { key: 'profiles', label: '存档', icon: '💾' },
 ];
 
+const TAB_PARAM_GROUP: Partial<Record<TabKey, string>> = {
+  pricing: 'pricing', cogs: 'bom', deploy: 'deploy', opex: 'opex',
+  funding: 'funding', milestones: 'milestones', projection: 'growth',
+};
+
 export default function ParameterPanel({ model, resultBest, resultBase, onModelChange, onReset, onClose }: Props) {
   const [tab, setTab] = useState<TabKey>('pricing');
   const [profiles, setProfiles] = useState<ProfileEntry[]>([]);
@@ -38,9 +43,17 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
 
   // Snapshot at panel open to detect dirty state
   const openSnapshotRef = useRef<string>(JSON.stringify(model));
-  const isDirty = JSON.stringify(model) !== openSnapshotRef.current;
+  const [isDirty, setIsDirty] = useState(false);
 
-  useEffect(() => { setProfiles(listProfiles()); }, []);
+  useEffect(() => {
+    setIsDirty(JSON.stringify(model) !== openSnapshotRef.current);
+  }, [model]);
+
+  const [profilesLoaded, setProfilesLoaded] = useState(false);
+  if (!profilesLoaded) {
+    setProfiles(listProfiles());
+    setProfilesLoaded(true);
+  }
 
   // Auto-save every 60s when dirty
   useEffect(() => {
@@ -190,8 +203,6 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     setProfiles(listProfiles());
   }, []);
 
-  const isModified = (val: number, def: number) => val !== def;
-
   return (
     <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-2xl border border-slate-700/50 shadow-2xl p-0 my-5 relative overflow-hidden">
       {/* Glow effect */}
@@ -247,6 +258,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
 
       {/* Content */}
       <div className="px-6 py-5 min-h-[320px]">
+        <BPBadges tabKey={tab} />
 
         {/* ===== PRICING ===== */}
         {tab === 'pricing' && (
@@ -574,38 +586,32 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
         {/* ===== PROJECTION ===== */}
         {tab === 'projection' && (() => {
           const fmtWan = (n: number) => { const v = n / 10000; return v >= 10000 ? `${(v / 10000).toFixed(2)}亿` : `${Math.round(v)}万`; };
-          const growthRates = [g.growth_y6, g.growth_y7, g.growth_y8];
 
-          // Build 8-year revenue arrays for Best and Base
-          const buildProjection = (result: CalcResult) => {
-            const revs: number[] = result.years.map(yr => yr.total_revenue);
-            for (let i = 0; i < 3; i++) {
-              revs.push(revs[4 + i] * (1 + growthRates[i]));
-            }
-            return revs;
-          };
-          const bestRevs = buildProjection(resultBest);
-          const baseRevs = buildProjection(resultBase);
+          // Calculator now produces 10 years directly
+          const bestRevs: number[] = resultBest.years.map(yr => yr.total_revenue);
+          const baseRevs: number[] = resultBase.years.map(yr => yr.total_revenue);
 
           return (
             <div className="space-y-4">
-              <SectionTitle>1–8年销售额测算</SectionTitle>
-              <p className="text-xs text-slate-300">Year 1–5 由模型自动计算 · Year 6–8 基于 Year 5 按年增长率复合外推</p>
+              <SectionTitle>1–10年销售额测算</SectionTitle>
+              <p className="text-xs text-slate-300">Year 1–5 由模型自动计算 · Year 6–10 基于 Year 5 按年增长率复合推演</p>
 
-              <SectionTitle>年增长率设置 (Y6–Y8)</SectionTitle>
-              <div className="grid grid-cols-3 gap-3">
+              <SectionTitle>年增长率设置 (Y6–Y10)</SectionTitle>
+              <div className="grid grid-cols-5 gap-3">
                 <DarkInput label="Y6 增长率" value={g.growth_y6} def={DEFAULT_MODEL.global.growth_y6} onChange={v => setG('growth_y6', v)} step={0.05} />
                 <DarkInput label="Y7 增长率" value={g.growth_y7} def={DEFAULT_MODEL.global.growth_y7} onChange={v => setG('growth_y7', v)} step={0.05} />
                 <DarkInput label="Y8 增长率" value={g.growth_y8} def={DEFAULT_MODEL.global.growth_y8} onChange={v => setG('growth_y8', v)} step={0.05} />
+                <DarkInput label="Y9 增长率" value={g.growth_y9} def={DEFAULT_MODEL.global.growth_y9} onChange={v => setG('growth_y9', v)} step={0.05} />
+                <DarkInput label="Y10 增长率" value={g.growth_y10} def={DEFAULT_MODEL.global.growth_y10} onChange={v => setG('growth_y10', v)} step={0.05} />
               </div>
 
-              <SectionTitle>8年销售额预览 (Best Case 🚀)</SectionTitle>
+              <SectionTitle>10年销售额预览 (Best Case 🚀)</SectionTitle>
               <div className="overflow-x-auto rounded-lg border border-slate-700/50">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-slate-800/80">
                       <th className="text-left px-3 py-2 text-cyan-400 font-semibold">Year</th>
-                      {Array.from({ length: 8 }, (_, i) => (
+                      {Array.from({ length: 10 }, (_, i) => (
                         <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
                           Y{i + 1}{i >= 5 ? ' ⬆' : ''}
                         </th>
@@ -633,13 +639,13 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 </table>
               </div>
 
-              <SectionTitle>8年销售额预览 (Base Case 📊)</SectionTitle>
+              <SectionTitle>10年销售额预览 (Base Case 📊)</SectionTitle>
               <div className="overflow-x-auto rounded-lg border border-slate-700/50">
                 <table className="w-full text-xs">
                   <thead>
                     <tr className="bg-slate-800/80">
                       <th className="text-left px-3 py-2 text-cyan-400 font-semibold">Year</th>
-                      {Array.from({ length: 8 }, (_, i) => (
+                      {Array.from({ length: 10 }, (_, i) => (
                         <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
                           Y{i + 1}{i >= 5 ? ' ⬆' : ''}
                         </th>
@@ -668,8 +674,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               </div>
 
               <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-xs text-slate-400 leading-relaxed">
-                💡 Y1–Y5 收入由部署数量×定价×SaaS续约模型自动计算，不可手动覆盖。Y6–Y8 基于 Y5 收入按上方增长率逐年复合得出。
-                调整增长率后，MarketSection 中 Year 8 SOM 会同步更新。
+                💡 Y1–Y5 收入由部署数量×定价×SaaS续约模型自动计算。Y6–Y10 基于 Y5 收入按上方增长率逐年复合推演，OpEx按半速增长(经营杠杆)。
               </div>
             </div>
           );
@@ -736,6 +741,24 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
         )}
       </div>
 
+      {/* Validation warnings */}
+      {(() => {
+        const warnings = validateModel(model);
+        if (warnings.length === 0) return null;
+        return (
+          <div className="px-6 pb-3">
+            <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 space-y-1">
+              <p className="text-[11px] font-semibold text-amber-300">⚠ 参数校验</p>
+              {warnings.map((w, i) => (
+                <p key={i} className={`text-[11px] ${w.severity === 'error' ? 'text-red-400' : 'text-amber-400'}`}>
+                  {w.severity === 'error' ? '❌' : '⚠️'} {w.message}
+                </p>
+              ))}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Close confirmation dialog */}
       {showCloseDialog && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm rounded-2xl">
@@ -769,6 +792,26 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
 
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return <h3 className="text-sm font-bold text-slate-200 tracking-wide flex items-center gap-2">{children}</h3>;
+}
+
+function BPBadges({ tabKey }: { tabKey: TabKey }) {
+  const group = TAB_PARAM_GROUP[tabKey];
+  if (!group) return null;
+  const blockIds = PARAM_MAPPING[group] || [];
+  if (blockIds.length === 0) return null;
+  return (
+    <div className="flex flex-wrap gap-1.5 mb-3">
+      <span className="text-[10px] text-slate-500 self-center">影响BP:</span>
+      {blockIds.map(id => {
+        const block = MAPPING_BLOCKS.find(b => b.id === id);
+        return (
+          <span key={id} className="rounded-full border border-cyan-400/30 bg-cyan-500/10 text-cyan-300 px-2 py-0.5 text-[10px] font-medium" title={block?.description || ''}>
+            {id} {block?.label || ''}
+          </span>
+        );
+      })}
+    </div>
+  );
 }
 
 function NoteBar({ text, annotationKey, onChange }: { text: string; annotationKey: string; onChange: (key: string, val: string) => void }) {
@@ -817,13 +860,14 @@ function DarkInput({ label, value, def, onChange, step = 1000 }: {
 }
 
 function DarkTable({ children }: { children: React.ReactNode }) {
+  const editLabels = YEAR_LABELS.slice(0, 5);
   return (
     <div className="overflow-x-auto rounded-xl border border-slate-700/50">
       <table className="w-full text-xs border-collapse">
         <thead>
           <tr>
             <th className="text-left py-2 px-2 text-slate-500 font-medium w-[120px] bg-slate-800/30">参数</th>
-            {YEAR_LABELS.map(l => <th key={l} className="text-center py-2 px-2 text-slate-500 font-medium bg-slate-800/30">{l}</th>)}
+            {editLabels.map(l => <th key={l} className="text-center py-2 px-2 text-slate-500 font-medium bg-slate-800/30">{l}</th>)}
           </tr>
         </thead>
         <tbody>{children}</tbody>

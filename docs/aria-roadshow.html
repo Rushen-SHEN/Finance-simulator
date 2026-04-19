@@ -1,0 +1,3728 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ARIA 路演稿 | ICU 谵妄智能辅助监测系统</title>
+  <style>
+    :root {
+      --bg: #040812;
+      --bg-2: #08111f;
+      --panel: rgba(10, 21, 39, 0.84);
+      --panel-strong: rgba(9, 19, 36, 0.94);
+      --glass: rgba(128, 198, 255, 0.09);
+      --stroke: rgba(130, 188, 255, 0.18);
+      --stroke-strong: rgba(130, 208, 255, 0.32);
+      --text: #e9f1ff;
+      --muted: #9db0c9;
+      --soft: #7590b2;
+      --cyan: #55d5ff;
+      --teal: #3df0d1;
+      --blue: #6ea2ff;
+      --amber: #ffbf66;
+      --rose: #ff8a94;
+      --green: #56e39f;
+      --shadow: 0 24px 90px rgba(0, 0, 0, 0.48);
+      --radius: 26px;
+      --radius-sm: 18px;
+      --mono: "SF Mono", "IBM Plex Mono", "Roboto Mono", ui-monospace, monospace;
+      --sans: "Avenir Next", "SF Pro Display", "PingFang SC", "Hiragino Sans GB", "Segoe UI", "Microsoft YaHei", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      color: var(--text);
+      background:
+        radial-gradient(circle at 15% 10%, rgba(61, 240, 209, 0.1), transparent 24%),
+        radial-gradient(circle at 84% 18%, rgba(85, 213, 255, 0.12), transparent 26%),
+        radial-gradient(circle at 50% 85%, rgba(110, 162, 255, 0.08), transparent 32%),
+        linear-gradient(180deg, #03070f 0%, #06101d 42%, #040811 100%);
+      overflow-y: auto;
+      scroll-snap-type: y mandatory;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(101, 165, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(101, 165, 255, 0.045) 1px, transparent 1px);
+      background-size: 40px 40px;
+      mask-image: radial-gradient(circle at center, black 42%, transparent 84%);
+      pointer-events: none;
+      opacity: 0.48;
+    }
+
+    ::selection {
+      background: rgba(85, 213, 255, 0.22);
+      color: #fff;
+    }
+
+    .hud {
+      position: fixed;
+      inset: 18px 22px auto 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+      pointer-events: none;
+    }
+
+    .hud-badge,
+    .hud-page {
+      pointer-events: auto;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 14px;
+      border-radius: 999px;
+      background: rgba(5, 12, 24, 0.72);
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.26);
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hud-badge strong,
+    .hud-page strong {
+      color: var(--text);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .legend-ribbon {
+      position: fixed;
+      inset: auto auto 18px 22px;
+      z-index: 20;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      max-width: min(62vw, 680px);
+    }
+
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(5, 12, 24, 0.72);
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      backdrop-filter: blur(16px);
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: 0.02em;
+    }
+
+    .legend-chip::before {
+      content: "";
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      opacity: 0.88;
+    }
+
+    .legend-chip.fact {
+      color: var(--cyan);
+    }
+
+    .legend-chip.target {
+      color: var(--amber);
+    }
+
+    .legend-chip.projected {
+      color: var(--teal);
+    }
+
+    .legend-chip.plan {
+      color: var(--rose);
+    }
+
+    .legend-chip.target::before,
+    .legend-chip.projected::before,
+    .legend-chip.plan::before {
+      border-style: dashed;
+    }
+
+    .toc {
+      position: fixed;
+      inset: 50% 18px auto auto;
+      transform: translateY(-50%);
+      display: grid;
+      gap: 10px;
+      z-index: 20;
+      background: rgba(5, 12, 24, 0.5);
+      border: 1px solid rgba(130, 188, 255, 0.12);
+      backdrop-filter: blur(18px);
+      border-radius: 20px;
+      padding: 12px 10px;
+    }
+
+    .toc a {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border-radius: 999px;
+      border: 1px solid rgba(130, 188, 255, 0.3);
+      background: rgba(255, 255, 255, 0.02);
+      text-decoration: none;
+      position: relative;
+      transition: transform 0.2s ease, background 0.25s ease, border-color 0.25s ease;
+    }
+
+    .toc a span {
+      position: absolute;
+      right: calc(100% + 10px);
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(8px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(5, 12, 24, 0.88);
+      border: 1px solid rgba(130, 188, 255, 0.12);
+    }
+
+    .toc a:hover span {
+      opacity: 1;
+      transform: translateX(0);
+    }
+
+    .toc a.active {
+      transform: scale(1.22);
+      background: linear-gradient(135deg, rgba(85, 213, 255, 0.96), rgba(61, 240, 209, 0.92));
+      border-color: transparent;
+      box-shadow: 0 0 20px rgba(85, 213, 255, 0.38);
+    }
+
+    @page {
+      size: 960pt 540pt;
+      margin: 0;
+    }
+
+    .slide {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 34px 0;
+      scroll-snap-align: start;
+      scroll-snap-stop: always;
+      position: relative;
+    }
+
+    .frame {
+      position: relative;
+      width: min(96vw, calc(94vh * 16 / 9));
+      aspect-ratio: 16 / 9;
+      border-radius: 28px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 18% 12%, rgba(61, 240, 209, 0.1), transparent 22%),
+        radial-gradient(circle at 82% 12%, rgba(85, 213, 255, 0.12), transparent 28%),
+        linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%);
+      border: 1px solid rgba(130, 188, 255, 0.18);
+      box-shadow: var(--shadow);
+    }
+
+    .frame::before,
+    .frame::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .frame::before {
+      background-image:
+        linear-gradient(rgba(130, 188, 255, 0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(130, 188, 255, 0.045) 1px, transparent 1px);
+      background-size: 28px 28px;
+      opacity: 0.45;
+      mask-image: linear-gradient(180deg, transparent 0%, black 8%, black 88%, transparent 100%);
+    }
+
+    .frame::after {
+      inset: 10px;
+      border-radius: 22px;
+      border: 1px solid rgba(130, 188, 255, 0.08);
+    }
+
+    .inner {
+      position: relative;
+      height: 100%;
+      padding: 34px 38px 32px 38px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    .fade-up {
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.55s ease, transform 0.55s ease;
+    }
+
+    body.js-motion .slide:not(.is-visible) .fade-up {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+
+    body.js-motion .slide.is-visible .fade-up {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-size: 11px;
+      font-weight: 700;
+    }
+
+    .eyebrow::before {
+      content: "";
+      width: 34px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(85, 213, 255, 0.88));
+    }
+
+    .slide-header {
+      display: grid;
+      grid-template-columns: 1.4fr 0.8fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .slide-header.compact {
+      grid-template-columns: 1fr auto;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 40px;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      font-weight: 800;
+    }
+
+    .title .accent {
+      color: var(--cyan);
+    }
+
+    .subtitle {
+      margin: 10px 0 0;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.55;
+      max-width: 60ch;
+    }
+
+    .slide-note {
+      display: flex;
+      justify-content: flex-end;
+      align-items: flex-start;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .chip,
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-transform: uppercase;
+      color: var(--text);
+      border: 1px solid rgba(130, 188, 255, 0.18);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .tag.fact,
+    .chip.fact {
+      color: var(--cyan);
+      border-color: rgba(85, 213, 255, 0.3);
+    }
+
+    .tag.target,
+    .chip.target {
+      color: var(--amber);
+      border-style: dashed;
+      border-color: rgba(255, 191, 102, 0.38);
+      background: rgba(255, 191, 102, 0.06);
+    }
+
+    .tag.projected,
+    .chip.projected {
+      color: var(--teal);
+      border-style: dashed;
+      border-color: rgba(61, 240, 209, 0.34);
+      background: rgba(61, 240, 209, 0.06);
+    }
+
+    .tag.plan,
+    .chip.plan {
+      color: var(--rose);
+      border-style: dashed;
+      border-color: rgba(255, 138, 148, 0.34);
+      background: rgba(255, 138, 148, 0.06);
+    }
+
+    .grid {
+      display: grid;
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .grid-2 {
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .grid-3 {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+
+    .grid-5 {
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+    }
+
+    .panel {
+      position: relative;
+      background: var(--panel);
+      border: 1px solid var(--stroke);
+      border-radius: var(--radius-sm);
+      padding: 18px;
+      backdrop-filter: blur(18px);
+      overflow: hidden;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(85, 213, 255, 0.55), transparent);
+      opacity: 0.45;
+    }
+
+    .panel.projected,
+    .panel.target,
+    .panel.plan {
+      border-style: dashed;
+    }
+
+    .panel-title {
+      margin: 0 0 10px;
+      font-size: 13px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--soft);
+      font-weight: 700;
+    }
+
+    .panel h3,
+    .panel h4 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+    }
+
+    .panel p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      line-height: 1.55;
+      font-size: 13px;
+    }
+
+    .metric-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .metric {
+      background: linear-gradient(180deg, rgba(13, 25, 45, 0.84), rgba(7, 15, 29, 0.82));
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      border-radius: 18px;
+      padding: 18px 16px;
+      position: relative;
+      overflow: hidden;
+      min-height: 112px;
+    }
+
+    .metric.projected,
+    .metric.target,
+    .metric.plan {
+      border-style: dashed;
+    }
+
+    .metric::before {
+      content: "";
+      position: absolute;
+      inset: auto -20% -50% auto;
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(85, 213, 255, 0.18) 0%, transparent 70%);
+    }
+
+    .metric .value {
+      font-family: var(--mono);
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 700;
+      letter-spacing: -0.04em;
+      color: #fff;
+    }
+
+    .metric .label {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .metric .detail {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .hero-grid {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.2fr 0.8fr;
+      gap: 18px;
+      min-height: 0;
+    }
+
+    .stack {
+      display: grid;
+      gap: 14px;
+    }
+
+    .hero-card {
+      position: relative;
+      background:
+        linear-gradient(150deg, rgba(85, 213, 255, 0.08) 0%, rgba(9, 20, 38, 0.86) 28%, rgba(4, 10, 20, 0.94) 100%);
+      border: 1px solid rgba(130, 188, 255, 0.18);
+      border-radius: 22px;
+      padding: 28px 28px 24px;
+      overflow: hidden;
+      min-height: 100%;
+    }
+
+    .hero-card::before {
+      content: "";
+      position: absolute;
+      inset: -10% auto auto 70%;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(61, 240, 209, 0.18), transparent 68%);
+      filter: blur(8px);
+    }
+
+    .hero-card h2 {
+      margin: 10px 0 0;
+      font-size: 54px;
+      line-height: 0.98;
+      letter-spacing: -0.05em;
+      max-width: 10ch;
+    }
+
+    .hero-card p {
+      max-width: 44ch;
+      color: var(--muted);
+      font-size: 16px;
+      line-height: 1.65;
+      margin: 18px 0 0;
+    }
+
+    .status-card {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .status-line {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 14px 0;
+      border-top: 1px solid rgba(130, 188, 255, 0.08);
+    }
+
+    .status-line:first-of-type {
+      border-top: 0;
+      padding-top: 0;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      margin-top: 6px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--cyan), var(--teal));
+      box-shadow: 0 0 14px rgba(85, 213, 255, 0.4);
+      flex: 0 0 auto;
+    }
+
+    .status-copy strong {
+      display: block;
+      font-size: 13px;
+      color: var(--text);
+    }
+
+    .status-copy span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .split-hero {
+      display: grid;
+      grid-template-columns: 1.08fr 0.92fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .statement {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 18px;
+      padding: 24px;
+      background: linear-gradient(180deg, rgba(10, 19, 34, 0.94), rgba(6, 12, 22, 0.92));
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      border-radius: 24px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .statement::before {
+      content: "";
+      position: absolute;
+      inset: auto auto -70px -40px;
+      width: 240px;
+      height: 240px;
+      background: radial-gradient(circle, rgba(110, 162, 255, 0.2), transparent 72%);
+      pointer-events: none;
+    }
+
+    .statement-quote {
+      font-size: 40px;
+      line-height: 1.12;
+      letter-spacing: -0.04em;
+      font-weight: 800;
+      margin: 0;
+      max-width: 12ch;
+    }
+
+    .statement p {
+      margin: 0;
+      max-width: 46ch;
+      color: var(--muted);
+      line-height: 1.7;
+      font-size: 15px;
+    }
+
+    .kpi-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .kpi {
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(130, 188, 255, 0.12);
+    }
+
+    .kpi .kpi-value {
+      font-family: var(--mono);
+      font-size: 24px;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .kpi .kpi-label {
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .kpi .kpi-note {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      align-items: stretch;
+    }
+
+    .flow-step {
+      position: relative;
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(8, 17, 32, 0.82);
+      min-height: 118px;
+    }
+
+    .flow-step:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(130, 188, 255, 0.45);
+      font-size: 20px;
+      z-index: 1;
+    }
+
+    .flow-step .num {
+      display: inline-flex;
+      width: 24px;
+      height: 24px;
+      align-items: center;
+      justify-content: center;
+      border-radius: 999px;
+      background: rgba(85, 213, 255, 0.12);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 12px;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .flow-step strong {
+      display: block;
+      font-size: 15px;
+      line-height: 1.35;
+    }
+
+    .flow-step span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    .process-lane {
+      display: grid;
+      grid-template-columns: 0.96fr 1.04fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .lane {
+      border-radius: 22px;
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      background: rgba(9, 19, 34, 0.84);
+      padding: 18px;
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .lane-step {
+      position: relative;
+      padding: 14px 16px 14px 42px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(130, 188, 255, 0.12);
+      min-height: 70px;
+    }
+
+    .lane-step::before {
+      content: "";
+      position: absolute;
+      left: 16px;
+      top: 20px;
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(85, 213, 255, 0.72);
+      box-shadow: 0 0 16px rgba(85, 213, 255, 0.32);
+    }
+
+    .lane-step strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .lane-step span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .lane-step.break::before {
+      background: rgba(255, 138, 148, 0.84);
+      box-shadow: 0 0 16px rgba(255, 138, 148, 0.24);
+    }
+
+    .mini-table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .table-row {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1fr;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(130, 188, 255, 0.08);
+      font-size: 13px;
+    }
+
+    .table-row.header {
+      color: var(--soft);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .table-row span:last-child,
+    .table-row strong:last-child {
+      text-align: right;
+    }
+
+    .arch-grid {
+      display: grid;
+      grid-template-columns: 1.06fr 0.94fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .signal-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      position: relative;
+    }
+
+    .signal-card strong {
+      display: block;
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+
+    .signal-card p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .feature-item {
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: rgba(85, 213, 255, 0.04);
+      border: 1px solid rgba(85, 213, 255, 0.12);
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .fusion-board {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .fusion-center {
+      min-height: 180px;
+      padding: 20px;
+      border-radius: 22px;
+      background:
+        radial-gradient(circle at center, rgba(85, 213, 255, 0.11), transparent 62%),
+        rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 12px;
+    }
+
+    .fusion-center h3 {
+      font-size: 24px;
+      margin: 0;
+    }
+
+    .fusion-center p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .pill-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      background: rgba(255, 255, 255, 0.025);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .ai-grid {
+      display: grid;
+      grid-template-columns: 0.96fr 1.04fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .evidence-card {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 12px;
+    }
+
+    .evidence-card h3 {
+      font-size: 18px;
+      margin: 0;
+    }
+
+    .evidence-card .big {
+      font-family: var(--mono);
+      font-size: 28px;
+      color: #fff;
+      letter-spacing: -0.04em;
+    }
+
+    .evidence-card p {
+      margin: 0;
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .data-bars {
+      display: grid;
+      gap: 12px;
+    }
+
+    .bar-row {
+      display: grid;
+      grid-template-columns: 150px 1fr 52px;
+      gap: 12px;
+      align-items: center;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .bar-track {
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      border: 1px solid rgba(130, 188, 255, 0.1);
+    }
+
+    .bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(85, 213, 255, 0.82), rgba(61, 240, 209, 0.82));
+      box-shadow: 0 0 16px rgba(85, 213, 255, 0.24);
+      width: calc(var(--pct) * 1%);
+    }
+
+    .bar-fill.target {
+      background: linear-gradient(90deg, rgba(255, 191, 102, 0.82), rgba(255, 138, 148, 0.82));
+    }
+
+    .value-chain {
+      display: grid;
+      grid-template-columns: 1.14fr 0.86fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .chain-line {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      align-items: stretch;
+    }
+
+    .chain-card {
+      position: relative;
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      min-height: 200px;
+    }
+
+    .chain-card:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -12px;
+      top: 22px;
+      color: rgba(130, 188, 255, 0.42);
+      font-size: 18px;
+    }
+
+    .chain-card h3 {
+      font-size: 16px;
+      margin: 10px 0 0;
+    }
+
+    .chain-card p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      line-height: 1.55;
+      color: var(--muted);
+    }
+
+    .role-note {
+      margin-top: 12px;
+      display: inline-flex;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      border: 1px solid rgba(130, 188, 255, 0.18);
+      color: var(--cyan);
+      background: rgba(85, 213, 255, 0.06);
+    }
+
+    .quadrant-wrap {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .quadrant {
+      position: relative;
+      border-radius: 22px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background:
+        linear-gradient(rgba(130, 188, 255, 0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(130, 188, 255, 0.06) 1px, transparent 1px),
+        rgba(255, 255, 255, 0.03);
+      background-size: 25% 25%;
+      padding: 22px;
+      overflow: hidden;
+    }
+
+    .quadrant::before,
+    .quadrant::after {
+      content: "";
+      position: absolute;
+      background: rgba(130, 188, 255, 0.15);
+    }
+
+    .quadrant::before {
+      left: 50%;
+      top: 22px;
+      bottom: 22px;
+      width: 1px;
+    }
+
+    .quadrant::after {
+      top: 50%;
+      left: 22px;
+      right: 22px;
+      height: 1px;
+    }
+
+    .axis-label {
+      position: absolute;
+      font-size: 11px;
+      color: var(--soft);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .axis-x-left {
+      left: 22px;
+      bottom: 6px;
+    }
+
+    .axis-x-right {
+      right: 22px;
+      bottom: 6px;
+    }
+
+    .axis-y-top {
+      left: 12px;
+      top: 10px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+
+    .axis-y-bottom {
+      right: 12px;
+      bottom: 10px;
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
+    }
+
+    .plot {
+      position: absolute;
+      left: calc(var(--x) * 1%);
+      top: calc(var(--y) * 1%);
+      transform: translate(-50%, -50%);
+      display: grid;
+      gap: 6px;
+      align-items: center;
+      justify-items: center;
+      text-align: center;
+      width: 112px;
+    }
+
+    .plot .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, var(--cyan), var(--teal));
+      box-shadow: 0 0 18px rgba(85, 213, 255, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    .plot.alt .dot {
+      background: linear-gradient(135deg, var(--amber), var(--rose));
+    }
+
+    .plot strong {
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .plot span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .reg-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .timeline {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 10px;
+      align-items: stretch;
+      margin-top: 12px;
+    }
+
+    .time-node {
+      padding: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      min-height: 106px;
+      position: relative;
+    }
+
+    .time-node::before {
+      content: "";
+      position: absolute;
+      inset: 12px auto auto 12px;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: rgba(85, 213, 255, 0.78);
+      box-shadow: 0 0 12px rgba(85, 213, 255, 0.32);
+    }
+
+    .time-node strong {
+      display: block;
+      margin-top: 14px;
+      font-family: var(--mono);
+      font-size: 13px;
+      color: #fff;
+    }
+
+    .time-node span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .price-card {
+      padding: 18px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 10px;
+    }
+
+    .price-card .price {
+      font-family: var(--mono);
+      font-size: 30px;
+      line-height: 1;
+      color: #fff;
+    }
+
+    .roi-grid {
+      display: grid;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .roi-row {
+      display: grid;
+      grid-template-columns: 150px 1fr 80px;
+      gap: 12px;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(130, 188, 255, 0.1);
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .roi-row .track {
+      height: 16px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      border: 1px solid rgba(130, 188, 255, 0.1);
+    }
+
+    .roi-row .fill {
+      height: 100%;
+      width: calc(var(--pct) * 1%);
+      background: linear-gradient(90deg, rgba(61, 240, 209, 0.85), rgba(85, 213, 255, 0.85));
+      box-shadow: 0 0 18px rgba(61, 240, 209, 0.24);
+    }
+
+    .roi-card-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .roi-card {
+      padding: 14px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(86, 227, 159, 0.26);
+      background: linear-gradient(180deg, rgba(86, 227, 159, 0.08), rgba(255, 255, 255, 0.03));
+      display: grid;
+      gap: 8px;
+      min-height: 156px;
+      align-content: start;
+    }
+
+    .roi-card .roi-name {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.35;
+    }
+
+    .roi-card .roi-value {
+      font-size: 38px;
+      line-height: 1;
+      letter-spacing: -0.05em;
+      font-weight: 800;
+      color: var(--green);
+    }
+
+    .roi-card .roi-meta {
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .roi-summary {
+      margin-top: 10px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(86, 227, 159, 0.2);
+      background: rgba(86, 227, 159, 0.07);
+      color: var(--text);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .gtm-grid {
+      display: grid;
+      grid-template-columns: 0.95fr 1.05fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .lane-map {
+      display: grid;
+      gap: 12px;
+    }
+
+    .route {
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      padding: 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .route.plan {
+      border-style: dashed;
+    }
+
+    .route-line {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .route-stop {
+      padding: 12px;
+      border-radius: 14px;
+      background: rgba(5, 12, 24, 0.46);
+      border: 1px solid rgba(130, 188, 255, 0.08);
+      position: relative;
+      min-height: 86px;
+    }
+
+    .route-stop:not(:last-child)::after {
+      content: "→";
+      position: absolute;
+      right: -11px;
+      top: 12px;
+      color: rgba(130, 188, 255, 0.38);
+      font-size: 18px;
+    }
+
+    .route-stop strong {
+      display: block;
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .route-stop span {
+      display: block;
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.45;
+    }
+
+    .fin-grid {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .fin-bars {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 12px;
+      align-items: end;
+      min-height: 230px;
+      margin-top: 12px;
+    }
+
+    .fin-col {
+      display: grid;
+      gap: 8px;
+      align-items: end;
+      justify-items: center;
+    }
+
+    .fin-bar-wrap {
+      width: 100%;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+      align-items: end;
+      min-height: 190px;
+    }
+
+    .fin-bar {
+      width: 100%;
+      border-radius: 14px 14px 6px 6px;
+      background: linear-gradient(180deg, rgba(85, 213, 255, 0.88), rgba(39, 88, 178, 0.72));
+      box-shadow: 0 10px 28px rgba(85, 213, 255, 0.16);
+      height: calc(var(--h) * 1%);
+      min-height: 12px;
+      position: relative;
+    }
+
+    .fin-bar.ebitda {
+      background: linear-gradient(180deg, rgba(61, 240, 209, 0.88), rgba(23, 118, 116, 0.72));
+      box-shadow: 0 10px 28px rgba(61, 240, 209, 0.14);
+    }
+
+    .fin-bar.loss {
+      background: linear-gradient(180deg, rgba(255, 138, 148, 0.9), rgba(158, 44, 75, 0.72));
+      box-shadow: 0 10px 28px rgba(255, 138, 148, 0.18);
+    }
+
+    .fin-col .year {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--soft);
+    }
+
+    .fin-col .meta {
+      text-align: center;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.4;
+    }
+
+    .som-curve-panel {
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 12px;
+    }
+
+    .som-curve-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .som-curve-top h3 {
+      margin: 0;
+      font-size: 24px;
+      line-height: 1.2;
+    }
+
+    .som-legend {
+      display: inline-flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .som-legend span {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .som-legend span::before {
+      content: "";
+      width: 18px;
+      height: 0;
+      border-top: 2px solid rgba(85, 213, 255, 0.9);
+    }
+
+    .som-legend span:last-child::before {
+      border-top-style: dashed;
+      border-top-color: rgba(255, 191, 102, 0.85);
+    }
+
+    .som-chart {
+      position: relative;
+      height: 248px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.12);
+      background:
+        linear-gradient(rgba(130, 188, 255, 0.05) 1px, transparent 1px) 0 0 / 100% 25%,
+        linear-gradient(90deg, rgba(130, 188, 255, 0.045) 1px, transparent 1px) 0 0 / 10% 100%,
+        rgba(5, 12, 24, 0.42);
+      overflow: hidden;
+    }
+
+    .som-chart svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .som-chart .axis-text {
+      fill: rgba(157, 176, 201, 0.82);
+      font-size: 11px;
+      font-family: var(--mono);
+    }
+
+    .som-chart .axis-text.soft {
+      fill: rgba(157, 176, 201, 0.56);
+    }
+
+    .som-chart .solid-line {
+      fill: none;
+      stroke: rgba(85, 213, 255, 0.96);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      filter: drop-shadow(0 0 10px rgba(85, 213, 255, 0.2));
+    }
+
+    .som-chart .dashed-line {
+      fill: none;
+      stroke: rgba(255, 191, 102, 0.92);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      stroke-dasharray: 10 8;
+      opacity: 0.94;
+    }
+
+    .som-chart .solid-dot {
+      fill: #55d5ff;
+      stroke: rgba(4, 8, 18, 0.92);
+      stroke-width: 3;
+    }
+
+    .som-chart .dashed-dot {
+      fill: rgba(255, 191, 102, 0.95);
+      stroke: rgba(4, 8, 18, 0.92);
+      stroke-width: 3;
+    }
+
+    .som-chart .point-label {
+      fill: rgba(233, 241, 255, 0.92);
+      font-size: 11px;
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    .som-chart-note {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .risk-grid {
+      display: grid;
+      grid-template-columns: 1.06fr 0.94fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .risk-table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .risk-head,
+    .risk-item {
+      display: grid;
+      grid-template-columns: 1.1fr 0.7fr 1.2fr;
+      gap: 10px;
+      align-items: start;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(130, 188, 255, 0.1);
+      font-size: 13px;
+    }
+
+    .risk-head {
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-size: 11px;
+    }
+
+    .rpn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 52px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: #fff;
+      background: rgba(255, 138, 148, 0.14);
+      border: 1px solid rgba(255, 138, 148, 0.28);
+    }
+
+    .rpn.mid {
+      background: rgba(255, 191, 102, 0.12);
+      border-color: rgba(255, 191, 102, 0.28);
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: 1.06fr 0.94fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .person {
+      padding: 18px;
+      border-radius: 20px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 10px;
+    }
+
+    .person .role {
+      font-size: 12px;
+      color: var(--soft);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .person h3 {
+      margin: 0;
+      font-size: 24px;
+    }
+
+    .person p {
+      margin: 0;
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--muted);
+    }
+
+    .timeline-grid {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .hospital-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .hospital {
+      display: grid;
+      grid-template-columns: 84px 1fr 52px;
+      gap: 12px;
+      align-items: center;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(130, 188, 255, 0.1);
+      font-size: 13px;
+    }
+
+    .hospital .tier {
+      display: inline-flex;
+      justify-content: center;
+      padding: 6px 8px;
+      border-radius: 999px;
+      font-size: 11px;
+      letter-spacing: 0.04em;
+      background: rgba(85, 213, 255, 0.08);
+      color: var(--cyan);
+      border: 1px solid rgba(85, 213, 255, 0.16);
+    }
+
+    .review-grid {
+      display: grid;
+      grid-template-columns: 0.84fr 1.16fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .radar-shell {
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      border-radius: 22px;
+      border: 1px solid rgba(130, 188, 255, 0.14);
+      background: rgba(255, 255, 255, 0.03);
+      min-height: 100%;
+    }
+
+    .radar-shell svg {
+      width: 100%;
+      height: auto;
+      max-width: 380px;
+    }
+
+    .review-list {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      align-content: start;
+    }
+
+    .review-item {
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(130, 188, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 8px;
+    }
+
+    .review-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .review-head strong {
+      font-size: 13px;
+      line-height: 1.4;
+    }
+
+    .score {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--cyan);
+    }
+
+    .review-item p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .hc-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .score-card {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.12);
+      background: rgba(255, 255, 255, 0.03);
+      display: grid;
+      gap: 8px;
+    }
+
+    .score-card .name {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .score-card p {
+      margin: 0;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+    }
+
+    .score-track {
+      height: 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      overflow: hidden;
+      border: 1px solid rgba(130, 188, 255, 0.1);
+    }
+
+    .score-fill {
+      height: 100%;
+      width: calc(var(--score) * 20%);
+      border-radius: 999px;
+      background: linear-gradient(90deg, rgba(85, 213, 255, 0.85), rgba(110, 162, 255, 0.85));
+    }
+
+    .closing-grid {
+      display: grid;
+      grid-template-columns: 1.04fr 0.96fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .phase-card {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      background: linear-gradient(180deg, rgba(14, 25, 44, 0.84), rgba(7, 13, 24, 0.88));
+      display: grid;
+      gap: 12px;
+      align-content: start;
+      min-height: 280px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phase-card::before {
+      content: "";
+      position: absolute;
+      inset: auto -20px -60px auto;
+      width: 130px;
+      height: 130px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(85, 213, 255, 0.12), transparent 72%);
+    }
+
+    .phase-card:nth-child(2)::before {
+      background: radial-gradient(circle, rgba(110, 162, 255, 0.14), transparent 72%);
+    }
+
+    .phase-card:nth-child(3)::before {
+      background: radial-gradient(circle, rgba(61, 240, 209, 0.14), transparent 72%);
+    }
+
+    .phase-card:nth-child(4)::before {
+      background: radial-gradient(circle, rgba(210, 144, 255, 0.14), transparent 72%);
+    }
+
+    .phase-card:nth-child(5)::before {
+      background: radial-gradient(circle, rgba(255, 191, 102, 0.14), transparent 72%);
+    }
+
+    .phase-head {
+      display: grid;
+      gap: 6px;
+    }
+
+    .phase-year {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(130, 188, 255, 0.16);
+      background: rgba(5, 12, 24, 0.58);
+      color: var(--soft);
+      font-family: var(--mono);
+      font-size: 11px;
+      letter-spacing: 0.03em;
+      backdrop-filter: blur(10px);
+    }
+
+    .phase-kicker {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--soft);
+    }
+
+    .phase-title {
+      font-size: 22px;
+      line-height: 1.1;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .phase-range {
+      display: inline-flex;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(85, 213, 255, 0.2);
+      background: rgba(85, 213, 255, 0.06);
+      color: var(--cyan);
+      font-family: var(--mono);
+      font-size: 12px;
+      width: fit-content;
+    }
+
+    .phase-list {
+      display: grid;
+      gap: 8px;
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .phase-deliverable {
+      margin-top: auto;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(130, 188, 255, 0.1);
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--muted);
+    }
+
+    .phase-deliverable strong {
+      display: block;
+      color: var(--text);
+      margin-bottom: 4px;
+    }
+
+    .ref-columns {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .ref-list {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .ref-entry {
+      font-size: 10.5px;
+      line-height: 1.38;
+      color: var(--muted);
+    }
+
+    .ref-entry strong {
+      color: var(--text);
+      font-family: var(--mono);
+      font-weight: 700;
+    }
+
+    .appendix-grid {
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 18px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .wide-table .table-row {
+      grid-template-columns: 1.1fr 0.9fr 1.1fr 0.8fr;
+    }
+
+    .wide-table .table-row.header {
+      font-size: 10px;
+    }
+
+    .appendix-note {
+      padding: 14px 16px;
+      border-radius: 16px;
+      border: 1px dashed rgba(255, 191, 102, 0.28);
+      background: rgba(255, 191, 102, 0.05);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    .closing-quote {
+      font-size: 34px;
+      line-height: 1.18;
+      letter-spacing: -0.04em;
+      margin: 0;
+      max-width: 13ch;
+    }
+
+    .source-box {
+      position: absolute;
+      right: 30px;
+      bottom: 22px;
+      max-width: 72%;
+      text-align: right;
+      color: rgba(157, 176, 201, 0.88);
+      font-size: 10px;
+      line-height: 1.42;
+      letter-spacing: 0.01em;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+      align-items: flex-end;
+    }
+
+    .source-box strong {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .source-line {
+      display: block;
+    }
+
+    .source-note {
+      color: var(--soft);
+    }
+
+    .cite-inline {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 2px;
+      color: rgba(157, 176, 201, 0.68);
+      font-family: var(--mono);
+      font-size: 0.56em;
+      line-height: 1;
+      letter-spacing: 0.01em;
+      vertical-align: super;
+      white-space: nowrap;
+      opacity: 0.78;
+    }
+
+    .cite-inline.note {
+      color: rgba(157, 176, 201, 0.6);
+      font-size: 0.54em;
+      vertical-align: baseline;
+      margin-left: 4px;
+    }
+
+    #s9 .metric .value .cite-inline {
+      margin-left: 1px;
+      font-size: 0.44em;
+      color: rgba(157, 176, 201, 0.54);
+      opacity: 0.7;
+    }
+
+    #s1 .metric .value .cite-inline {
+      margin-left: 1px;
+      font-size: 0.28em;
+      color: rgba(157, 176, 201, 0.48);
+      opacity: 0.64;
+    }
+
+    .small {
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .mono {
+      font-family: var(--mono);
+    }
+
+    .center {
+      text-align: center;
+    }
+
+    @media (max-width: 1180px), (max-height: 700px) {
+      .hud,
+      .legend-ribbon,
+      .toc {
+        display: none;
+      }
+
+      body {
+        scroll-snap-type: none;
+      }
+
+      .slide {
+        padding: 18px 12px;
+      }
+
+      .frame {
+        width: min(100vw, calc(100vh * 16 / 9));
+        border-radius: 18px;
+      }
+
+      .inner {
+        padding: 22px;
+        gap: 14px;
+      }
+
+      .title {
+        font-size: 30px;
+      }
+
+      .hero-card h2 {
+        font-size: 40px;
+      }
+
+      .statement-quote,
+      .closing-quote {
+        font-size: 28px;
+      }
+
+      .metric-grid,
+      .grid-5,
+      .grid-4,
+      .kpi-strip,
+      .flow,
+      .timeline,
+      .chain-line,
+      .route-line,
+      .fin-bars,
+      .review-list,
+      .hc-grid,
+      .ref-columns,
+      .grid-3,
+      .grid-2,
+      .hero-grid,
+      .split-hero,
+      .process-lane,
+      .arch-grid,
+      .ai-grid,
+      .value-chain,
+      .quadrant-wrap,
+      .reg-grid,
+      .pricing-grid,
+      .gtm-grid,
+      .fin-grid,
+      .risk-grid,
+      .team-grid,
+      .timeline-grid,
+      .review-grid,
+      .closing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .source-box {
+        position: static;
+        max-width: none;
+        text-align: left;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <div class="hud-badge"><strong>ICU谵妄智能监测系统</strong><span>项目编号 2610865</span></div>
+    <div class="hud-page"><strong id="pageNow">01</strong><span>/</span><span id="pageTotal">18</span></div>
+  </div>
+
+  <div class="legend-ribbon" aria-hidden="true">
+    <div class="legend-chip fact">已有事实 / 文献</div>
+    <div class="legend-chip target">设计目标</div>
+    <div class="legend-chip projected">推算 / 财务模型</div>
+    <div class="legend-chip plan">规划 / 待验证</div>
+  </div>
+
+  <nav class="toc" id="toc" aria-label="演示目录"></nav>
+
+  <section class="slide" id="s1" data-title="封面">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header compact fade-up">
+          <div>
+            <div class="eyebrow">Project No. 2610865</div>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">临床问题已被证实</span>
+            <span class="chip plan">当前阶段：原型开发</span>
+          </div>
+        </div>
+
+        <div class="hero-grid">
+          <div class="hero-card fade-up">
+            <span class="tag fact">ARIA</span>
+            <h2>ICU谵妄智能监测系统</h2>
+            <p>
+              项目编号 <strong>2610865</strong>。ARIA 以<strong>非接触式床垫传感、本地视频行为分析、HIS 临床变量融合</strong>
+              构建连续风险预警，目标是在 ICU 床旁更早识别高危患者，为人工复评和临床干预争取时间窗口。
+            </p>
+          </div>
+
+          <div class="stack">
+            <div class="metric-grid fade-up">
+              <div class="metric fact">
+                <div class="value">60-80%<span class="cite-inline">[1][2]</span></div>
+                <div class="label">ICU 谵妄发生率</div>
+                <div class="detail">综合 ICU 场景属于高发问题。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">2-4x<span class="cite-inline">[1][2]</span></div>
+                <div class="label">死亡率上升</div>
+                <div class="detail">谵妄与不良临床结局显著相关。</div>
+              </div>
+              <div class="metric target">
+                <div class="value">15 min</div>
+                <div class="label">风险提示节奏</div>
+                <div class="detail">连续输出低 / 中 / 高风险分层。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">3 模态</div>
+                <div class="label">数据融合</div>
+                <div class="detail">床垫传感 + 视频行为 + HIS 变量。</div>
+              </div>
+            </div>
+
+            <div class="panel status-card fade-up">
+              <div class="panel-title">项目状态</div>
+              <div class="status-line">
+                <div class="status-dot"></div>
+                <div class="status-copy">
+                  <strong>功能原型开发中</strong>
+                  <span>项目处于产品工程化早期，尚未进入获批或规模化销售阶段。</span>
+                </div>
+              </div>
+              <div class="status-line">
+                <div class="status-dot"></div>
+                <div class="status-copy">
+                  <strong>未申报专利</strong>
+                  <span>专利提交、试点落地与渠道合作均属于下一阶段重点工作。</span>
+                </div>
+              </div>
+              <div class="status-line">
+                <div class="status-dot"></div>
+                <div class="status-copy">
+                  <strong>无外部融资</strong>
+                  <span>当前由创始团队自筹推进，融资计划与财务预测见后续页面。</span>
+                </div>
+              </div>
+              <div class="status-line">
+                <div class="status-dot"></div>
+                <div class="status-copy">
+                  <strong>试点与渠道仍待验证</strong>
+                  <span>医院试点、Baxter 渠道与商业化节奏均以规划和测算口径呈现。</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[1] Delirium as a predictor of mortality in mechanically ventilated patients in the intensive care unit</span>
+          <span class="source-line">[2] Outcome of delirium in critically ill patients: systematic review and meta-analysis</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s2" data-title="ICU 谵妄：被忽视的重症挑战">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Clinical Challenge</div>
+            <h1 class="title">ICU 谵妄：<span class="accent">被忽视的重症挑战</span></h1>
+            <p class="subtitle">问题并不稀少，真正的难点在于它高发、伤害重，而且在 ICU 的现有工作流中往往被过晚发现。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">高频</span>
+            <span class="chip fact">高痛</span>
+            <span class="chip fact">现流程存在盲区</span>
+          </div>
+        </div>
+
+        <div class="process-lane">
+          <div class="lane fade-up">
+            <div class="panel-title">现有流程的结构性断点</div>
+            <div class="lane-step">
+              <strong>CAM-ICU 依赖人工量表，每 4-8 小时评估一次</strong>
+              <span>患者状态在间断评估之间持续波动，关键窗口容易被错过。</span>
+            </div>
+            <div class="lane-step break">
+              <strong>漏诊率约 40%<span class="cite-inline">[3]</span></strong>
+              <span>间断评估难以覆盖完整的临床表征时间窗。</span>
+            </div>
+            <div class="lane-step break">
+              <strong>低活动型谵妄隐匿且更危险</strong>
+              <span>嗜睡、淡漠等表现不易被肉眼快速识别，却承担更高死亡风险。</span>
+            </div>
+            <div class="lane-step break">
+              <strong>中国 ICU 规范评估率仅约 30%<span class="cite-inline">[6]</span></strong>
+              <span>护理人力压力和数据基础设施不足，使常规评估难以稳定执行。</span>
+            </div>
+          </div>
+
+          <div class="stack">
+            <div class="metric-grid fade-up">
+              <div class="metric fact">
+                <div class="value">60-80%<span class="cite-inline">[1][2]</span></div>
+                <div class="label">综合 ICU 发生率</div>
+                <div class="detail">机械通气患者可进一步升高。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">56.8%<span class="cite-inline">[6]</span></div>
+                <div class="label">中国多中心发生率</div>
+                <div class="detail">23 家三甲医院、n=1,213。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">30-45%<span class="cite-inline">[5]</span></div>
+                <div class="label">低活动型占比</div>
+                <div class="detail">识别难、后果重，是最关键的临床盲区。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">30%<span class="cite-inline">[6]</span></div>
+                <div class="label">规范评估率</div>
+                <div class="detail">中国 ICU 场景执行率仍偏低。</div>
+              </div>
+            </div>
+
+            <div class="panel fade-up">
+              <div class="panel-title">为什么必须解决</div>
+              <h3>如果问题高发、后果严重、且现行流程天然依赖间断人工观察，那么连续预警就不是“锦上添花”，而是流程补位。</h3>
+              <p>ARIA 针对的不是一个模糊命题，而是 ICU 谵妄被发现得太晚这一具体且反复出现的痛点。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[1] Delirium as a predictor of mortality in mechanically ventilated patients in the intensive care unit</span>
+          <span class="source-line">[2] Outcome of delirium in critically ill patients: systematic review and meta-analysis</span>
+          <span class="source-line">[3] Comparison of delirium assessment tools in a mixed intensive care unit</span>
+          <span class="source-line">[5] Incidence and prevalence of delirium subtypes in an adult ICU: a systematic review and meta-analysis</span>
+          <span class="source-line">[6] 中国重症监护病房谵妄评估现状: 多中心横断面调查</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s3" data-title="ICU谵妄隐藏的成本">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Clinical & Economic Burden</div>
+            <h1 class="title">ICU谵妄隐藏的成本</h1>
+            <p class="subtitle">谵妄的成本并不只体现在一条诊断记录上，它会同时拖累死亡风险、住院时长、长期认知功能和护理资源配置。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">临床负担明确</span>
+            <span class="chip projected">部分费用为测算区间</span>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="stack fade-up">
+            <div class="metric-grid">
+              <div class="metric fact">
+                <div class="value">2-4x<span class="cite-inline">[2]</span></div>
+                <div class="label">ICU 死亡率增加</div>
+                <div class="detail">谵妄与死亡风险显著相关。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">5-10 天<span class="cite-inline">[2]</span></div>
+                <div class="label">住院时间延长</div>
+                <div class="detail">对 ICU 周转与床位效率形成持续压力。</div>
+              </div>
+              <div class="metric fact">
+                <div class="value">40-60%<span class="cite-inline">[9]</span></div>
+                <div class="label">6 个月认知障碍</div>
+                <div class="detail">问题会延续到出院后阶段。</div>
+              </div>
+              <div class="metric projected">
+                <div class="value">¥3-8 万</div>
+                <div class="label">单例额外费用</div>
+                <div class="detail">为项目测算区间，计算逻辑见关键假设页。</div>
+              </div>
+            </div>
+
+            <div class="panel fact">
+              <div class="panel-title">低活动型的隐形成本</div>
+              <h3>低活动型谵妄不是“症状轻”，而是“更难被看到”。</h3>
+              <p>这类患者往往不表现为明显躁动，识别率仅 30-40%，却可能承担 25-35% 的 ICU 死亡率<span class="cite-inline">[4]</span>。</p>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel fact">
+              <div class="panel-title">成本如何扩散</div>
+              <div class="chain-line">
+                <div class="chain-card fact">
+                  <h3>患者结局</h3>
+                  <p>死亡风险、长期认知障碍与康复难度提升。</p>
+                </div>
+                <div class="chain-card fact">
+                  <h3>医院运营</h3>
+                  <p>住院时间延长，床位与护理资源被持续占用。</p>
+                </div>
+                <div class="chain-card projected">
+                  <h3>支付与成本</h3>
+                  <p>额外费用、结算归类方式与住院日变化共同影响经济性。</p>
+                </div>
+                <div class="chain-card fact">
+                  <h3>护理负荷</h3>
+                  <p>全员、间断、重复量表评估耗费大量人工时间。</p>
+                </div>
+              </div>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">判断重点</div>
+              <h3>一个被低估的问题，往往也是流程创新最先能够产生价值的位置。</h3>
+              <p>如果系统能够把高危患者更早推到临床面前，它影响的就不只是模型精度，而是 ICU 的整体工作方式。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[2] Outcome of delirium in critically ill patients: systematic review and meta-analysis</span>
+          <span class="source-line">[4] A comparison of neuropsychiatric and cognitive profiles in delirium, dementia, comorbid delirium-dementia and cognitively intact controls</span>
+          <span class="source-line">[9] Long-term cognitive impairment after critical illness</span>
+          <span class="source-line source-note">单例额外费用为项目测算区间，详细逻辑见关键假设页。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s4" data-title="机遇之窗：技术发展和政策支持推动谵妄预警">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Why Now</div>
+            <h1 class="title">机遇之窗：技术发展和政策支持推动谵妄预警</h1>
+            <p class="subtitle">现在值得做，不是因为概念更热，而是因为前驱信号研究、边缘部署能力、数据合规框架和北京产业政策正在同时成熟。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">技术条件具备</span>
+            <span class="chip fact">政策窗口存在</span>
+          </div>
+        </div>
+
+        <div class="split-hero">
+          <div class="statement fade-up">
+            <span class="tag fact">Opportunity Window</span>
+            <p class="statement-quote">谵妄前并非毫无线索，关键在于能否把多源信号变成 ICU 可执行的连续提示。</p>
+            <p>多模态研究显示，HRV、睡眠、临床变量和行为特征可以在发作前提供风险线索；边缘 AI 让这些信号可以在院内、本地、低功耗地被处理<span class="cite-inline">[10][11][12][13]</span>。</p>
+            <div class="kpi-strip">
+              <div class="kpi">
+                <div class="kpi-value">4-48h<span class="cite-inline">[10][11][12][13]</span></div>
+                <div class="kpi-label">预警窗口</div>
+                <div class="kpi-note">多篇研究支持发作前存在可识别信号。</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-value">本地推理</div>
+                <div class="kpi-label">数据不出院</div>
+                <div class="kpi-note">适合 ICU 敏感医疗数据场景。</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-value">15-20W<span class="cite-inline">[19][20]</span></div>
+                <div class="kpi-label">边缘功耗</div>
+                <div class="kpi-note">支持床旁部署与持续运行。</div>
+              </div>
+              <div class="kpi">
+                <div class="kpi-value">¥1.13 万亿<span class="cite-inline">[32]</span></div>
+                <div class="kpi-label">北京医药健康产业</div>
+                <div class="kpi-note">产业化与试点环境有政策支撑。</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel fact">
+              <div class="panel-title">研究基础</div>
+              <h3>多模态研究与 HRV / 睡眠研究已把“提前识别”从猜想推进到可研究命题。</h3>
+              <p>Mount Sinai 多模态研究、Mayo Clinic HRV 研究、PRE-DELIRIC 与睡眠研究共同为连续预警提供外部依据<span class="cite-inline">[10][11][12][13]</span>。</p>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">工程基础</div>
+              <h3>边缘 AI 硬件和可解释性工具已足以支撑 ICU 床旁原型。</h3>
+              <p>Jetson Orin Nano Super、昇腾 Atlas 200 DK 与 SHAP 等工具，让本地推理、低功耗部署和解释输出具备可行性<span class="cite-inline">[19][20][21]</span>。</p>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">合规基础</div>
+              <h3>PIPL、DSL、CSL 与 NMPA 网络安全审查要求已明确<span class="cite-inline">[22][23][24][25]</span>。</h3>
+              <p>这意味着产品可以从第一天就围绕“最小化采集、数据不出院、可审计”来设计。</p>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">政策基础</div>
+              <h3>北京医药健康产业、首台套与创新器械政策，为试点与产业化提供了现实土壤<span class="cite-inline">[32][33]</span>。</h3>
+              <p>这使北京既是临床试点城市，也是产业落地城市。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[10] An objective multimodal foundation model for delirium risk prediction in the intensive care unit</span>
+          <span class="source-line">[11] Heart rate variability as a predictor of delirium in critically ill patients</span>
+          <span class="source-line">[12] Development and validation of PRE-DELIRIC</span>
+          <span class="source-line">[13] Delirium prediction in the intensive care unit using sleep-wake disruption and routine clinical variables</span>
+          <span class="source-line">[19] NVIDIA Jetson Orin Nano Super Developer Kit</span>
+          <span class="source-line">[20] Huawei Atlas 200 DK AI Developer Kit</span>
+          <span class="source-line">[21] A Unified Approach to Interpreting Model Predictions</span>
+          <span class="source-line">[22][23][24][25] PIPL / DSL / CSL 与 NMPA 人工智能及网络安全审查要求</span>
+          <span class="source-line">[32][33] 北京医药健康产业统计与医疗器械产业提质升级政策</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s5" data-title="ARIA 多模态谵妄智能监测的方案">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Multimodal Solution</div>
+            <h1 class="title">ARIA 多模态谵妄智能监测的方案</h1>
+            <p class="subtitle">ARIA 围绕 ICU 谵妄这一单一临床问题搭建三模态输入和边缘 AI 融合，不追求替代诊断，而追求更早、更连续、更可解释的提示能力。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">产品形态已定义</span>
+            <span class="chip target">性能目标待验证</span>
+          </div>
+        </div>
+
+        <div class="arch-grid">
+          <div class="stack fade-up">
+            <div class="signal-card fact">
+              <strong>床垫传感系统</strong>
+              <p>作为主数据源，连续采集 HRV、睡眠、呼吸、体动等信号，无需皮肤接触，适合 ICU 长时间监测<span class="cite-inline">[11][12][17]</span>。</p>
+              <div class="feature-list">
+                <div class="feature-item">HRV 时域与频域特征</div>
+                <div class="feature-item">睡眠片段化与深睡占比</div>
+                <div class="feature-item">呼吸不规则度与暂停指数</div>
+                <div class="feature-item">体动模式与频率熵</div>
+              </div>
+            </div>
+            <div class="signal-card fact">
+              <strong>本地视频行为分析</strong>
+              <p>用于识别躁动、凝视、淡漠等行为表现，原始视频在边缘侧处理后即时丢弃，仅保留结构化特征。</p>
+            </div>
+            <div class="signal-card fact">
+              <strong>HIS 临床变量融合</strong>
+              <p>通过 HL7 FHIR 接口获取 42 类临床变量<span class="cite-inline">[18]</span>，使模型更贴近 ICU 真实工作流。</p>
+            </div>
+          </div>
+
+          <div class="fusion-board fade-up">
+            <div class="fusion-center">
+              <span class="tag fact">Bedside AI</span>
+              <h3>三模态输入 → 后期融合 → 连续风险分层<span class="cite-inline">[21]</span></h3>
+              <p>每 15 分钟更新一次低 / 中 / 高风险分层，并输出风险驱动因素，辅助医护团队决定谁需要优先复评。</p>
+              <div class="pill-row">
+                <span class="pill">非接触式床旁采集</span>
+                <span class="pill">LightGBM 后期融合</span>
+                <span class="pill">SHAP 可解释输出</span>
+              </div>
+            </div>
+            <div class="mini-table">
+              <div class="table-row header"><span>模态</span><span>核心作用</span><span>状态</span></div>
+              <div class="table-row"><strong>床垫传感</strong><span>连续生理变化捕捉</span><span class="tag fact">Fact</span></div>
+              <div class="table-row"><strong>视频行为</strong><span>躁动 / 淡漠行为补充</span><span class="tag fact">Fact</span></div>
+              <div class="table-row"><strong>HIS 变量</strong><span>临床背景补全</span><span class="tag fact">Fact</span></div>
+              <div class="table-row"><strong>三模态融合</strong><span>提高低活动型识别机会</span><span class="tag target">Target</span></div>
+            </div>
+            <div class="panel target">
+              <div class="panel-title">设计目标</div>
+              <h3>三模态融合 AUROC 目标为 0.82-0.85。</h3>
+              <p>这是设计目标，不是实测结果；达不到门槛时，将按照 Go / No-Go 规则迭代或停项。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[11] Heart rate variability as a predictor of delirium in critically ill patients</span>
+          <span class="source-line">[12] Development and validation of PRE-DELIRIC</span>
+          <span class="source-line">[17] Bed-based unconstrained cardiorespiratory monitoring technologies</span>
+          <span class="source-line">[18] Multimodal clinical feature integration for hospital prediction models</span>
+          <span class="source-line">[21] A Unified Approach to Interpreting Model Predictions</span>
+          <span class="source-line source-note">三模态融合 AUROC 为设计目标，不代表已完成实测验证。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s6" data-title="产品形态与临床工作流">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Form Factor & Workflow</div>
+            <h1 class="title">产品形态与临床工作流</h1>
+            <p class="subtitle">产品不只是一个模型，而是一套 ICU 床旁可部署、可解释、可进入护理工作流的监测系统。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">临床环节保留人工复核</span>
+            <span class="chip fact">数据不出院</span>
+          </div>
+        </div>
+
+        <div class="process-lane">
+          <div class="lane fade-up">
+            <div class="panel-title">产品形态</div>
+            <div class="lane-step">
+              <strong>非接触式床垫传感层</strong>
+              <span>嵌入床垫或床旁形态，持续采集体征和体动信号。</span>
+            </div>
+            <div class="lane-step">
+              <strong>本地边缘推理主机</strong>
+              <span>运行轻量化模型与解释模块，支持 ICU 床旁部署。</span>
+            </div>
+            <div class="lane-step">
+              <strong>本地摄像头与视频特征提取</strong>
+              <span>只保留结构化行为特征，避免原始视频留存。</span>
+            </div>
+            <div class="lane-step">
+              <strong>HIS / EMR 数据接口</strong>
+              <span>通过标准化接口读取临床变量，补充患者背景信息。</span>
+            </div>
+            <div class="lane-step">
+              <strong>ICU 看板与风险提示界面</strong>
+              <span>呈现风险分层、驱动因素和复评优先级。</span>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel fact">
+              <div class="panel-title">临床工作流</div>
+              <div class="flow">
+                <div class="flow-step fact">
+                  <div class="num">1</div>
+                  <strong>床旁连续采集</strong>
+                  <span>床垫、视频与 HIS 同步输入。</span>
+                </div>
+                <div class="flow-step fact">
+                  <div class="num">2</div>
+                  <strong>院内边缘推理</strong>
+                  <span>原始数据不出院，仅在本地完成处理<span class="cite-inline">[22][23][24]</span>。</span>
+                </div>
+                <div class="flow-step target">
+                  <div class="num">3</div>
+                  <strong>风险分层提示</strong>
+                  <span>每 15 分钟刷新低 / 中 / 高风险状态。</span>
+                </div>
+                <div class="flow-step fact">
+                  <div class="num">4</div>
+                  <strong>人工复评</strong>
+                  <span>护士或医师基于提示执行 CAM-ICU 复评。</span>
+                </div>
+                <div class="flow-step fact">
+                  <div class="num">5</div>
+                  <strong>临床干预</strong>
+                  <span>镇静管理、环境优化和早期活动由临床决定。</span>
+                </div>
+              </div>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">核心边界</div>
+              <h3>ARIA 提供的是辅助监测与风险提示，不替代 CAM-ICU，也不替代医生最终判断。</h3>
+              <p>这种边界既符合 ICU 场景的使用逻辑，也与二类产品的注册策略保持一致<span class="cite-inline">[25][28]</span>。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[22] 中华人民共和国个人信息保护法</span>
+          <span class="source-line">[23] 中华人民共和国数据安全法</span>
+          <span class="source-line">[24] 中华人民共和国网络安全法</span>
+          <span class="source-line">[25] 人工智能医疗器械注册审查指导原则；网络安全注册审查指导原则</span>
+          <span class="source-line">[28] 医疗器械软件注册审查指导原则（2022修订版）</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s7" data-title="ARIA的核心临床价值">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Clinical Value</div>
+            <h1 class="title">ARIA的核心临床价值</h1>
+            <p class="subtitle">核心价值不在“模型给了一个分数”，而在于预警能否驱动人工复评、非药物干预和 ICU 资源更精准配置。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">价值链清晰</span>
+            <span class="chip projected">结局改善仍待验证</span>
+          </div>
+        </div>
+
+        <div class="value-chain">
+          <div class="stack fade-up">
+            <div class="chain-line">
+              <div class="chain-card fact">
+                <span class="tag fact">系统输出</span>
+                <h3>高危预警</h3>
+                <p>把值得优先关注的患者提前推到医护团队面前。</p>
+              </div>
+              <div class="chain-card fact">
+                <span class="tag fact">临床执行</span>
+                <h3>人工复评</h3>
+                <p>护士 / 医师完成 CAM-ICU 复核，确认后进入干预路径。</p>
+              </div>
+              <div class="chain-card fact">
+                <span class="tag fact">临床执行</span>
+                <h3>非药物干预</h3>
+                  <p>环境优化、早期活动与镇静管理调整是关键动作<span class="cite-inline">[14]</span>。</p>
+              </div>
+              <div class="chain-card projected">
+                <span class="tag projected">需试点验证</span>
+                <h3>结局改善</h3>
+                <p>最终体现在发生率下降、护理效率改善与住院日优化。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="metric-grid">
+              <div class="metric target">
+                <div class="value">≥75%</div>
+                <div class="label">低活动型敏感性</div>
+                <div class="detail">是临床价值是否真正成立的关键门槛。</div>
+              </div>
+              <div class="metric target">
+                <div class="value">≥12h</div>
+                <div class="label">预警提前量中位数</div>
+                <div class="detail">试点阶段希望验证的核心指标。</div>
+              </div>
+              <div class="metric projected">
+                <div class="value">15-28%<span class="cite-inline">[14]</span></div>
+                <div class="label">发生率下降</div>
+                <div class="detail">基于干预有效性与执行转化率的测算。</div>
+              </div>
+              <div class="metric projected">
+                <div class="value">60-70%</div>
+                <div class="label">护理工时缩减</div>
+                <div class="detail">基于高危患者触发复评的流程测算。</div>
+              </div>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">最重要的一句话</div>
+              <h3>ARIA 真正创造的，是“更早发现谁需要被人工确认”，而不是“替代临床做结论”<span class="cite-inline">[10][11]</span>。</h3>
+              <p>这让产品既有临床价值方向，也保持了足够清晰的风险边界。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[10] An objective multimodal foundation model for delirium risk prediction in the intensive care unit</span>
+          <span class="source-line">[11] Heart rate variability as a predictor of delirium in critically ill patients</span>
+          <span class="source-line">[14] Effectiveness of multicomponent nonpharmacological delirium interventions</span>
+          <span class="source-line source-note">转化效率与护理工时缩减为流程测算，详细逻辑见关键假设页。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s8" data-title="全球首发与国内首创">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Positioning</div>
+            <h1 class="title">全球首发与国内首创</h1>
+            <p class="subtitle">更准确的表达是：在公开注册数据库检索口径下，尚未发现与 ARIA 当前产品定义完全对应的已获批同类形态。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip projected">检索口径判断</span>
+            <span class="chip fact">替代方案与潜在竞品存在</span>
+          </div>
+        </div>
+
+        <div class="quadrant-wrap">
+          <div class="quadrant fade-up">
+            <div class="axis-label axis-y-top">与谵妄场景贴合度较高</div>
+            <div class="axis-label axis-y-bottom">与谵妄场景贴合度较低</div>
+            <div class="axis-label axis-x-left">产品成熟度更低</div>
+            <div class="axis-label axis-x-right">产品成熟度更高</div>
+
+            <div class="plot" style="--x:30; --y:28;">
+              <div class="dot"></div>
+              <strong>ARIA</strong>
+              <span>三模态 + 谵妄连续预警<br />原型开发中</span>
+            </div>
+            <div class="plot alt" style="--x:76; --y:72;">
+              <div class="dot"></div>
+              <strong>Ceribell</strong>
+              <span>EEG 单模态<br />已获批但非谵妄</span>
+            </div>
+            <div class="plot alt" style="--x:74; --y:58;">
+              <div class="dot"></div>
+              <strong>EarlySense</strong>
+              <span>床垫平台成熟<br />但不做谵妄</span>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel projected">
+              <div class="panel-title">当前可成立的说法</div>
+              <h3>产品差异化来自“非接触形态 + 多模态融合 + ICU 谵妄场景”的组合。</h3>
+              <p>这不是对所有竞争者的绝对否定，而是强调当前公开注册信息下，仍未看到完全同构的已获批产品。</p>
+            </div>
+            <div class="mini-table">
+              <div class="table-row header"><span>对象</span><span>当前判断</span><span>备注</span></div>
+              <div class="table-row"><strong>EarlySense</strong><span>硬件平台成熟</span><span>缺少谵妄算法</span></div>
+              <div class="table-row"><strong>Ceribell</strong><span>已产品化</span><span>核心场景为癫痫监测</span></div>
+              <div class="table-row"><strong>迈瑞 / 联影等</strong><span>具备追入能力</span><span>市场验证后可能进入</span></div>
+              <div class="table-row"><strong>ARIA</strong><span>场景定义更聚焦</span><span>需用数据与注册完成验证</span></div>
+            </div>
+            <div class="panel plan">
+              <div class="panel-title">最需要补强的部分</div>
+              <h3>数据壁垒、专利壁垒和真实世界证据仍在建设中。</h3>
+              <p>当前最有说服力的是产品定义与法规路径，下一步需要把它转化为可验证的证据链。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box"><strong>说明：</strong>本页判断基于公开注册数据库检索与企业公开资料整理，不单列正文文献引用。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s9" data-title="市场机会">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Market Opportunity</div>
+            <h1 class="title">市场机会</h1>
+            <p class="subtitle">市场讨论应从 ICU 床位基础、可支付医院范围和首轮可落地场景逐层展开，而不是直接把理论市场空间当成近期收入。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">床位基础明确</span>
+            <span class="chip projected">市场规模与放量节奏为测算</span>
+          </div>
+        </div>
+
+        <div class="grid grid-2">
+          <div class="stack fade-up">
+            <div class="metric-grid">
+              <div class="metric fact">
+                <div class="value">15-25 万<span class="cite-inline">[30]</span></div>
+                <div class="label">中国 ICU 床位</div>
+                <div class="detail">中性口径约 18 万张。</div>
+              </div>
+              <div class="metric projected">
+                <div class="value">¥54-150 亿<span class="cite-inline">[30]</span></div>
+                <div class="label">TAM / 年</div>
+                <div class="detail">理论市场空间上限。</div>
+              </div>
+              <div class="metric projected">
+                <div class="value">¥15-40 亿<span class="cite-inline">[30]</span></div>
+                <div class="label">SAM / 年</div>
+                <div class="detail">聚焦三级医院 ICU 与支付能力。</div>
+              </div>
+              <div class="metric projected">
+                <div class="value">第 2 年<span class="cite-inline">[30][31]</span></div>
+                <div class="label">EBITDA 转正</div>
+                <div class="detail">基准模型下发生在 Year 2。</div>
+              </div>
+            </div>
+            <div class="panel projected">
+              <div class="panel-title">获批后的 SOM 增长</div>
+              <h3>TAM 说明问题大，SAM 说明起步范围；真正决定近期落点的是二类证和三类证获批后的装机节奏。</h3>
+              <p>二类证获批后，SOM 先由北京样板场景起步，对应首轮 110 床部署；增长引擎是高发科室切入、样板医院复制和首轮渠道验证。</p>
+              <p>三类证获批后，累计商业床位按 290 → 520 → 780 床增长；增长引擎转为三类更高单床价值、二类向三类升级收入以及渠道放量。</p>
+              <p>可比路径上，关键假设页引用联影智能、推想科技等公开数据所推断的行业经验显示，中国 AI 医疗器械公司的增长通常也遵循“先装机验证，再靠续约、升级和渠道扩张放大”的节奏。</p>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel fact">
+              <div class="panel-title">北京优先落地场景</div>
+              <h3>心外 ICU、神外 ICU 与已有谵妄研究基础医院，是更优先的试点对象。</h3>
+              <div class="hospital-list" style="margin-top:10px;">
+                <div class="hospital">
+                  <span class="tier">第一梯队</span>
+                  <span><strong>安贞医院</strong><br /><span class="muted">心外术后谵妄高发。</span></span>
+                  <strong class="mono">32</strong>
+                </div>
+                <div class="hospital">
+                  <span class="tier">第一梯队</span>
+                  <span><strong>天坛医院</strong><br /><span class="muted">神外 ICU 有利于验证鲁棒性。</span></span>
+                  <strong class="mono">26</strong>
+                </div>
+                <div class="hospital">
+                  <span class="tier">第二梯队</span>
+                  <span><strong>北大第一医院</strong><br /><span class="muted">有谵妄队列研究基础。</span></span>
+                  <strong class="mono">20</strong>
+                </div>
+              </div>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">产业环境</div>
+              <h3>北京医药健康产业与器械政策，为试点、首台套和创新器械申报提供了外部环境。</h3>
+              <p>这让市场机会不仅体现在床位数，也体现在临床试点和产业转化的现实路径。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[30] 中国重症医学学科发展报告（2024）；国家卫生健康委员会 ICU 床位配置标准</span>
+          <span class="source-line">[31] Royalty Rates for Licensing Intellectual Property</span>
+          <span class="source-line">[32] 北京医药健康产业发展统计报告（2025）</span>
+          <span class="source-line">[33] 医疗器械产业提质升级行动计划（2024-2026年）</span>
+          <span class="source-line source-note">SOM 路径、EBITDA 转正时点及行业可比增长节奏为经营测算或公开数据推断，详见关键假设页。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s10" data-title="商业模式">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Business Model</div>
+            <h1 class="title">商业模式</h1>
+            <p class="subtitle">硬件建立装机，SaaS 形成递延收入，二类向三类升级提升单床价值；渠道合作提供放大器，但不是当前唯一依赖。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">收入结构已定义</span>
+            <span class="chip projected">ROI 为测算口径</span>
+          </div>
+        </div>
+
+        <div class="pricing-grid">
+          <div class="stack fade-up">
+            <div class="grid grid-2">
+              <div class="price-card fact">
+                <div class="panel-title">二类证 · 辅助监测版</div>
+                <div class="price">¥6.5 万 / 床</div>
+                <p>硬件一次性定价</p>
+                <div class="price">¥2.5 万 / 床 / 年</div>
+                <p>SaaS 订阅</p>
+              </div>
+              <div class="price-card fact">
+                <div class="panel-title">三类证 · 预警诊断版</div>
+                <div class="price">¥8.5 万 / 床</div>
+                <p>硬件一次性定价</p>
+                <div class="price">¥4.0 万 / 床 / 年</div>
+                <p>SaaS 订阅；五年期可降至 ¥3.5 万 / 年</p>
+              </div>
+            </div>
+            <div class="panel plan">
+              <div class="panel-title">合作经销商双渠道</div>
+              <h3>直销打样板医院，合作经销商用于放大装机与全国复制。</h3>
+              <p>渠道条款、授权金与分成比例目前均按规划口径呈现，实际仍取决于谈判结果。</p>
+            </div>
+            <div class="mini-table">
+              <div class="table-row header"><span>收入项</span><span>二类</span><span>三类 / 升级</span></div>
+              <div class="table-row"><strong>硬件</strong><span>¥6.5 万</span><span>¥8.5 万</span></div>
+              <div class="table-row"><strong>SaaS</strong><span>¥2.5 万 / 年</span><span>¥4.0 万 / 年</span></div>
+              <div class="table-row"><strong>升级服务</strong><span>—</span><span>¥2.5 万 / 床</span></div>
+              <div class="table-row"><strong>渠道合作</strong><span>直销为主</span><span>直销 + 合作经销商</span></div>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel projected">
+              <div class="panel-title">医院 ROI</div>
+              <h3><strong>医院 ROI</strong>：三种主要采购路径下，医院 ROI 均为正，差别在于价值兑现速度与证据强度<span class="cite-inline">[14][30][31]</span>。</h3>
+              <div class="roi-card-grid">
+                <div class="roi-card">
+                  <div class="roi-name">二类新购（3 年期）</div>
+                  <div class="roi-value">+34%</div>
+                  <div class="roi-meta">年化费用 ¥4.67 万 / 床</div>
+                  <div class="roi-meta">价值锚点 ¥6.25 万 / 床 / 年</div>
+                </div>
+                <div class="roi-card">
+                  <div class="roi-name">三类新购（3 年期）</div>
+                  <div class="roi-value">+17%</div>
+                  <div class="roi-meta">年化费用 ¥6.83 万 / 床</div>
+                  <div class="roi-meta">价值锚点 ¥8.0 万 / 床 / 年</div>
+                </div>
+                <div class="roi-card">
+                  <div class="roi-name">三类升级（3 年期）</div>
+                  <div class="roi-value">+66%</div>
+                  <div class="roi-meta">年化费用 ¥4.83 万 / 床</div>
+                  <div class="roi-meta">价值锚点 ¥8.0 万 / 床 / 年</div>
+                </div>
+              </div>
+              <div class="roi-summary">补充情形：三类新购采用 5 年期 + SaaS 量折时，医院 ROI 仍为正，对应约 +20%。</div>
+            </div>
+            <div class="panel projected">
+              <div class="panel-title">采购逻辑</div>
+              <h3>当前更准确的表述不是“支付闭环已形成”，而是“采购讨论已有可计算的价值锚点”。</h3>
+              <p>价值锚点由成本下降、护理工时优化、DRG 编码收益与住院日缩短等部分组成，其中后两项仍需真实世界数据支持。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[14] Effectiveness of multicomponent nonpharmacological delirium interventions</span>
+          <span class="source-line">[30] 中国重症医学学科发展报告（2024）；国家卫生健康委员会 ICU 床位配置标准</span>
+          <span class="source-line">[31] Royalty Rates for Licensing Intellectual Property</span>
+          <span class="source-line source-note">ROI 与渠道条款为经营测算，详细逻辑见关键假设页。</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s11" data-title="法规路径">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Regulatory Path</div>
+            <h1 class="title">法规路径</h1>
+            <p class="subtitle">NMPA 决策支持软件既有三类也有二类，为了更早的上市且部署后收集更多的真实世界临床数据用于三类的申报审批上市，上市路径分两步走。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">分类逻辑清晰</span>
+            <span class="chip plan">获批时间线为目标</span>
+          </div>
+        </div>
+
+        <div class="reg-grid">
+          <div class="stack fade-up">
+            <div class="grid grid-2">
+              <div class="panel fact">
+                <div class="panel-title">V1.0 | 二类路径</div>
+                <h3>21-04-02.2 计算机辅助诊断 / 分析软件<span class="cite-inline">[26][28]</span></h3>
+                <p>输出谵妄风险分层参考值，不直接给出诊断或治疗建议，医师保留最终决策权。</p>
+              </div>
+              <div class="panel plan">
+                <div class="panel-title">V2.0 | 三类路径</div>
+                <h3>21-04-02.1 计算机辅助诊断 / 分析软件<span class="cite-inline">[26][28]</span></h3>
+                <p>自动识别+诊断建议，增加连续评分、可解释性报告与干预建议，进入更高监管等级。</p>
+              </div>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">二类路径成立的核心原因</div>
+              <h3>不输出诊断建议、CAM-ICU 复评不可绕过、最终决策由临床完成。</h3>
+              <p>这三点构成了辅助监测定位，也降低了一开始就进入高监管路径的整体风险。</p>
+            </div>
+            <div class="panel plan">
+              <div class="panel-title">创新器械通道</div>
+              <h3>创新审评具备讨论空间，但前提是前瞻性验证与专利进展同步到位<span class="cite-inline">[29]</span>。</h3>
+              <p>因此当前更重要的是先把样本验证、QARA 执行和注册前沟通跑通。</p>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel plan">
+              <div class="panel-title">注册时间线</div>
+              <h3>先二类辅助监测，再三类升级，是项目整体去风险的主路径<span class="cite-inline">[25][28][29]</span>。</h3>
+              <div class="timeline">
+                <div class="time-node">
+                  <strong>M3-M6</strong>
+                  <span>分类界定预沟通，确认二类路径。</span>
+                </div>
+                <div class="time-node">
+                  <strong>M8-M13</strong>
+                  <span>二类临床评价，文献评价 + 小样本验证。</span>
+                </div>
+                <div class="time-node">
+                  <strong>M8-M12</strong>
+                  <span>注册检验与材料准备。</span>
+                </div>
+                <div class="time-node">
+                  <strong>M14-M17</strong>
+                  <span>二类获批目标窗口。</span>
+                </div>
+                <div class="time-node">
+                  <strong>M16-M21</strong>
+                  <span>三类临床试验。</span>
+                </div>
+                <div class="time-node">
+                  <strong>M22-M24</strong>
+                  <span>三类注册申报。</span>
+                </div>
+                <div class="time-node">
+                  <strong>M28-M31</strong>
+                  <span>三类获批目标窗口。</span>
+                </div>
+              </div>
+            </div>
+            <div class="mini-table">
+              <div class="table-row header"><span>临床评价路径</span><span>样本量</span><span>时间</span></div>
+              <div class="table-row"><strong>文献评价 + 小样本验证</strong><span>n=50-80<span class="cite-inline">[25][28]</span></span><span class="tag plan">3-5 月</span></div>
+              <div class="table-row"><strong>最小样本量谈判</strong><span>n=100-150<span class="cite-inline">[25][28]</span></span><span class="tag plan">5-6 月</span></div>
+              <div class="table-row"><strong>常规临床试验</strong><span>n≥310<span class="cite-inline">[25][28]</span></span><span class="tag fact">保底路径</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box">
+          <strong>本页引用：</strong>
+          <span class="source-line">[25] 人工智能医疗器械注册审查指导原则；网络安全注册审查指导原则</span>
+          <span class="source-line">[26] 医疗器械分类目录（2017版，2022修订）</span>
+          <span class="source-line">[27] 医疗器械分类规则</span>
+          <span class="source-line">[28] 医疗器械软件注册审查指导原则（2022修订版）</span>
+          <span class="source-line">[29] 创新医疗器械特别审查程序</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s13" data-title="项目阶段里程碑">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Milestones</div>
+            <h1 class="title">项目阶段里程碑</h1>
+            <p class="subtitle">项目分为 5 个阶段推进，从原型验证、注册申报到商业化放量，关键节点均以月度里程碑和交付物管理。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip plan">阶段规划</span>
+            <span class="chip target">关键 KPI 驱动推进</span>
+          </div>
+        </div>
+
+        <div class="appendix-note fade-up">时间口径：<span class="mono">M</span> 为 month（月）的缩写；<span class="mono">M1</span> 为启动种子轮融资的月份，后续节点按月顺延。</div>
+
+        <div class="grid grid-5 fade-up">
+          <div class="phase-card">
+            <div class="phase-year">2026</div>
+            <div class="phase-head">
+              <div class="phase-kicker">Phase 0</div>
+              <div class="phase-title">发现与验证</div>
+              <div class="phase-range">M1-M6</div>
+            </div>
+            <div class="phase-list">
+              <div>• CDMO 签约与样机开发</div>
+              <div>• 三模态集成与数据采集</div>
+              <div>• 2 家医院 40 床科研部署</div>
+            </div>
+            <div class="phase-deliverable">
+              <strong>关键交付</strong>
+              原型验收 + 数据采集通过
+            </div>
+          </div>
+          <div class="phase-card">
+            <div class="phase-year">2027</div>
+            <div class="phase-head">
+              <div class="phase-kicker">Phase 1</div>
+              <div class="phase-title">研发与注册</div>
+              <div class="phase-range">M7-M15</div>
+            </div>
+            <div class="phase-list">
+              <div>• 算法训练与测试</div>
+              <div>• 注册检验与二类临床评价</div>
+              <div>• QARA 体系落地</div>
+            </div>
+            <div class="phase-deliverable">
+              <strong>关键交付</strong>
+              二类医疗器械注册证目标获批
+            </div>
+          </div>
+          <div class="phase-card">
+            <div class="phase-year">2027-2028</div>
+            <div class="phase-head">
+              <div class="phase-kicker">Phase 2</div>
+              <div class="phase-title">首轮商业化</div>
+              <div class="phase-range">M16-M27</div>
+            </div>
+            <div class="phase-list">
+              <div>• 二类版本装机部署</div>
+              <div>• 直销 + 合作经销商双渠道</div>
+              <div>• 三类注册前准备</div>
+            </div>
+            <div class="phase-deliverable">
+              <strong>关键交付</strong>
+              首轮商业床位部署与渠道打样
+            </div>
+          </div>
+          <div class="phase-card">
+            <div class="phase-year">2028-2029</div>
+            <div class="phase-head">
+              <div class="phase-kicker">Phase 3</div>
+              <div class="phase-title">三类升级与扩张</div>
+              <div class="phase-range">M25-M36</div>
+            </div>
+            <div class="phase-list">
+              <div>• 三类临床试验与申报</div>
+              <div>• C2 向 C3 升级</div>
+              <div>• 渠道里程碑兑现</div>
+            </div>
+            <div class="phase-deliverable">
+              <strong>关键交付</strong>
+              三类注册证目标获批
+            </div>
+          </div>
+          <div class="phase-card">
+            <div class="phase-year">2029-2031</div>
+            <div class="phase-head">
+              <div class="phase-kicker">Phase 4</div>
+              <div class="phase-title">规模化增长</div>
+              <div class="phase-range">M37-M60</div>
+            </div>
+            <div class="phase-list">
+              <div>• 重点城市复制</div>
+              <div>• 经销商放量与产线配套</div>
+              <div>• EBITDA 持续为正</div>
+            </div>
+            <div class="phase-deliverable">
+              <strong>关键交付</strong>
+              累计商业床位 520-780 张
+            </div>
+          </div>
+        </div>
+
+        <div class="panel plan fade-up">
+          <div class="panel-title">Go / No-Go</div>
+          <h3>M6 原型集成、M12 算法门槛、M15 二类获批、M21 三类临床报告，是决定项目能否按原路径推进的四个关键门槛。</h3>
+          <p>任何一个关键门槛未达标，都需要触发降级方案、补充验证或调整预期用途。</p>
+        </div>
+
+        <div class="source-box"><strong>说明：</strong>本页为项目阶段规划与里程碑管理页，不新增外部文献引用。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s14" data-title="团队介绍">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Team</div>
+            <h1 class="title">团队介绍</h1>
+            <p class="subtitle">团队结构强调“核心决策内建 + 执行网络协同”，其中法规与质量战略能力是项目推进的关键支点。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip fact">法规能力突出</span>
+            <span class="chip plan">执行团队持续补强</span>
+          </div>
+        </div>
+
+        <div class="team-grid">
+          <div class="stack fade-up">
+            <div class="person fact">
+              <div class="role">质量法规战略顾问</div>
+              <h3>沈如申</h3>
+              <p>长期从事医疗器械质量与法规管理工作，具备 SaMD、AI 医疗软件、创新器械与复杂注册路径的实战经验，为项目提供法规、质量和临床评价策略支持。</p>
+              <div class="pill-row">
+                <span class="pill">SaMD 注册策略</span>
+                <span class="pill">创新器械路径</span>
+                <span class="pill">质量体系与审评沟通</span>
+              </div>
+            </div>
+            <div class="grid grid-2">
+              <div class="person fact">
+                <div class="role">工程系统负责人</div>
+                <h3>张海涛</h3>
+                <p>负责多传感器系统集成、CDMO / CMO 技术协同、HIS 接口与系统稳定性建设。</p>
+              </div>
+              <div class="person fact">
+                <div class="role">临床落地负责人</div>
+                <h3>李庆同</h3>
+                <p>负责医院现场部署、安装培训、客户成功与临床场景反馈闭环。</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="panel plan">
+              <div class="panel-title">团队补强重点</div>
+              <h3>QARA 负责人、临床顾问与 AI 算法工程师是下一阶段最关键的组织补位。</h3>
+              <p>其中 QARA 到岗时间直接影响 NMPA 预沟通、注册检验和临床评价节奏。</p>
+            </div>
+            <div class="mini-table">
+              <div class="table-row header"><span>岗位</span><span>定位</span><span>状态</span></div>
+              <div class="table-row"><strong>QARA 负责人</strong><span>注册执行与体系维护</span><span class="tag plan">M3 到岗</span></div>
+              <div class="table-row"><strong>临床顾问</strong><span>方案审核与学术推广</span><span class="tag plan">M6 补强</span></div>
+              <div class="table-row"><strong>AI 算法工程师</strong><span>负责边缘 AI 算法训练与测试相关策略对接 CDMO</span><span class="tag plan">M6 补强</span></div>
+            </div>
+            <div class="panel fact">
+              <div class="panel-title">外部执行网络</div>
+              <h3>ISO13485 认证 CDMO / CMO、CRO 与临床顾问网络，使项目能以轻量团队推进早期器械开发。</h3>
+              <p>这要求项目管理和关键里程碑控制足够严格，但也有利于减少前期固定成本。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box"><strong>来源：</strong>项目团队履历资料</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s16" data-title="融资计划与SOM增长曲线">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Financing Plan</div>
+            <h1 class="title">融资计划与SOM增长曲线</h1>
+            <p class="subtitle">这一页单独回答两个问题：资金分阶段怎么用，以及在获批后的中长期窗口里，SOM 如何沿着可解释的路径放量。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip projected">全部财务数据为测算</span>
+            <span class="chip plan">融资与里程碑联动</span>
+          </div>
+        </div>
+
+        <div class="fin-grid">
+          <div class="stack fade-up">
+            <div class="som-curve-panel projected">
+              <div class="som-curve-top">
+                <h3>SOM 的 10 年增长曲线</h3>
+                <div class="som-legend">
+                  <span>五年模型值</span>
+                  <span>十年延展测算</span>
+                </div>
+              </div>
+              <div class="som-chart" aria-label="SOM 十年增长曲线">
+                <svg viewBox="0 0 1000 300" role="img">
+                  <line x1="62" y1="240" x2="962" y2="240" stroke="rgba(130,188,255,0.18)" stroke-width="1.5"></line>
+                  <line x1="62" y1="190" x2="962" y2="190" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
+                  <line x1="62" y1="140" x2="962" y2="140" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
+                  <line x1="62" y1="90" x2="962" y2="90" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
+                  <line x1="62" y1="40" x2="962" y2="40" stroke="rgba(130,188,255,0.12)" stroke-width="1"></line>
+
+                  <text x="18" y="244" class="axis-text">0</text>
+                  <text x="8" y="194" class="axis-text soft">400</text>
+                  <text x="8" y="144" class="axis-text soft">800</text>
+                  <text x="2" y="94" class="axis-text soft">1200</text>
+                  <text x="2" y="44" class="axis-text soft">1600</text>
+
+                  <polyline class="solid-line" points="90,240 180,226 270,202 360,172 450,143"></polyline>
+                  <polyline class="dashed-line" points="450,143 540,117 630,95 720,76 810,58 900,44"></polyline>
+
+                  <circle class="solid-dot" cx="90" cy="240" r="7"></circle>
+                  <circle class="solid-dot" cx="180" cy="226" r="7"></circle>
+                  <circle class="solid-dot" cx="270" cy="202" r="7"></circle>
+                  <circle class="solid-dot" cx="360" cy="172" r="7"></circle>
+                  <circle class="solid-dot" cx="450" cy="143" r="7"></circle>
+
+                  <circle class="dashed-dot" cx="540" cy="117" r="6"></circle>
+                  <circle class="dashed-dot" cx="630" cy="95" r="6"></circle>
+                  <circle class="dashed-dot" cx="720" cy="76" r="6"></circle>
+                  <circle class="dashed-dot" cx="810" cy="58" r="6"></circle>
+                  <circle class="dashed-dot" cx="900" cy="44" r="6"></circle>
+
+                  <text x="78" y="258" class="point-label">0</text>
+                  <text x="165" y="214" class="point-label">110</text>
+                  <text x="255" y="190" class="point-label">290</text>
+                  <text x="345" y="160" class="point-label">520</text>
+                  <text x="434" y="131" class="point-label">780</text>
+
+                  <text x="82" y="280" class="axis-text">Y1</text>
+                  <text x="172" y="280" class="axis-text">Y2</text>
+                  <text x="262" y="280" class="axis-text">Y3</text>
+                  <text x="352" y="280" class="axis-text">Y4</text>
+                  <text x="442" y="280" class="axis-text">Y5</text>
+                  <text x="532" y="280" class="axis-text soft">Y6</text>
+                  <text x="622" y="280" class="axis-text soft">Y7</text>
+                  <text x="712" y="280" class="axis-text soft">Y8</text>
+                  <text x="802" y="280" class="axis-text soft">Y9</text>
+                  <text x="888" y="280" class="axis-text soft">Y10</text>
+                </svg>
+              </div>
+              <div class="som-chart-note">
+                <span>Y1-Y5 采用五年模型中的累计商业床位：0 → 110 → 290 → 520 → 780。</span>
+                <span>Y6-Y10 为延展测算，用于展示获批后 SOM 的长期放量形态，不应理解为已锁定经营目标。</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="mini-table">
+              <div class="table-row header"><span>轮次</span><span>金额</span><span>主要用途</span></div>
+              <div class="table-row"><strong>种子轮</strong><span>¥500-600 万</span><span>CDMO NRE、40 台样机、薪资与注册前准备</span></div>
+              <div class="table-row"><strong>Pre-A</strong><span>¥300-500 万</span><span>二类获批后商业化启动与渠道放大</span></div>
+              <div class="table-row"><strong>A 轮（可选）</strong><span>¥0-500 万</span><span>用于加速扩张，非生存必需</span></div>
+            </div>
+            <div class="panel projected">
+              <div class="panel-title">关键财务锚点</div>
+              <h3>基准模型下，Year 2 EBITDA 转正，Year 5 总收入约 ¥1,665 万；当前无外部融资，所有财务曲线都应被理解为经营模型而非既有经营结果。</h3>
+              <p>这些数字均以注册时点、渠道合作、续约率和单床经济模型为前提；项目下一步的关键，是把融资、注册和试点里程碑严格绑定，避免资金消耗先于证据积累。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box"><strong>说明：</strong>本页为融资计划与 SOM 延展测算页，外部床位口径与授权费率锚点已在相关正文页标注。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s17" data-title="收入结构与盈利路径">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">Financial Appendix II</div>
+            <h1 class="title">收入结构与盈利路径</h1>
+            <p class="subtitle">硬件、SaaS、升级服务和授权 / 里程碑收入共同构成五年期收入曲线，其中装机速度与续约率是最关键的放大变量。</p>
+          </div>
+          <div class="slide-note">
+            <span class="chip projected">收入分解</span>
+            <span class="chip projected">床位增长路径</span>
+          </div>
+        </div>
+
+        <div class="appendix-grid">
+          <div class="stack fade-up">
+            <div class="grid grid-4">
+              <div class="panel projected">
+                <div class="panel-title">Y2</div>
+                <h3>¥932 万</h3>
+                <p>硬件直销 ¥520 万；授权金 + 里程碑 ¥300 万；SaaS 及分成收入开始形成。</p>
+              </div>
+              <div class="panel projected">
+                <div class="panel-title">Y3</div>
+                <h3>¥1,259 万</h3>
+                <p>直销硬件、升级服务、SaaS 与渠道分成同时增长。</p>
+              </div>
+              <div class="panel projected">
+                <div class="panel-title">Y4</div>
+                <h3>¥1,398 万</h3>
+                <p>三类装机扩大，SaaS 贡献占比继续抬升。</p>
+              </div>
+              <div class="panel projected">
+                <div class="panel-title">Y5</div>
+                <h3>¥1,665 万</h3>
+                <p>规模化阶段，SaaS 与渠道分成成为更重要的利润来源。</p>
+              </div>
+            </div>
+
+            <div class="panel projected">
+              <div class="panel-title">床位部署节奏</div>
+              <div class="roi-grid" style="margin-top:8px;">
+                <div class="roi-row" style="--pct:14;">
+                  <span>Year 2</span>
+                  <div class="track"><div class="fill"></div></div>
+                  <strong class="mono">110 床</strong>
+                </div>
+                <div class="roi-row" style="--pct:37;">
+                  <span>Year 3</span>
+                  <div class="track"><div class="fill"></div></div>
+                  <strong class="mono">290 床</strong>
+                </div>
+                <div class="roi-row" style="--pct:67;">
+                  <span>Year 4</span>
+                  <div class="track"><div class="fill"></div></div>
+                  <strong class="mono">520 床</strong>
+                </div>
+                <div class="roi-row" style="--pct:100;">
+                  <span>Year 5</span>
+                  <div class="track"><div class="fill"></div></div>
+                  <strong class="mono">780 床</strong>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="stack fade-up">
+            <div class="mini-table wide-table">
+              <div class="table-row header"><span>收入项</span><span>Y2</span><span>Y3</span><span>Y5</span></div>
+              <div class="table-row"><strong>硬件收入（直销）</strong><span>¥520 万</span><span>¥580 万</span><span>¥510 万</span></div>
+              <div class="table-row"><strong>硬件分成</strong><span>¥29 万</span><span>¥77 万</span><span>¥255 万</span></div>
+              <div class="table-row"><strong>升级服务收入</strong><span>¥0</span><span>¥100 万</span><span>¥0</span></div>
+              <div class="table-row"><strong>SaaS 收入（直销）</strong><span>¥75 万</span><span>¥260 万</span><span>¥640 万</span></div>
+              <div class="table-row"><strong>SaaS 分成</strong><span>¥8 万</span><span>¥42 万</span><span>¥260 万</span></div>
+              <div class="table-row"><strong>授权金 + 里程碑</strong><span>¥300 万</span><span>¥200 万</span><span>¥0</span></div>
+            </div>
+            <div class="appendix-note">
+              五年模型的收入并非单一产品售卖，而是由装机、SaaS、升级与渠道条款共同驱动。任何一项关键假设变化，都会重塑收入结构占比。
+            </div>
+          </div>
+        </div>
+
+        <div class="source-box"><strong>说明：</strong>本页为五年经营测算拆解页，不新增外部文献引用。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="slide" id="s19" data-title="参考文献">
+    <div class="frame">
+      <div class="inner">
+        <div class="slide-header fade-up">
+          <div>
+            <div class="eyebrow">References</div>
+            <h1 class="title">参考文献</h1>
+            <p class="subtitle">编号与正文引用保持一致。</p>
+          </div>
+        </div>
+
+        <div class="ref-columns fade-up">
+          <div class="panel">
+            <div class="ref-list">
+              <div class="ref-entry"><strong>[1]</strong> Ely EW, et al. JAMA. 2004;291(14):1753-1762.</div>
+              <div class="ref-entry"><strong>[2]</strong> Salluh JIF, et al. BMJ. 2015;350:h2538.</div>
+              <div class="ref-entry"><strong>[3]</strong> van Eijk MMJ, et al. Crit Care Med. 2009;37(6):1881-1885.</div>
+              <div class="ref-entry"><strong>[4]</strong> Meagher DJ, et al. J Psychosom Res. 2011;71(6):395-403.</div>
+              <div class="ref-entry"><strong>[5]</strong> Krewulak KD, et al. Crit Care Med. 2018;46(12):2029-2035.</div>
+              <div class="ref-entry"><strong>[6]</strong> 张晓丽, 王小亭, 刘大为, 等. 中华内科杂志. 2020;59(11):887-893.</div>
+              <div class="ref-entry"><strong>[7]</strong> Baxter International Inc. Baxter completes acquisition of Hill-Rom. 2021.</div>
+              <div class="ref-entry"><strong>[8]</strong> Ely EW, et al. Intensive Care Med. 2001;27(12):1892-1900.</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ref-list">
+              <div class="ref-entry"><strong>[9]</strong> Pandharipande PP, et al. N Engl J Med. 2013;369(14):1306-1316.</div>
+              <div class="ref-entry"><strong>[10]</strong> Bhagwat N, et al. Nature Medicine. 2024;30(3):741-750.</div>
+              <div class="ref-entry"><strong>[11]</strong> Oh ST, et al. Crit Care Med. 2021;49(8):e758-e767.</div>
+              <div class="ref-entry"><strong>[12]</strong> Wassenaar A, et al. Intensive Care Med. 2015;41(6):1048-1056.</div>
+              <div class="ref-entry"><strong>[13]</strong> Kamdar BB, et al. J Intensive Care Med. 2012;27(2):97-111.</div>
+              <div class="ref-entry"><strong>[14]</strong> Hshieh TT, et al. JAMA Intern Med. 2015;175(4):512-520.</div>
+              <div class="ref-entry"><strong>[15]</strong> Zaal IJ, et al. J Crit Care. 2019;50:75-79.</div>
+              <div class="ref-entry"><strong>[16]</strong> Akansel N, Kaymakçi Ş. J Clin Nurs. 2008;17(12):1581-1590.</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ref-list">
+              <div class="ref-entry"><strong>[17]</strong> Kanda T, et al. Sensors. 2023;23(7):3512.</div>
+              <div class="ref-entry"><strong>[18]</strong> de Jong L, et al. J Am Med Inform Assoc. 2023;30(5):876-884.</div>
+              <div class="ref-entry"><strong>[19]</strong> NVIDIA Corporation. Jetson Orin Nano Super Developer Kit. 2025.</div>
+              <div class="ref-entry"><strong>[20]</strong> Huawei Technologies. Atlas 200 DK AI Developer Kit. 2024.</div>
+              <div class="ref-entry"><strong>[21]</strong> Lundberg SM, Lee SI. NeurIPS. 2017.</div>
+              <div class="ref-entry"><strong>[22]</strong> 中华人民共和国个人信息保护法. 2021.</div>
+              <div class="ref-entry"><strong>[23]</strong> 中华人民共和国数据安全法. 2021.</div>
+              <div class="ref-entry"><strong>[24]</strong> 中华人民共和国网络安全法. 2017.</div>
+            </div>
+          </div>
+          <div class="panel">
+            <div class="ref-list">
+              <div class="ref-entry"><strong>[25]</strong> 国家药品监督管理局. 人工智能医疗器械注册审查指导原则. 2019；网络安全注册审查指导原则. 2022.</div>
+              <div class="ref-entry"><strong>[26]</strong> 国家药品监督管理局. 医疗器械分类目录（2017版，2022修订）.</div>
+              <div class="ref-entry"><strong>[27]</strong> 国家药品监督管理局. 医疗器械分类规则. 2015.</div>
+              <div class="ref-entry"><strong>[28]</strong> 国家药品监督管理局. 医疗器械软件注册审查指导原则（2022修订版）.</div>
+              <div class="ref-entry"><strong>[29]</strong> 国家药品监督管理局. 创新医疗器械特别审查程序. 2018.</div>
+              <div class="ref-entry"><strong>[30]</strong> 中华医学会重症医学分会. 中国重症医学学科发展报告（2024）；国家卫健委 ICU 床位配置标准.</div>
+              <div class="ref-entry"><strong>[31]</strong> Licensing Executives Society. Royalty Rates for Licensing Intellectual Property. 2024.</div>
+              <div class="ref-entry"><strong>[32]</strong> 北京市统计局. 北京医药健康产业发展统计报告（2025）.</div>
+              <div class="ref-entry"><strong>[33]</strong> 北京市药品监督管理局. 医疗器械产业提质升级行动计划（2024-2026年）.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.slide'));
+    const toc = document.getElementById('toc');
+    const pageNow = document.getElementById('pageNow');
+    const pageTotal = document.getElementById('pageTotal');
+    document.body.classList.add('js-motion');
+    pageTotal.textContent = String(slides.length).padStart(2, '0');
+
+    slides.forEach((slide, index) => {
+      const link = document.createElement('a');
+      link.href = `#${slide.id}`;
+      link.setAttribute('aria-label', slide.dataset.title || `第 ${index + 1} 页`);
+      const label = document.createElement('span');
+      label.textContent = `${String(index + 1).padStart(2, '0')} ${slide.dataset.title || ''}`;
+      link.appendChild(label);
+      toc.appendChild(link);
+    });
+
+    const tocLinks = Array.from(toc.querySelectorAll('a'));
+
+    function setActive(index) {
+      pageNow.textContent = String(index + 1).padStart(2, '0');
+      tocLinks.forEach((link, linkIndex) => {
+        link.classList.toggle('active', linkIndex === index);
+      });
+    }
+
+    const slideObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.intersectionRatio > 0.56) {
+          const currentIndex = slides.indexOf(entry.target);
+          setActive(currentIndex);
+          entry.target.classList.add('is-visible');
+        }
+      });
+    }, { threshold: [0.3, 0.56, 0.8] });
+
+    if (slides[0]) {
+      slides[0].classList.add('is-visible');
+    }
+
+    slides.forEach((slide) => slideObserver.observe(slide));
+
+    function goToSlide(nextIndex) {
+      const clamped = Math.max(0, Math.min(slides.length - 1, nextIndex));
+      slides[clamped].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    document.addEventListener('keydown', (event) => {
+      const activeElement = document.activeElement;
+      if (activeElement && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeElement.tagName)) {
+        return;
+      }
+      const currentIndex = slides.findIndex((slide) => {
+        const rect = slide.getBoundingClientRect();
+        return rect.top >= -window.innerHeight * 0.2 && rect.top < window.innerHeight * 0.3;
+      });
+      if (['ArrowDown', 'PageDown', ' '].includes(event.key)) {
+        event.preventDefault();
+        goToSlide((currentIndex === -1 ? 0 : currentIndex) + 1);
+      }
+      if (['ArrowUp', 'PageUp'].includes(event.key)) {
+        event.preventDefault();
+        goToSlide((currentIndex === -1 ? 0 : currentIndex) - 1);
+      }
+      if (event.key === 'Home') {
+        event.preventDefault();
+        goToSlide(0);
+      }
+      if (event.key === 'End') {
+        event.preventDefault();
+        goToSlide(slides.length - 1);
+      }
+    });
+
+    function createPolygonPoints(cx, cy, radius, sides, ratio = 1) {
+      const points = [];
+      for (let i = 0; i < sides; i += 1) {
+        const angle = (-Math.PI / 2) + (Math.PI * 2 * i / sides);
+        const x = cx + Math.cos(angle) * radius * ratio;
+        const y = cy + Math.sin(angle) * radius * ratio;
+        points.push(`${x.toFixed(2)},${y.toFixed(2)}`);
+      }
+      return points.join(' ');
+    }
+
+    document.querySelectorAll('[data-radar]').forEach((svg) => {
+      const values = (svg.dataset.values || '').split(',').map((item) => Number(item.trim()));
+      const labels = (svg.dataset.labels || '').split('|').map((item) => item.trim());
+      const ns = 'http://www.w3.org/2000/svg';
+      const size = 420;
+      const cx = size / 2;
+      const cy = size / 2;
+      const radius = 136;
+      const levels = 5;
+      const sides = values.length;
+
+      function append(tag, attrs) {
+        const element = document.createElementNS(ns, tag);
+        Object.entries(attrs).forEach(([key, value]) => element.setAttribute(key, value));
+        svg.appendChild(element);
+        return element;
+      }
+
+      append('circle', {
+        cx,
+        cy,
+        r: radius + 40,
+        fill: 'rgba(85,213,255,0.03)',
+        stroke: 'rgba(130,188,255,0.08)'
+      });
+
+      for (let level = 1; level <= levels; level += 1) {
+        append('polygon', {
+          points: createPolygonPoints(cx, cy, radius, sides, level / levels),
+          fill: 'none',
+          stroke: 'rgba(130,188,255,0.14)',
+          'stroke-width': level === levels ? '1.2' : '1',
+        });
+      }
+
+      values.forEach((_, index) => {
+        const angle = (-Math.PI / 2) + (Math.PI * 2 * index / sides);
+        const x = cx + Math.cos(angle) * radius;
+        const y = cy + Math.sin(angle) * radius;
+        append('line', {
+          x1: cx,
+          y1: cy,
+          x2: x,
+          y2: y,
+          stroke: 'rgba(130,188,255,0.14)',
+          'stroke-width': '1'
+        });
+
+        const labelX = cx + Math.cos(angle) * (radius + 28);
+        const labelY = cy + Math.sin(angle) * (radius + 28);
+        const text = append('text', {
+          x: labelX,
+          y: labelY,
+          fill: 'rgba(233,241,255,0.88)',
+          'font-size': '12',
+          'font-family': 'Avenir Next, SF Pro Display, PingFang SC, sans-serif',
+          'text-anchor': labelX < cx - 8 ? 'end' : labelX > cx + 8 ? 'start' : 'middle',
+          'dominant-baseline': labelY < cy - 8 ? 'auto' : labelY > cy + 8 ? 'hanging' : 'middle'
+        });
+        text.textContent = labels[index] || '';
+      });
+
+      const valuePoints = values.map((value, index) => {
+        const ratio = value / levels;
+        const angle = (-Math.PI / 2) + (Math.PI * 2 * index / sides);
+        const x = cx + Math.cos(angle) * radius * ratio;
+        const y = cy + Math.sin(angle) * radius * ratio;
+        return { x, y };
+      });
+
+      append('polygon', {
+        points: valuePoints.map((point) => `${point.x.toFixed(2)},${point.y.toFixed(2)}`).join(' '),
+        fill: 'rgba(85,213,255,0.18)',
+        stroke: 'rgba(85,213,255,0.9)',
+        'stroke-width': '2.2'
+      });
+
+      valuePoints.forEach((point) => {
+        append('circle', {
+          cx: point.x,
+          cy: point.y,
+          r: '4.6',
+          fill: '#55d5ff',
+          stroke: '#ffffff',
+          'stroke-width': '1.2'
+        });
+      });
+    });
+
+    setActive(0);
+  </script>
+</body>
+</html>

@@ -4,6 +4,8 @@ import { DEFAULT_MODEL } from './defaults';
 
 const KEY_ACTIVE = 'aria-model-v3';
 const KEY_PROFILES = 'aria-profiles-v3';
+const KEY_AUDIT = 'aria-audit-log';
+const MAX_AUDIT_ENTRIES = 50;
 
 export interface ProfileEntry {
   name: string;
@@ -111,4 +113,38 @@ function mergeWithDefaults(partial: Partial<ModelInputs>): ModelInputs {
     milestones_base: partial.milestones_base || d.milestones_base.map(m => ({ ...m })),
     annotations: { ...d.annotations, ...(partial.annotations || {}) },
   };
+}
+
+// ============================================================
+// Audit Log
+// ============================================================
+
+export interface AuditEntry {
+  timestamp: string;
+  tab: string;
+  field: string;
+  oldValue: string;
+  newValue: string;
+  affectedMappings: string[];
+}
+
+export function appendAuditEntry(entry: Omit<AuditEntry, 'timestamp'>) {
+  if (typeof window === 'undefined') return;
+  try {
+    const raw = localStorage.getItem(KEY_AUDIT);
+    const log: AuditEntry[] = raw ? JSON.parse(raw) : [];
+    log.unshift({ ...entry, timestamp: new Date().toISOString() });
+    if (log.length > MAX_AUDIT_ENTRIES) log.length = MAX_AUDIT_ENTRIES;
+    localStorage.setItem(KEY_AUDIT, JSON.stringify(log));
+  } catch { /* ignore */ }
+}
+
+export function loadAuditLog(): AuditEntry[] {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = localStorage.getItem(KEY_AUDIT);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
 }

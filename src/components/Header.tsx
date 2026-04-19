@@ -1,6 +1,5 @@
 'use client';
 
-import Link from 'next/link';
 import { useState } from 'react';
 
 interface HeaderProps {
@@ -48,21 +47,6 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
-          <div className="hidden items-center gap-2 md:flex">
-            <Link
-              href="/dashboard"
-              className="px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-900/50 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all"
-            >
-              ARIA Dashboard
-            </Link>
-            <Link
-              href="/parameters"
-              className="px-3 py-1.5 rounded-lg border border-slate-600 bg-slate-900/50 text-xs font-medium text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all"
-            >
-              ARIA Parameters
-            </Link>
-          </div>
-
           <div className="flex rounded-lg overflow-hidden border border-slate-600 bg-slate-900/50 backdrop-blur-sm">
             {scenarios.map(s => (
               <button

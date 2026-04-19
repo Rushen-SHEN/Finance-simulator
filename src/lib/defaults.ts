@@ -28,6 +28,8 @@ export const DEFAULT_GLOBAL: GlobalInputs = {
   growth_y6: 0.30,
   growth_y7: 0.30,
   growth_y8: 0.30,
+  growth_y9: 0.25,
+  growth_y10: 0.25,
 };
 
 // Best Case yearly inputs (BPccR2 §5.4 / §9.3)
@@ -134,17 +136,18 @@ export const DEFAULT_MODEL: ModelInputs = {
 
 // BPccR2 §9.2 Best Case targets (万元)
 export const BP_TARGETS = {
-  total_revenue: [300, 560, 420, 910, 1280],
-  total_cogs:    [0, 280, 50, 360, 410],
-  gross_profit:  [300, 280, 370, 550, 870],
-  opex:          [480, 360, 460, 500, 560],
-  ebitda:        [-180, -80, -90, 50, 310],
-  net_profit:    [-200, -100, -110, 25, 285],
+  total_revenue: [300, 560, 420, 910, 1280, 0, 0, 0, 0, 0],
+  total_cogs:    [0, 280, 50, 360, 410, 0, 0, 0, 0, 0],
+  gross_profit:  [300, 280, 370, 550, 870, 0, 0, 0, 0, 0],
+  opex:          [480, 360, 460, 500, 560, 0, 0, 0, 0, 0],
+  ebitda:        [-180, -80, -90, 50, 310, 0, 0, 0, 0, 0],
+  net_profit:    [-200, -100, -110, 25, 285, 0, 0, 0, 0, 0],
 };
 
-export const YEAR_LABELS = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5'];
-export const MONTH_LABELS = ['M1–12', 'M13–24', 'M25–36', 'M37–48', 'M49–60'];
-export const PHASE_LABELS = ['原型+试点', '二类商业化', '三类商业化', '规模放量', '全面扩张'];
+export const YEAR_LABELS = ['Year 1', 'Year 2', 'Year 3', 'Year 4', 'Year 5', 'Year 6', 'Year 7', 'Year 8', 'Year 9', 'Year 10'];
+export const YEAR_LABELS_SHORT = ['Y1', 'Y2', 'Y3', 'Y4', 'Y5', 'Y6', 'Y7', 'Y8', 'Y9', 'Y10'];
+export const MONTH_LABELS = ['M1–12', 'M13–24', 'M25–36', 'M37–48', 'M49–60', 'M61–72', 'M73–84', 'M85–96', 'M97–108', 'M109–120'];
+export const PHASE_LABELS = ['原型+试点', '二类商业化', '三类商业化', '规模放量', '全面扩张', '全国拓展', '深度渗透', '平台升级', '生态延伸', '稳态运营'];
 
 export const OPEX_LABELS: Record<keyof OpExDetail, string> = {
   salary: '薪资社保',

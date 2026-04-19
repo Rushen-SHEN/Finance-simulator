@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect, useRef } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL } from '@/lib/defaults';
 import { loadModel, saveModel, clearModel } from '@/lib/storage';
@@ -36,13 +36,19 @@ export default function Home() {
   const [codeError, setCodeError] = useState(false);
   const printRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    setModel(loadModel());
-    setMounted(true);
-    if (typeof window !== 'undefined' && sessionStorage.getItem('aria-unlocked') === '1') {
+  // Initialize from localStorage — use layout effect to avoid flash
+  const [initialized, setInitialized] = useState(false);
+  if (!initialized && typeof window !== 'undefined') {
+    const saved = loadModel();
+    if (JSON.stringify(saved) !== JSON.stringify(model)) {
+      setModel(saved);
+    }
+    if (sessionStorage.getItem('aria-unlocked') === '1' && !unlocked) {
       setUnlocked(true);
     }
-  }, []);
+    if (!mounted) setMounted(true);
+    setInitialized(true);
+  }
 
   const handleUnlock = useCallback(async () => {
     const hash = await sha256(code);
@@ -166,7 +172,7 @@ export default function Home() {
           <PhaseTimeline milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} />
         </div>
 
-        <div data-export-module><MarketSection resultBest={resultBest} resultBase={resultBase} global={model.global} /></div>
+        <div data-export-module><MarketSection resultBest={resultBest} resultBase={resultBase} /></div>
         <div data-export-module><BusinessModel global={model.global} result={resultBest} /></div>
         <FinancialTable resultBest={resultBest} resultBase={resultBase} scenario={scenario} />
         <div data-export-module><RevenueCharts result={resultBest} /></div>

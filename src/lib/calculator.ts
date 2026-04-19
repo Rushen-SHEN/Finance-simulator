@@ -32,10 +32,12 @@ export interface GlobalInputs {
   value_anchor_c3: number;
   // Post-Class-III annual revenue growth rate (e.g. 0.30 = 30%)
   post_class3_growth: number;
-  // Per-year growth rates for Y6, Y7, Y8 projection (default all = post_class3_growth)
+  // Per-year growth rates for Y6, Y7, Y8, Y9, Y10 projection
   growth_y6: number;
   growth_y7: number;
   growth_y8: number;
+  growth_y9: number;
+  growth_y10: number;
 }
 
 export interface OpExDetail {
@@ -76,7 +78,6 @@ export interface MilestoneItem {
 
 /** Resolve milestone schedule: propagate predecessor chains */
 export function resolveMilestones(items: MilestoneItem[]): MilestoneItem[] {
-  const byId = new Map(items.map(m => [m.id, { ...m }]));
   const resolved = items.map(m => ({ ...m }));
   // Topological resolve — iterate until stable (max 20 passes for safety)
   for (let pass = 0; pass < 20; pass++) {
@@ -379,9 +380,151 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
     });
   }
 
+  // === Y6-Y10: Growth-rate projection from Y5 baseline ===
+  const growthRates = [g.growth_y6, g.growth_y7, g.growth_y8, g.growth_y9, g.growth_y10];
+  for (let p = 0; p < 5; p++) {
+    const prev = years[4 + p];
+    const gr = growthRates[p];
+    const scale = 1 + gr;
+
+    // Scale revenue components proportionally
+    const hwDirect = Math.round(prev.hw_direct * scale);
+    const hwBaxter = Math.round(prev.hw_baxter * scale);
+    const upgradeRev = Math.round(prev.upgrade_revenue * scale);
+    const saasDirect = Math.round(prev.saas_direct * scale);
+    const saasBaxter = Math.round(prev.saas_baxter * scale);
+    const license = 0; // no one-off license fees in projection years
+    const totalRevenue = hwDirect + hwBaxter + upgradeRev + saasDirect + saasBaxter + license;
+
+    // COGS scales with hardware revenue ratio
+    const cogsRatio = prev.total_revenue > 0 ? prev.cogs / prev.total_revenue : 0.35;
+    const cogs = Math.round(totalRevenue * cogsRatio);
+    const grossProfit = totalRevenue - cogs;
+
+    // OpEx grows at half the revenue growth rate (operating leverage)
+    const opexScale = 1 + gr * 0.5;
+    const od = {
+      salary: Math.round(prev.opex_detail.salary * opexScale),
+      cdmo_nre: 0, // NRE done by Y5
+      pilot_bom: 0,
+      cro: 0,
+      reg: Math.round(prev.opex_detail.reg * opexScale),
+      compliance: Math.round(prev.opex_detail.compliance * opexScale),
+      patent_ai: Math.round(prev.opex_detail.patent_ai * opexScale),
+      travel_ops: Math.round(prev.opex_detail.travel_ops * opexScale),
+    };
+    const totalOpex = od.salary + od.cdmo_nre + od.pilot_bom + od.cro + od.reg + od.compliance + od.patent_ai + od.travel_ops;
+
+    const ebitda = grossProfit - totalOpex;
+    const dep = Math.round(prev.depreciation * scale);
+    const netProfit = ebitda - dep;
+
+    // Beds: estimate new beds from revenue growth
+    const newBeds = Math.round(prev.total_new * scale);
+    cumBeds += newBeds;
+    const activePaying = Math.round(prev.active_paying * rr + newBeds);
+
+    years.push({
+      direct_c2: 0, direct_c3: 0, baxter_c2: 0, baxter_c3: 0, // not itemized in projection
+      total_new: newBeds, actual_upgrade: 0,
+      cumulative_beds: cumBeds, active_paying: activePaying,
+      hw_direct: hwDirect, hw_baxter: hwBaxter, upgrade_revenue: upgradeRev,
+      saas_direct: saasDirect, saas_baxter: saasBaxter, baxter_license: license,
+      total_revenue: totalRevenue,
+      cogs, gross_profit: grossProfit,
+      opex: totalOpex, opex_detail: od,
+      ebitda, depreciation: dep, net_profit: netProfit,
+      gross_margin: totalRevenue > 0 ? grossProfit / totalRevenue : null,
+      net_margin: totalRevenue > 0 ? netProfit / totalRevenue : null,
+      opex_ratio: totalRevenue > 0 ? totalOpex / totalRevenue : null,
+    });
+  }
+
   return {
     years,
     cumulative_net_profit: years.reduce((s, yr) => s + yr.net_profit, 0),
     bom_c2: bom.c2, bom_c3: bom.c3, bom_upgrade: bom.upgrade,
   };
+}
+
+// ============================================================
+// BP Traceability — Mapping Blocks
+// ============================================================
+
+export interface MappingBlock {
+  id: string;
+  label: string;
+  bpSection: string;
+  description: string;
+}
+
+export const MAPPING_BLOCKS: MappingBlock[] = [
+  { id: 'M-01', label: '核心财务指标', bpSection: 'BP §1.5 / §9.2', description: 'Y1-Y10 收入、EBITDA、净利润、ARR' },
+  { id: 'M-02', label: '渠道经济模型', bpSection: 'BP §5.3', description: '经销商佣金、授权金、SaaS分成' },
+  { id: 'M-03', label: '商业化床位曲线', bpSection: 'BP §5.4 / §9.3', description: '直销/经销商 C2/C3 部署计划、升级路径' },
+  { id: 'M-04', label: 'EBITDA盈亏平衡', bpSection: 'BP §9 融资与盈亏', description: 'EBITDA转正时间、融资窗口' },
+  { id: 'M-05', label: '里程碑与注册', bpSection: 'BP §11 里程碑', description: 'C2/C3注册时间、商业化部署节奏' },
+  { id: 'M-06', label: '增长假设', bpSection: 'BP §1.5 增长', description: 'Y6-Y10 增长率曲线' },
+  { id: 'M-07', label: 'ARR与续费', bpSection: 'BP §1.5 ARR', description: 'SaaS续费率、活跃床位、ARR' },
+];
+
+/** Parameter group → affected mapping block IDs */
+export const PARAM_MAPPING: Record<string, string[]> = {
+  pricing:    ['M-01', 'M-02'],
+  bom:        ['M-01', 'M-02'],
+  channel:    ['M-02', 'M-07'],
+  deploy:     ['M-01', 'M-03', 'M-04'],
+  opex:       ['M-01', 'M-04'],
+  milestones: ['M-03', 'M-05'],
+  growth:     ['M-01', 'M-06'],
+  renewal:    ['M-07', 'M-01'],
+  funding:    ['M-04'],
+};
+
+/** Given a list of changed parameter groups, return all affected mapping block IDs */
+export function getAffectedMappings(changedGroups: string[]): string[] {
+  const set = new Set<string>();
+  for (const group of changedGroups) {
+    const blocks = PARAM_MAPPING[group];
+    if (blocks) blocks.forEach(b => set.add(b));
+  }
+  return Array.from(set).sort();
+}
+
+// ============================================================
+// Parameter Validation
+// ============================================================
+
+export interface ValidationWarning {
+  field: string;
+  message: string;
+  severity: 'error' | 'warning';
+}
+
+export function validateModel(model: ModelInputs): ValidationWarning[] {
+  const w: ValidationWarning[] = [];
+  const g = model.global;
+
+  if (g.price_hw_c2 < 30000 || g.price_hw_c2 > 200000)
+    w.push({ field: 'price_hw_c2', message: 'C2硬件价格超出合理范围 (3-20万)', severity: 'warning' });
+  if (g.price_hw_c3 < 50000 || g.price_hw_c3 > 300000)
+    w.push({ field: 'price_hw_c3', message: 'C3硬件价格超出合理范围 (5-30万)', severity: 'warning' });
+  if (g.rr_base < 0.5 || g.rr_base > 0.95)
+    w.push({ field: 'rr_base', message: '续费率超出合理范围 (50%-95%)', severity: 'error' });
+  if (g.baxter_hw_commission < 0.05 || g.baxter_hw_commission > 0.40)
+    w.push({ field: 'baxter_hw_commission', message: '硬件佣金超出合理范围 (5%-40%)', severity: 'warning' });
+
+  const growths = [g.growth_y6, g.growth_y7, g.growth_y8, g.growth_y9, g.growth_y10];
+  for (let i = 0; i < growths.length; i++) {
+    if (growths[i] < -0.3 || growths[i] > 1.0)
+      w.push({ field: `growth_y${i + 6}`, message: `Y${i + 6}增长率超出合理范围 (-30%~100%)`, severity: 'warning' });
+  }
+
+  // Check deployment arrays have reasonable totals
+  const totalBestBeds = model.yearly.direct_c2.reduce((s, v) => s + v, 0) + model.yearly.direct_c3.reduce((s, v) => s + v, 0)
+    + model.yearly.baxter_c2.reduce((s, v) => s + v, 0) + model.yearly.baxter_c3.reduce((s, v) => s + v, 0);
+  if (totalBestBeds === 0)
+    w.push({ field: 'deploy', message: 'Best Case 5年部署床位总数为0', severity: 'error' });
+
+  return w;
 }

@@ -1,27 +1,14 @@
-import { CalcResult, GlobalInputs } from '@/lib/calculator';
+import { CalcResult } from '@/lib/calculator';
 
-interface Props { resultBest: CalcResult; resultBase: CalcResult; global: GlobalInputs; }
+interface Props { resultBest: CalcResult; resultBase: CalcResult; }
 
-export default function MarketSection({ resultBest, resultBase, global: g }: Props) {
+export default function MarketSection({ resultBest, resultBase }: Props) {
   const y5best = resultBest.years[4];
   const y5base = resultBase.years[4];
-  // Year 6-8 projection using per-year growth rates
-  const y6revBest = y5best.total_revenue * (1 + g.growth_y6);
-  const y7revBest = y6revBest * (1 + g.growth_y7);
-  const y8revBest = y7revBest * (1 + g.growth_y8);
-  const y6revBase = y5base.total_revenue * (1 + g.growth_y6);
-  const y7revBase = y6revBase * (1 + g.growth_y7);
-  const y8revBase = y7revBase * (1 + g.growth_y8);
 
-  // Build SOM yearly arrays (Y1-Y8) for the growth dashboard
-  const bestRev = [
-    ...resultBest.years.map(y => y.total_revenue),
-    y6revBest, y7revBest, y8revBest,
-  ];
-  const baseRev = [
-    ...resultBase.years.map(y => y.total_revenue),
-    y6revBase, y7revBase, y8revBase,
-  ];
+  // Build SOM yearly arrays (Y1-Y10) from calculator results
+  const bestRev = resultBest.years.map(y => y.total_revenue);
+  const baseRev = resultBase.years.map(y => y.total_revenue);
   const yoyGrowth = (arr: number[]) =>
     arr.map((v, i) => (i === 0 || arr[i - 1] <= 0) ? null : ((v / arr[i - 1]) - 1) * 100);
   const bestGrowth = yoyGrowth(bestRev);
@@ -60,13 +47,13 @@ export default function MarketSection({ resultBest, resultBase, global: g }: Pro
             <div className="text-xs text-gray-600 leading-relaxed">{y5best.cumulative_beds}床(Best) / {y5base.cumulative_beds}床(Base) · 三类获批+规模放量</div>
           </div>
           <div className="rounded-xl px-5 py-4 border-l-4 border-orange-500 bg-gradient-to-r from-orange-50 to-white w-[42%]">
-            <div className="text-xs text-gray-600">SOM · Year 8 (外推)</div>
+            <div className="text-xs text-gray-600">SOM · Year 10 (外推)</div>
             <div className="flex items-baseline gap-2 my-1">
-              <span className="text-[20px] font-extrabold text-orange-600">🚀 {fmtWan(y8revBest)}</span>
+              <span className="text-[20px] font-extrabold text-orange-600">🚀 {fmtWan(resultBest.years[9]?.total_revenue ?? 0)}</span>
               <span className="text-[13px] text-gray-400">/</span>
-              <span className="text-[16px] font-bold text-blue-500">📊 {fmtWan(y8revBase)}</span>
+              <span className="text-[16px] font-bold text-blue-500">📊 {fmtWan(resultBase.years[9]?.total_revenue ?? 0)}</span>
             </div>
-            <div className="text-xs text-gray-600 leading-relaxed">Y6 +{(g.growth_y6 * 100).toFixed(0)}% → Y7 +{(g.growth_y7 * 100).toFixed(0)}% → Y8 +{(g.growth_y8 * 100).toFixed(0)}% · 全国扩张</div>
+            <div className="text-xs text-gray-600 leading-relaxed">Y6–Y10 增长率复合外推 · 全国扩张+生态延伸</div>
           </div>
         </div>
 
@@ -87,7 +74,7 @@ export default function MarketSection({ resultBest, resultBase, global: g }: Pro
             <thead>
               <tr className="bg-gray-50">
                 <th className="text-left px-2 py-2 text-gray-500 font-medium border-b border-gray-200 w-28"></th>
-                {['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8'].map(l => (
+                {['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'].map(l => (
                   <th key={l} className={`text-center px-2 py-2 font-medium border-b border-gray-200 ${parseInt(l.slice(1)) > 5 ? 'text-orange-500' : 'text-gray-500'}`}>
                     {l}{parseInt(l.slice(1)) > 5 ? ' ⁺' : ''}
                   </th>
@@ -126,7 +113,7 @@ export default function MarketSection({ resultBest, resultBase, global: g }: Pro
             </tbody>
           </table>
         </div>
-        <p className="text-[10px] text-gray-400 mt-1.5">Y6-Y8 标注 ⁺ 为外推值，基于参数面板设定增长率</p>
+        <p className="text-[10px] text-gray-400 mt-1.5">Y6-Y10 标注 ⁺ 为增长率外推值，基于参数面板设定增长率</p>
       </div>
 
       {/* Benchmark: China AI Medical Device Companies */}
