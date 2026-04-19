@@ -6,15 +6,14 @@ import { DEFAULT_MODEL, BP_TARGETS } from '@/lib/defaults';
 import { loadModel } from '@/lib/storage';
 import { useModelInit } from '@/lib/useModelInit';
 import {
-  BP_MAIN_TABLE, BP_SOM,
+  BP_MAIN_TABLE, BP_SOM, DOC_VERSIONS,
   DataConflict, detectConflicts,
 } from '@/lib/bp-reference';
 
 const YEAR_LABELS = ['Y1','Y2','Y3','Y4','Y5','Y6','Y7','Y8','Y9','Y10'];
 
-// ARIA Finance Plan v2.0 data (BPccR2 §9.2 Best Case, Y1-Y5 only)
-const FP_VERSION = 'Finance Plan v2.0';
-const BP_VERSION = 'BP v2.1 (2026-04-19)';
+const FP_VERSION = DOC_VERSIONS.fp;
+const BP_VERSION = DOC_VERSIONS.bp;
 
 export default function QAPage() {
   const [model, setModel] = useModelInit();
@@ -235,7 +234,7 @@ export default function QAPage() {
             {/* Roadshow data anchors */}
             <div>
               <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">路演稿数据锚点</h3>
-              <div className="text-xs text-slate-500 mb-2">路演稿中硬编码的数据 vs BP v2.1</div>
+              <div className="text-xs text-slate-500 mb-2">路演稿中硬编码的数据 vs {BP_VERSION}</div>
               <div className="space-y-2">
                 {[
                   { label: 's17 Y5收入', roadshow: '¥1,665万', bp: '¥2,049万', ok: false },
@@ -255,7 +254,7 @@ export default function QAPage() {
                 ))}
               </div>
               <div className="text-[11px] text-slate-600 mt-2">
-                注: 路演稿s17中的Y3/Y4/Y5收入基于旧模型，与BP v2.1有偏差。模拟器参数联动后路演页面会黄色高亮标出差异。
+                注: 路演稿s17中的Y3/Y4/Y5收入基于旧模型，与{BP_VERSION}有偏差。模拟器参数联动后路演页面会黄色高亮标出差异。
               </div>
             </div>
           </div>
@@ -263,7 +262,7 @@ export default function QAPage() {
 
         {activeTab === 'som' && (
           <div className="space-y-6">
-            <div className="text-xs text-slate-400 mb-2">BP v2.1: 二类获批后30%年增长 · SAM中值¥27.5B</div>
+            <div className="text-xs text-slate-400 mb-2">{BP_VERSION}: 二类获批后30%年增长 · SAM中值¥27.5B</div>
 
             {/* SVG SOM Chart */}
             <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-4">
@@ -300,7 +299,7 @@ export default function QAPage() {
                 <line x1="50" y1="15" x2="70" y2="15" stroke="rgba(85,213,255,0.9)" strokeWidth="2"/>
                 <text x="74" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">模拟器</text>
                 <line x1="120" y1="15" x2="140" y2="15" stroke="rgba(255,191,102,0.8)" strokeWidth="2" strokeDasharray="4 3"/>
-                <text x="144" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">BP v2.1</text>
+                <text x="144" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">{BP_VERSION}</text>
               </svg>
             </div>
 
