@@ -46,12 +46,17 @@ export default function QAPage() {
 
   const liveData = useMemo(() => {
     const yrs = resultBest.years;
+    const rev = yrs.map(y => Math.round(y.total_revenue / 10000));
+    const samMid = model.global.sam_midpoint; // 万元
     return {
       cumBeds: yrs.map(y => y.cumulative_beds),
+      activePaying: yrs.map(y => y.active_paying),
       ebitda: yrs.map(y => Math.round(y.ebitda / 10000)),
-      revenue: yrs.map(y => Math.round(y.total_revenue / 10000)),
+      revenue: rev,
+      yoy: rev.map((r, i) => i === 0 || rev[i - 1] === 0 ? null : ((r - rev[i - 1]) / rev[i - 1] * 100)),
+      somPct: rev.map(r => r > 0 && samMid > 0 ? (r / samMid * 100) : 0),
     };
-  }, [resultBest]);
+  }, [resultBest, model.global.sam_midpoint]);
 
   const basePath = process.env.NODE_ENV === 'production' ? '/Finance-simulator' : '';
 
@@ -262,89 +267,93 @@ export default function QAPage() {
 
         {activeTab === 'som' && (
           <div className="space-y-6">
-            <div className="text-xs text-slate-400 mb-2">{BP_VERSION}: 二类获批后30%年增长 · SAM中值¥27.5B</div>
+            <div className="text-xs text-slate-400 mb-2">续约率 {(effectiveRR * 100).toFixed(0)}% · SAM中值¥{(model.global.sam_midpoint / 10000).toFixed(1)}亿 · 模拟器实时数据</div>
 
-            {/* SVG SOM Chart */}
+            {/* SVG SOM Chart — dynamic Y-axis */}
             <div className="rounded-xl border border-slate-700 bg-slate-800/30 p-4">
               <h3 className="text-sm font-bold text-slate-200 mb-3">SOM 10年增长曲线 (收入)</h3>
-              <svg viewBox="0 0 400 200" className="w-full max-w-[600px] mx-auto">
-                <line x1="40" y1="170" x2="380" y2="170" stroke="rgba(130,188,255,0.2)" strokeWidth="1"/>
-                <line x1="40" y1="130" x2="380" y2="130" stroke="rgba(130,188,255,0.08)" strokeWidth="0.5"/>
-                <line x1="40" y1="90" x2="380" y2="90" stroke="rgba(130,188,255,0.08)" strokeWidth="0.5"/>
-                <line x1="40" y1="50" x2="380" y2="50" stroke="rgba(130,188,255,0.08)" strokeWidth="0.5"/>
-                <text x="2" y="174" fill="rgba(157,176,201,0.6)" fontSize="8" fontFamily="monospace">0</text>
-                <text x="2" y="134" fill="rgba(157,176,201,0.6)" fontSize="8" fontFamily="monospace">2500</text>
-                <text x="2" y="94" fill="rgba(157,176,201,0.6)" fontSize="8" fontFamily="monospace">5000</text>
-                <text x="2" y="54" fill="rgba(157,176,201,0.6)" fontSize="8" fontFamily="monospace">7500</text>
-                {(() => {
-                  const maxVal = 8000;
-                  const bpPoints = BP_MAIN_TABLE.total_revenue.map((v, i) => `${50 + i * 36},${170 - (v / maxVal) * 130}`).join(' ');
-                  const simPoints = liveData.revenue.map((v, i) => `${50 + i * 36},${170 - (v / maxVal) * 130}`).join(' ');
-                  return (
-                    <>
-                      <polyline points={bpPoints} fill="none" stroke="rgba(255,191,102,0.8)" strokeWidth="2" strokeDasharray="4 3"/>
-                      <polyline points={simPoints} fill="none" stroke="rgba(85,213,255,0.9)" strokeWidth="2"/>
-                      {BP_MAIN_TABLE.total_revenue.map((v, i) => (
-                        <circle key={`bp-${i}`} cx={50 + i * 36} cy={170 - (v / maxVal) * 130} r="3" fill="rgba(255,191,102,0.8)" stroke="rgba(4,8,18,0.8)" strokeWidth="1.5"/>
-                      ))}
-                      {liveData.revenue.map((v, i) => (
-                        <circle key={`sim-${i}`} cx={50 + i * 36} cy={170 - (v / maxVal) * 130} r="3" fill="rgba(85,213,255,0.9)" stroke="rgba(4,8,18,0.8)" strokeWidth="1.5"/>
-                      ))}
-                    </>
-                  );
-                })()}
-                {YEAR_LABELS.map((label, i) => (
-                  <text key={label} x={50 + i * 36} y="185" fill="rgba(157,176,201,0.6)" fontSize="7" fontFamily="monospace" textAnchor="middle">{label}</text>
-                ))}
-                <line x1="50" y1="15" x2="70" y2="15" stroke="rgba(85,213,255,0.9)" strokeWidth="2"/>
-                <text x="74" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">模拟器</text>
-                <line x1="120" y1="15" x2="140" y2="15" stroke="rgba(255,191,102,0.8)" strokeWidth="2" strokeDasharray="4 3"/>
-                <text x="144" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">{BP_VERSION}</text>
-              </svg>
+              {(() => {
+                const allVals = [...liveData.revenue, ...BP_MAIN_TABLE.total_revenue];
+                const rawMax = Math.max(...allVals, 100);
+                // nice round max
+                const mag = Math.pow(10, Math.floor(Math.log10(rawMax)));
+                const maxVal = Math.ceil(rawMax / mag) * mag;
+                const gridLines = [0.25, 0.5, 0.75].map(f => Math.round(maxVal * f));
+                const yPos = (v: number) => 170 - (v / maxVal) * 130;
+                const bpPoints = BP_MAIN_TABLE.total_revenue.map((v, i) => `${50 + i * 36},${yPos(v)}`).join(' ');
+                const simPoints = liveData.revenue.map((v, i) => `${50 + i * 36},${yPos(v)}`).join(' ');
+                return (
+                  <svg viewBox="0 0 400 200" className="w-full max-w-[600px] mx-auto">
+                    <line x1="40" y1="170" x2="380" y2="170" stroke="rgba(130,188,255,0.2)" strokeWidth="1"/>
+                    {gridLines.map(g => (
+                      <line key={g} x1="40" y1={yPos(g)} x2="380" y2={yPos(g)} stroke="rgba(130,188,255,0.08)" strokeWidth="0.5"/>
+                    ))}
+                    <text x="2" y="174" fill="rgba(157,176,201,0.6)" fontSize="8" fontFamily="monospace">0</text>
+                    {gridLines.map(g => (
+                      <text key={g} x="2" y={yPos(g) + 4} fill="rgba(157,176,201,0.6)" fontSize="8" fontFamily="monospace">{g.toLocaleString()}</text>
+                    ))}
+                    <polyline points={bpPoints} fill="none" stroke="rgba(255,191,102,0.8)" strokeWidth="2" strokeDasharray="4 3"/>
+                    <polyline points={simPoints} fill="none" stroke="rgba(85,213,255,0.9)" strokeWidth="2"/>
+                    {BP_MAIN_TABLE.total_revenue.map((v, i) => (
+                      <circle key={`bp-${i}`} cx={50 + i * 36} cy={yPos(v)} r="3" fill="rgba(255,191,102,0.8)" stroke="rgba(4,8,18,0.8)" strokeWidth="1.5"/>
+                    ))}
+                    {liveData.revenue.map((v, i) => (
+                      <circle key={`sim-${i}`} cx={50 + i * 36} cy={yPos(v)} r="3" fill="rgba(85,213,255,0.9)" stroke="rgba(4,8,18,0.8)" strokeWidth="1.5"/>
+                    ))}
+                    {YEAR_LABELS.map((label, i) => (
+                      <text key={label} x={50 + i * 36} y="185" fill="rgba(157,176,201,0.6)" fontSize="7" fontFamily="monospace" textAnchor="middle">{label}</text>
+                    ))}
+                    <line x1="50" y1="15" x2="70" y2="15" stroke="rgba(85,213,255,0.9)" strokeWidth="2"/>
+                    <text x="74" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">模拟器</text>
+                    <line x1="120" y1="15" x2="140" y2="15" stroke="rgba(255,191,102,0.8)" strokeWidth="2" strokeDasharray="4 3"/>
+                    <text x="144" y="18" fill="rgba(157,176,201,0.8)" fontSize="7">{BP_VERSION}</text>
+                  </svg>
+                );
+              })()}
             </div>
 
-            {/* SOM table */}
+            {/* SOM table — live data */}
             <div className="rounded-xl border border-slate-700 overflow-hidden">
               <table className="w-full text-sm">
                 <thead>
                   <tr className="bg-slate-800/80">
                     <th className="text-left px-3 py-2 text-slate-400 font-medium">年份</th>
-                    <th className="text-right px-3 py-2 text-slate-400 font-medium">收入(万)</th>
+                    <th className="text-right px-3 py-2 text-cyan-400/80 font-medium">收入(万)</th>
                     <th className="text-right px-3 py-2 text-slate-400 font-medium">同比</th>
                     <th className="text-right px-3 py-2 text-slate-400 font-medium">SOM穿透</th>
-                    <th className="text-right px-3 py-2 text-slate-400 font-medium">活跃床位</th>
+                    <th className="text-right px-3 py-2 text-cyan-400/80 font-medium">活跃床位</th>
                   </tr>
                 </thead>
                 <tbody>
                   {YEAR_LABELS.map((label, i) => (
                     <tr key={label} className="border-t border-slate-700/50">
                       <td className="px-3 py-2 text-slate-300 font-mono">{label}</td>
-                      <td className="px-3 py-2 text-right text-slate-300 font-mono">{BP_MAIN_TABLE.total_revenue[i].toLocaleString()}</td>
-                      <td className="px-3 py-2 text-right text-slate-400 font-mono">{i <= 1 ? '—' : '30%'}</td>
-                      <td className="px-3 py-2 text-right text-slate-400 font-mono">{BP_SOM.som_penetration[i] > 0 ? (BP_SOM.som_penetration[i] * 100).toFixed(2) + '%' : '—'}</td>
-                      <td className="px-3 py-2 text-right text-cyan-400 font-mono">{BP_SOM.active_paying[i].toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right text-cyan-300 font-mono">{liveData.revenue[i].toLocaleString()}</td>
+                      <td className="px-3 py-2 text-right text-slate-400 font-mono">{liveData.yoy[i] !== null ? liveData.yoy[i]!.toFixed(1) + '%' : '—'}</td>
+                      <td className="px-3 py-2 text-right text-slate-400 font-mono">{liveData.somPct[i] > 0 ? liveData.somPct[i].toFixed(2) + '%' : '—'}</td>
+                      <td className="px-3 py-2 text-right text-cyan-400 font-mono">{liveData.activePaying[i].toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
 
-            {/* ARR + SOM formulas */}
+            {/* ARR + SOM formulas — dynamic */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/30">
                 <h4 className="text-sm font-bold text-slate-200 mb-2">ARR计算公式</h4>
                 <div className="text-xs text-slate-400 space-y-1">
-                  <div>ARR = 活跃付费床位 × ¥0.7万/床/年</div>
-                  <div>活跃付费床位 = 累计商业床位 × 续约率(70%)</div>
-                  <div className="text-cyan-400 mt-2">Y10目标: 2,100床 × ¥0.7万 = ¥1,470万 ARR</div>
+                  <div>ARR = 活跃付费床位 × 年化单床SaaS</div>
+                  <div>活跃付费床位 = 累计商业床位 × 续约率({(effectiveRR * 100).toFixed(0)}%)</div>
+                  <div className="text-cyan-400 mt-2">Y10: {liveData.activePaying[9].toLocaleString()}床 · ARR ¥{Math.round(liveData.activePaying[9] * (model.global.price_saas_c3 || 40000) / 10000).toLocaleString()}万</div>
                 </div>
               </div>
               <div className="p-4 rounded-xl border border-slate-700 bg-slate-800/30">
                 <h4 className="text-sm font-bold text-slate-200 mb-2">SOM穿透率</h4>
                 <div className="text-xs text-slate-400 space-y-1">
-                  <div>穿透率 = 总收入(万) / SAM中值(¥27.5B) × 100%</div>
-                  <div>Y5: 0.75% | Y10: 2.77%</div>
-                  <div className="text-slate-500">市场远未饱和，仍有10倍扩张空间</div>
+                  <div>穿透率 = 总收入(万) / SAM中值(¥{(model.global.sam_midpoint / 10000).toFixed(1)}亿) × 100%</div>
+                  <div>Y5: {liveData.somPct[4].toFixed(2)}% | Y10: {liveData.somPct[9].toFixed(2)}%</div>
+                  <div className="text-slate-500">{liveData.somPct[9] < 5 ? '市场远未饱和，仍有大幅扩张空间' : liveData.somPct[9] < 15 ? '穿透率处于中等水平' : '穿透率较高，需关注天花板'}</div>
                 </div>
               </div>
             </div>
