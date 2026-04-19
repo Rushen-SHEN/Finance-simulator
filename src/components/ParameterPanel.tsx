@@ -122,6 +122,14 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
   const currentYearly = activeTimeline === 'aggressive' ? model.yearly : model.yearly_base;
   const currentMs = activeTimeline === 'aggressive' ? model.milestones_best : model.milestones_base;
   const scenarioResult = calculate(model.global, currentYearly, model.opex, currentMs, so);
+  const plannedNewBeds = [0, 1, 2, 3, 4].map(i =>
+    (currentYearly.direct_c2[i] || 0) +
+    (currentYearly.direct_c3[i] || 0) +
+    (currentYearly.baxter_c2[i] || 0) +
+    (currentYearly.baxter_c3[i] || 0)
+  );
+  const effectiveNewBeds = scenarioResult.years.slice(0, 5).map(yr => yr.total_new);
+  const gateRatios = plannedNewBeds.map((planned, i) => planned > 0 ? effectiveNewBeds[i] / planned : 0);
 
   const setScenario = useCallback((s: Scenario) => {
     onModelChange({ ...model, active_scenario: s });
@@ -741,6 +749,44 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 <DarkRow label="升级 C2→C3" values={yb.planned_upgrade} defaults={DEFAULT_MODEL.yearly_base.planned_upgrade} onChange={(i, v) => setYBase('planned_upgrade', i, v)} />
               </DarkTable>
             )}
+
+            <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 space-y-2">
+              <div className="text-[11px] text-slate-400">
+                说明: 上表是年度计划值。模型会按里程碑审批时间自动折算当年可部署床位（例如 Y2 常见为 8/12）。
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-[11px]">
+                  <thead>
+                    <tr className="text-slate-500">
+                      <th className="text-left py-1 pr-2">折算预览</th>
+                      {['Y1', 'Y2', 'Y3', 'Y4', 'Y5'].map(label => (
+                        <th key={label} className="text-right py-1 px-1">{label}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="py-1 pr-2 text-slate-400">计划新增床位</td>
+                      {plannedNewBeds.map((v, i) => (
+                        <td key={`p-${i}`} className="text-right py-1 px-1 font-mono text-slate-300">{v.toLocaleString()}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="py-1 pr-2 text-cyan-300">折算后新增床位</td>
+                      {effectiveNewBeds.map((v, i) => (
+                        <td key={`e-${i}`} className="text-right py-1 px-1 font-mono text-cyan-300">{v.toLocaleString()}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="py-1 pr-2 text-slate-500">审批折算系数</td>
+                      {gateRatios.map((v, i) => (
+                        <td key={`g-${i}`} className="text-right py-1 px-1 font-mono text-slate-500">{(v * 100).toFixed(0)}%</td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
             {/* SOM / Beds / ARR real-time display */}
             <SectionTitle>市场机会 — {activeScenario === 'optimistic' ? '🟢乐观' : activeScenario === 'conservative' ? '🟠保守' : '🔵中性'} × {activeTimeline === 'aggressive' ? '🚀激进' : '📊标准'} 时间线</SectionTitle>
