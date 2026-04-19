@@ -17,6 +17,7 @@
 | 编号 | 日期 | 现象 | 影响范围 | 临时处置 | Owner | 状态 |
 |------|------|------|---------|---------|------|------|
 | P2-001 | 2026-04-19 | Next 16 识别到多处 lockfile，build 时提示 workspace root warning | 可能造成开发体验噪音，但不阻塞当前构建 | 目前仅记录 warning，后续在 `next.config.ts` 指定 `turbopack.root` | project-manager-senior | Open |
+| P2-002 | 2026-04-19 | `AGENTS.md` 提到的 `node_modules/next/dist/docs/` 在已安装的 Next 16.2.4 包内不存在 | 后续 agent 若机械遵循旧路径，可能误判环境或反复尝试读取不存在的文档目录 | 本次已记录为包结构差异；需要时改读实际安装内容并以 build/lint 验证为准 | Frontend Developer | Open |
 
 ## 已解决
 | 编号 | 描述 | 解决日期 | 解决方式 |

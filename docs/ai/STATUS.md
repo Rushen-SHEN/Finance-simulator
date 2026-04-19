@@ -37,6 +37,7 @@
 | 审计日志基础设施 | ✅ | AuditEntry接口 + append/load函数已实现 |
 | 导出 | ✅ | PDF多页(表头续打) + PNG |
 | 路演页 | ✅ | /roadshow 独立页面 |
+| 路演主题系统 | ✅ | 五套预设（ARIA/工业风/科技风/简约风/红杉风）+ 中文控制台 + 本地持久化 + ARIA 安全回退 |
 | 答疑页 | ✅ | /qa 独立页面 |
 | GitHub Pages | ✅ | 部署成功，run_attempt:2 |
 | **变更检测系统** | **✅** | **参数变更→影响BP章节+路演页提示，ChangeBanner组件** |
@@ -78,6 +79,7 @@
 |------|------|--------|
 | 2026-04-19 | 实现Source-of-Truth架构：参数面板变更检测→ChangeBanner→接受变更自动导出Financial Plan+更新BP+路演数据；IndexedDB版本化存档+参数面板右侧栏历史；新增SAM中值+敏感性参数 | GitHub Copilot |
 | 2026-04-19 | 合并 Financial_Plan v2.1 + FINANCE_PLAN_V2.md → v2.2合并版；映射ID从 M-01~M-07 改为 §源→§目标 格式；新增§0集成说明；删除 FINANCE_PLAN_V2.md | GitHub Copilot |
+| 2026-04-19 | `/roadshow` 新增 ARIA 只读基线主题系统：五套预设、风格定义面板、微调、恢复默认、导入导出、localStorage 容错回退 | Codex |
 | 2026-04-19 | BP源文件迁入workspace: `docs/ARIA_BP_External.md` + `docs/ARIA_Financial_Plan_latest.md` | GitHub Copilot |
 | 2026-04-19 | 完成参考文件(5个)审阅，确认6/7项已实现，3项待改善(audit写入、impact diff、sensitivity对比) | GitHub Copilot |
 | 2026-04-19 | GitHub Pages部署成功(run_attempt:2) | GitHub Copilot |

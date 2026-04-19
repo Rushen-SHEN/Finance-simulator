@@ -1,0 +1,520 @@
+:root {
+  --roadshow-text-primary: #e9f1ff;
+  --roadshow-text-secondary: #9db0c9;
+  --roadshow-text-tertiary: #7590b2;
+  --roadshow-accent-primary: #55d5ff;
+  --roadshow-accent-secondary: #3df0d1;
+  --roadshow-accent-warm: #ffbf66;
+  --roadshow-accent-rose: #ff8a94;
+  --roadshow-accent-success: #56e39f;
+  --roadshow-body-bg: linear-gradient(180deg, #03070f 0%, #06101d 42%, #040811 100%);
+  --roadshow-body-glow-a: rgba(61, 240, 209, 0.1);
+  --roadshow-body-glow-b: rgba(85, 213, 255, 0.12);
+  --roadshow-body-glow-c: rgba(110, 162, 255, 0.08);
+  --roadshow-grid-line: rgba(101, 165, 255, 0.045);
+  --roadshow-grid-opacity: 0.48;
+  --roadshow-frame-bg: linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%);
+  --roadshow-frame-glow-a: rgba(61, 240, 209, 0.1);
+  --roadshow-frame-glow-b: rgba(85, 213, 255, 0.12);
+  --roadshow-frame-border: rgba(130, 188, 255, 0.18);
+  --roadshow-frame-inner-border: rgba(130, 188, 255, 0.08);
+  --roadshow-frame-grid: rgba(130, 188, 255, 0.045);
+  --roadshow-frame-shadow: 0 24px 90px rgba(0, 0, 0, 0.48);
+  --roadshow-control-bg: rgba(5, 12, 24, 0.72);
+  --roadshow-control-bg-strong: rgba(5, 12, 24, 0.88);
+  --roadshow-control-border: rgba(130, 188, 255, 0.14);
+  --roadshow-surface-bg: rgba(10, 21, 39, 0.84);
+  --roadshow-surface-strong: rgba(9, 19, 36, 0.94);
+  --roadshow-surface-soft: rgba(255, 255, 255, 0.03);
+  --roadshow-surface-subtle: rgba(255, 255, 255, 0.025);
+  --roadshow-surface-accent: rgba(85, 213, 255, 0.04);
+  --roadshow-surface-highlight: rgba(85, 213, 255, 0.55);
+  --roadshow-surface-success-border: rgba(86, 227, 159, 0.26);
+  --roadshow-surface-success-bg: linear-gradient(180deg, rgba(86, 227, 159, 0.08), rgba(255, 255, 255, 0.03));
+  --roadshow-stroke: rgba(130, 188, 255, 0.18);
+  --roadshow-stroke-soft: rgba(130, 188, 255, 0.12);
+  --roadshow-stroke-subtle: rgba(130, 188, 255, 0.08);
+  --roadshow-stroke-strong: rgba(130, 208, 255, 0.32);
+  --roadshow-title-weight: 800;
+  --roadshow-frame-radius: 28px;
+  --roadshow-radius-lg: 24px;
+  --roadshow-radius-md: 18px;
+  --roadshow-radius-sm: 14px;
+  --roadshow-radius-pill: 999px;
+  --roadshow-inner-pad-x: 38px;
+  --roadshow-inner-pad-y: 34px;
+  --roadshow-inner-pad-bottom: 32px;
+  --roadshow-section-gap: 18px;
+  --roadshow-grid-gap: 16px;
+  --roadshow-card-gap: 12px;
+  --roadshow-title-max: 60ch;
+  --roadshow-density-scale: 1;
+  --roadshow-selection: rgba(85, 213, 255, 0.22);
+}
+
+html,
+body {
+  color: var(--roadshow-text-primary);
+  transition:
+    background 320ms ease,
+    color 260ms ease;
+}
+
+body {
+  background:
+    radial-gradient(circle at 15% 10%, var(--roadshow-body-glow-a), transparent 24%),
+    radial-gradient(circle at 84% 18%, var(--roadshow-body-glow-b), transparent 26%),
+    radial-gradient(circle at 50% 85%, var(--roadshow-body-glow-c), transparent 32%),
+    var(--roadshow-body-bg);
+}
+
+body::before {
+  background-image:
+    linear-gradient(var(--roadshow-grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--roadshow-grid-line) 1px, transparent 1px);
+  opacity: var(--roadshow-grid-opacity);
+  transition: opacity 320ms ease;
+}
+
+::selection {
+  background: var(--roadshow-selection);
+}
+
+.frame,
+.frame::before,
+.frame::after,
+.panel,
+.metric,
+.hero-card,
+.statement,
+.kpi,
+.flow-step,
+.lane,
+.lane-step,
+.table-row,
+.signal-card,
+.feature-item,
+.fusion-center,
+.pill,
+.evidence-card,
+.bar-track,
+.chain-card,
+.quadrant,
+.time-node,
+.price-card,
+.roi-row,
+.roi-card,
+.som-curve-panel,
+.score-card,
+.phase-card,
+.source-box,
+.source-note,
+.review-item,
+.risk-item,
+.route-stop,
+.tag,
+.chip,
+.role-note,
+.ref-entry,
+.hud-badge,
+.hud-page,
+.legend-chip,
+.toc,
+.toc a,
+.toc a span {
+  transition:
+    background 320ms ease,
+    border-color 260ms ease,
+    color 220ms ease,
+    box-shadow 320ms ease,
+    border-radius 260ms ease,
+    opacity 240ms ease;
+}
+
+.frame {
+  border-radius: var(--roadshow-frame-radius);
+  background:
+    radial-gradient(circle at 18% 12%, var(--roadshow-frame-glow-a), transparent 22%),
+    radial-gradient(circle at 82% 12%, var(--roadshow-frame-glow-b), transparent 28%),
+    var(--roadshow-frame-bg);
+  border-color: var(--roadshow-frame-border);
+  box-shadow: var(--roadshow-frame-shadow);
+}
+
+.frame::before {
+  background-image:
+    linear-gradient(var(--roadshow-frame-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--roadshow-frame-grid) 1px, transparent 1px);
+}
+
+.frame::after {
+  border-radius: calc(var(--roadshow-frame-radius) - 6px);
+  border-color: var(--roadshow-frame-inner-border);
+}
+
+.inner {
+  padding:
+    var(--roadshow-inner-pad-y)
+    var(--roadshow-inner-pad-x)
+    var(--roadshow-inner-pad-bottom)
+    var(--roadshow-inner-pad-x);
+  gap: var(--roadshow-section-gap);
+}
+
+.grid,
+.stack,
+.hero-grid,
+.split-hero,
+.process-lane,
+.arch-grid,
+.ai-grid,
+.value-chain,
+.quadrant-wrap,
+.reg-grid,
+.pricing-grid,
+.metric-grid,
+.timeline,
+.chain-line,
+.feature-list,
+.fusion-board,
+.data-bars,
+.roi-grid,
+.roi-card-grid,
+.team-grid,
+.review-grid,
+.risk-grid,
+.closing-grid,
+.appendix-grid,
+.ref-columns {
+  gap: var(--roadshow-grid-gap);
+}
+
+.eyebrow,
+.title .accent,
+.legend-chip.fact,
+.tag.fact,
+.chip.fact,
+.role-note,
+.metric .value .accent {
+  color: var(--roadshow-accent-primary);
+}
+
+.eyebrow::before {
+  background: linear-gradient(90deg, transparent, var(--roadshow-accent-primary));
+}
+
+.title,
+.statement-quote,
+.hero-card h2 {
+  font-weight: var(--roadshow-title-weight);
+}
+
+.subtitle,
+.panel p,
+.metric .detail,
+.status-copy span,
+.statement p,
+.kpi .kpi-note,
+.flow-step span,
+.lane-step span,
+.signal-card p,
+.feature-item,
+.fusion-center p,
+.pill,
+.evidence-card p,
+.bar-row,
+.chain-card p,
+.plot span,
+.time-node span,
+.price-card,
+.roi-row,
+.roi-card .roi-name,
+.roi-card .roi-meta,
+.score-card p,
+.phase-list,
+.phase-deliverable,
+.ref-entry,
+.source-note,
+.risk-item,
+.review-item,
+.route-stop,
+.table-row {
+  color: var(--roadshow-text-secondary);
+}
+
+.panel-title,
+.metric .label,
+.kpi .kpi-label,
+.axis-label,
+.hud-badge,
+.hud-page,
+.legend-chip,
+.pill,
+.table-row.header,
+.phase-kicker,
+.phase-range,
+.phase-year,
+.som-chart-note,
+.ref-entry strong,
+.slide-note .tag,
+.slide-note .chip {
+  color: var(--roadshow-text-tertiary);
+}
+
+.hud-badge,
+.hud-page,
+.legend-chip,
+.toc {
+  background: var(--roadshow-control-bg);
+  border-color: var(--roadshow-control-border);
+}
+
+.toc a span {
+  background: var(--roadshow-control-bg-strong);
+  border-color: var(--roadshow-control-border);
+  color: var(--roadshow-text-secondary);
+}
+
+.toc a {
+  border-color: var(--roadshow-stroke);
+  background: var(--roadshow-surface-subtle);
+}
+
+.toc a.active {
+  background: linear-gradient(135deg, var(--roadshow-accent-primary), var(--roadshow-accent-secondary));
+  box-shadow: 0 0 20px color-mix(in srgb, var(--roadshow-accent-primary) 32%, transparent);
+}
+
+.panel,
+.metric,
+.hero-card,
+.statement,
+.lane,
+.signal-card,
+.fusion-center,
+.evidence-card,
+.chain-card,
+.quadrant,
+.time-node,
+.price-card,
+.som-curve-panel,
+.score-card,
+.phase-card,
+.source-box,
+.source-note,
+.review-item,
+.risk-item,
+.route-stop {
+  background: var(--roadshow-surface-bg);
+  border-color: var(--roadshow-stroke);
+  border-radius: var(--roadshow-radius-md);
+}
+
+.panel::before {
+  background: linear-gradient(90deg, transparent, var(--roadshow-surface-highlight), transparent);
+}
+
+.metric,
+.statement,
+.hero-card {
+  background:
+    radial-gradient(circle at 82% 18%, color-mix(in srgb, var(--roadshow-accent-secondary) 12%, transparent), transparent 48%),
+    var(--roadshow-surface-strong);
+}
+
+.metric::before,
+.hero-card::before,
+.statement::before,
+.fusion-center,
+.plot .dot,
+.status-dot,
+.lane-step::before,
+.time-node::before {
+  filter: saturate(1.05);
+}
+
+.kpi,
+.flow-step,
+.lane-step,
+.table-row,
+.feature-item,
+.pill,
+.bar-track,
+.roi-row,
+.review-item,
+.risk-item,
+.route-stop,
+.ref-entry {
+  background: var(--roadshow-surface-soft);
+  border-color: var(--roadshow-stroke-soft);
+  border-radius: var(--roadshow-radius-sm);
+}
+
+.fusion-center,
+.quadrant {
+  background:
+    radial-gradient(circle at center, color-mix(in srgb, var(--roadshow-accent-primary) 16%, transparent), transparent 62%),
+    var(--roadshow-surface-soft);
+}
+
+.metric .value,
+.kpi .kpi-value,
+.evidence-card .big,
+.price-card .price,
+.time-node strong,
+.panel h3,
+.panel h4,
+.signal-card strong,
+.chain-card h3,
+.fusion-center h3,
+.plot strong,
+.score-card .name,
+.phase-title,
+.phase-head,
+.slide-title,
+.title,
+.statement-quote {
+  color: var(--roadshow-text-primary);
+}
+
+.tag,
+.chip,
+.pill,
+.role-note {
+  border-radius: var(--roadshow-radius-pill);
+}
+
+.tag,
+.chip {
+  border-color: var(--roadshow-stroke);
+  background: var(--roadshow-surface-soft);
+  color: var(--roadshow-text-primary);
+}
+
+.tag.target,
+.chip.target,
+.bar-fill.target,
+.plot.alt .dot {
+  color: var(--roadshow-accent-warm);
+  border-color: color-mix(in srgb, var(--roadshow-accent-warm) 44%, transparent);
+}
+
+.tag.projected,
+.chip.projected {
+  color: var(--roadshow-accent-secondary);
+  border-color: color-mix(in srgb, var(--roadshow-accent-secondary) 40%, transparent);
+}
+
+.tag.plan,
+.chip.plan {
+  color: var(--roadshow-accent-rose);
+  border-color: color-mix(in srgb, var(--roadshow-accent-rose) 40%, transparent);
+}
+
+.role-note,
+.feature-item,
+.flow-step .num {
+  background: color-mix(in srgb, var(--roadshow-accent-primary) 8%, var(--roadshow-surface-soft));
+  border-color: color-mix(in srgb, var(--roadshow-accent-primary) 24%, transparent);
+}
+
+.status-dot,
+.plot .dot,
+.bar-fill,
+.roi-row .fill {
+  background: linear-gradient(135deg, var(--roadshow-accent-primary), var(--roadshow-accent-secondary));
+  box-shadow: 0 0 16px color-mix(in srgb, var(--roadshow-accent-primary) 36%, transparent);
+}
+
+.lane-step.break::before,
+.plot.alt .dot,
+.bar-fill.target {
+  box-shadow: 0 0 16px color-mix(in srgb, var(--roadshow-accent-rose) 28%, transparent);
+}
+
+.bar-track,
+.roi-row .track {
+  background: color-mix(in srgb, var(--roadshow-text-primary) 6%, transparent);
+  border-color: var(--roadshow-stroke-soft);
+}
+
+.roi-card {
+  background: var(--roadshow-surface-success-bg);
+  border-color: var(--roadshow-surface-success-border);
+}
+
+.roi-card .roi-value {
+  color: var(--roadshow-accent-success);
+}
+
+.quadrant {
+  background:
+    linear-gradient(var(--roadshow-frame-grid) 1px, transparent 1px),
+    linear-gradient(90deg, var(--roadshow-frame-grid) 1px, transparent 1px),
+    var(--roadshow-surface-soft);
+  background-size: 25% 25%;
+}
+
+.quadrant::before,
+.quadrant::after,
+.status-line,
+.chain-card:not(:last-child)::after,
+.flow-step:not(:last-child)::after {
+  color: var(--roadshow-stroke-strong);
+  background: var(--roadshow-stroke-soft);
+}
+
+body[data-theme-mode="light"] {
+  color-scheme: light;
+}
+
+body[data-theme-mode="light"] .frame {
+  box-shadow: var(--roadshow-frame-shadow), 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+}
+
+body[data-theme-mode="light"] .hud-badge,
+body[data-theme-mode="light"] .hud-page,
+body[data-theme-mode="light"] .legend-chip,
+body[data-theme-mode="light"] .toc,
+body[data-theme-mode="light"] .panel,
+body[data-theme-mode="light"] .metric,
+body[data-theme-mode="light"] .hero-card,
+body[data-theme-mode="light"] .statement,
+body[data-theme-mode="light"] .lane,
+body[data-theme-mode="light"] .signal-card,
+body[data-theme-mode="light"] .evidence-card,
+body[data-theme-mode="light"] .chain-card,
+body[data-theme-mode="light"] .quadrant,
+body[data-theme-mode="light"] .price-card,
+body[data-theme-mode="light"] .som-curve-panel,
+body[data-theme-mode="light"] .phase-card,
+body[data-theme-mode="light"] .source-box,
+body[data-theme-mode="light"] .source-note,
+body[data-theme-mode="light"] .review-item,
+body[data-theme-mode="light"] .risk-item,
+body[data-theme-mode="light"] .route-stop,
+body[data-theme-mode="light"] .kpi,
+body[data-theme-mode="light"] .flow-step,
+body[data-theme-mode="light"] .lane-step,
+body[data-theme-mode="light"] .table-row,
+body[data-theme-mode="light"] .feature-item,
+body[data-theme-mode="light"] .pill,
+body[data-theme-mode="light"] .time-node,
+body[data-theme-mode="light"] .roi-row,
+body[data-theme-mode="light"] .ref-entry {
+  backdrop-filter: blur(14px);
+}
+
+@media (max-width: 1100px) {
+  .frame {
+    border-radius: max(20px, calc(var(--roadshow-frame-radius) - 6px));
+  }
+
+  .inner {
+    padding:
+      calc(var(--roadshow-inner-pad-y) - 4px)
+      calc(var(--roadshow-inner-pad-x) - 6px)
+      calc(var(--roadshow-inner-pad-bottom) - 2px)
+      calc(var(--roadshow-inner-pad-x) - 6px);
+  }
+}
