@@ -11,7 +11,7 @@ interface SlideProps {
   /** English eyebrow label above the title */
   eyebrow?: string;
   /** Chip tags shown beside the header */
-  chips?: Array<{ label: string; variant: 'fact' | 'projected' | 'plan' }>;
+  chips?: Array<{ label: string; variant: 'fact' | 'projected' | 'plan' | 'target' }>;
   /** Additional className on the slide root */
   className?: string;
   /** Slide body content */
@@ -22,6 +22,7 @@ const chipClass: Record<string, string> = {
   fact: styles.chipFact,
   projected: styles.chipProjected,
   plan: styles.chipPlan,
+  target: styles.chipTarget,
 };
 
 export default function Slide({

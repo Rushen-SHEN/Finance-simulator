@@ -5,14 +5,24 @@ import { CalcResult, ModelInputs, calculate } from '@/lib/calculator';
 import { DEFAULT_MODEL } from '@/lib/defaults';
 import { loadModel } from '@/lib/storage';
 import SlideContainer from '@/components/roadshow/SlideContainer';
-import Slide from '@/components/roadshow/Slide';
-import PricingSlide from '@/components/roadshow/slides/PricingSlide';
+import CoverSlide from '@/components/roadshow/slides/CoverSlide';
+import ProblemSlide from '@/components/roadshow/slides/ProblemSlide';
+import CostSlide from '@/components/roadshow/slides/CostSlide';
+import WhyNowSlide from '@/components/roadshow/slides/WhyNowSlide';
+import SolutionSlide from '@/components/roadshow/slides/SolutionSlide';
 import MarketSlide from '@/components/roadshow/slides/MarketSlide';
+import PositioningSlide from '@/components/roadshow/slides/PositioningSlide';
+import ClinicalValueSlide from '@/components/roadshow/slides/ClinicalValueSlide';
+import FormFactorSlide from '@/components/roadshow/slides/FormFactorSlide';
+import PricingSlide from '@/components/roadshow/slides/PricingSlide';
+import RegulatorySlide from '@/components/roadshow/slides/RegulatorySlide';
+import TeamSlide from '@/components/roadshow/slides/TeamSlide';
+import MilestonesSlide from '@/components/roadshow/slides/MilestonesSlide';
 import FundingSlide from '@/components/roadshow/slides/FundingSlide';
 import RevenueSlide from '@/components/roadshow/slides/RevenueSlide';
-import styles from '@/components/roadshow/roadshow.module.css';
+import ReferencesSlide from '@/components/roadshow/slides/ReferencesSlide';
 
-/** All slide IDs in presentation order. Expand as slides are migrated. */
+/** All slide IDs in presentation order. */
 const SLIDE_IDS = [
   's01-cover',
   's02-problem',
@@ -32,19 +42,6 @@ const SLIDE_IDS = [
   's16-appendix',
 ];
 
-function PlaceholderSlide({ id, title, eyebrow }: { id: string; title: string; eyebrow: string }) {
-  return (
-    <Slide id={id} title={title} eyebrow={eyebrow}>
-      <div className={styles.placeholder}>
-        <div className={styles.placeholderIcon}>🚧</div>
-        <div className={styles.placeholderText}>
-          This slide will be migrated from the HTML roadshow in a future phase.
-        </div>
-      </div>
-    </Slide>
-  );
-}
-
 export default function RoadshowReactPage() {
   const [model] = useState<ModelInputs>(() => {
     if (typeof window === 'undefined') return structuredClone(DEFAULT_MODEL);
@@ -58,33 +55,33 @@ export default function RoadshowReactPage() {
 
   return (
     <SlideContainer slideIds={SLIDE_IDS}>
-      <PlaceholderSlide id="s01-cover" title="ARIA" eyebrow="Cover" />
-      <PlaceholderSlide id="s02-problem" title="临床痛点" eyebrow="Problem" />
-      <PlaceholderSlide id="s03-solution" title="产品方案" eyebrow="Solution" />
-      <PlaceholderSlide id="s04-technology" title="核心技术" eyebrow="Technology" />
-      <PlaceholderSlide id="s05-clinical" title="临床验证" eyebrow="Clinical Evidence" />
+      <CoverSlide />
+      <ProblemSlide />
+      <CostSlide />
+      <WhyNowSlide />
+      <SolutionSlide />
 
-      {/* ── Phase 2: Market slide (was s06 placeholder) ── */}
+      {/* ── Phase 2: Market slide ── */}
       <MarketSlide model={model} result={result} />
 
-      <PlaceholderSlide id="s07-competition" title="竞争格局" eyebrow="Competition" />
-      <PlaceholderSlide id="s08-traction" title="商业化进展" eyebrow="Traction" />
-      <PlaceholderSlide id="s09-growth" title="增长模型" eyebrow="Growth Model" />
+      <PositioningSlide />
+      <ClinicalValueSlide />
+      <FormFactorSlide />
 
       {/* ── Phase 1: Pricing slide ── */}
       <PricingSlide model={model} result={result} />
 
-      <PlaceholderSlide id="s11-regulatory" title="法规路径" eyebrow="Regulatory Path" />
-      <PlaceholderSlide id="s12-team" title="核心团队" eyebrow="Team" />
-      <PlaceholderSlide id="s13-milestones" title="项目阶段里程碑" eyebrow="Milestones" />
+      <RegulatorySlide />
+      <TeamSlide />
+      <MilestonesSlide />
 
-      {/* ── Phase 2: Funding slide (was s14 placeholder) ── */}
+      {/* ── Phase 2: Funding slide ── */}
       <FundingSlide model={model} result={result} />
 
-      {/* ── Phase 2: Revenue slide (new) ── */}
+      {/* ── Phase 2: Revenue slide ── */}
       <RevenueSlide model={model} result={result} />
 
-      <PlaceholderSlide id="s16-appendix" title="附录与引用" eyebrow="Appendix" />
+      <ReferencesSlide />
     </SlideContainer>
   );
 }
