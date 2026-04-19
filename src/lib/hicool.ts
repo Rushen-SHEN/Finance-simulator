@@ -76,7 +76,7 @@ export interface HicoolDraft {
 }
 
 const KEY = 'aria-hicool-draft-v1';
-export const HICOOL_TEMPLATE_VERSION = '2026-04-19-award-v1';
+export const HICOOL_TEMPLATE_VERSION = '2026-04-19-award-v2';
 
 const w = (v: number) => `${Math.round(v / 10000).toLocaleString('en-US')}万`;
 const pct = (v: number) => `${(v * 100).toFixed(0)}%`;
@@ -136,6 +136,10 @@ function areSectionsEqual(
 }
 
 export function buildDefaultHicoolSections(model: ModelInputs, result: CalcResult): Record<HicoolSectionKey, string> {
+  return buildAwardTemplateV2Sections(model, result);
+}
+
+function buildAwardTemplateV1Sections(model: ModelInputs, result: CalcResult): Record<HicoolSectionKey, string> {
   const y = result.years;
   const y2 = y[1];
   const y5 = y[4];
@@ -166,6 +170,36 @@ export function buildDefaultHicoolSections(model: ModelInputs, result: CalcResul
   };
 }
 
+function buildAwardTemplateV2Sections(model: ModelInputs, result: CalcResult): Record<HicoolSectionKey, string> {
+  const y = result.years;
+  const y2 = y[1];
+  const y5 = y[4];
+  const y10 = y[9];
+  const ebitdaYear = y.findIndex((yr) => yr.ebitda > 0) + 1;
+  const seedRange = `${Math.round(model.funding.seed_min / 10000)}-${Math.round(model.funding.seed_max / 10000)}万`;
+  const preARange = `${Math.round(model.funding.preA_min / 10000)}-${Math.round(model.funding.preA_max / 10000)}万`;
+
+  return {
+    projectOverview:
+      `ARIA是一套面向重症监护病房的ICU谵妄多模态边缘AI辅助监测系统，通过非接触式床垫传感、本地视频行为分析和HIS临床变量融合，在不增加医护负担、不依赖患者配合的前提下，对谵妄风险进行7×24小时连续辅助监测与早期预警。项目针对CAM-ICU间断评估、漏诊率高、低活动型识别不足等痛点，定位为院内部署的辅助监测工具，强调数据不出院、风险驱动因素可解释和与既有护理流程兼容。目前处于功能原型开发和工程化早期阶段，计划先完成试点验证和二类注册，再推进三类升级与规模化商业化，属于“方向清晰、尚待验证”的早期医疗器械项目。`,
+
+    productFeatures:
+      `1. 产品定位：ARIA（Anticipatory Risk Intelligence for Alertness）应用于ICU谵妄连续风险预警场景，不替代医生诊断，而是为护士和医生提供更早、更连续的风险线索。2. 核心架构：项目采用“非接触式床垫传感+本地视频行为分析+HIS临床变量融合+边缘AI推理”的三模态闭环，原始数据在院内处理后即时清除，仅输出结构化风险指标与可解释特征；在无HIS集成条件下仍可降级运行。3. 临床使用方式：系统拟按固定频率输出低、中、高风险分层提示，并提示触发风险的核心因素，便于护士决定是否复核CAM-ICU、医师是否进一步调整镇静、睡眠和活动管理。4. 关键价值：ICU谵妄发生率高达60–80%，会使死亡率增加2–4倍、住院时间延长5–10天，而现行CAM-ICU通常每4–8小时评估一次，漏诊率约40%，其中低活动型谵妄占30–45%，检出率仅30–40%。ARIA希望把“事后间断识别”前移为“提前12–24小时辅助预警”，并重点补足低活动型识别盲区。5. 证据依据：公开研究已证明HRV、睡眠片段化、行为异常和临床变量变化会早于临床症状出现，ARIA并非凭空创造需求，而是把已有循证趋势整合为可部署的产品形态。6. 差异化：与Ceribell等接触式单模态方案不同，ARIA不依赖贴附电极；与EHR+可穿戴研究原型不同，ARIA强调床旁非接触与院内部署；与普通生命体征床垫不同，ARIA聚焦谵妄这一具体临床结局，并通过多模态互补提升低活动型识别能力。7. 产品化约束：项目尚未形成获批产品，当前处于原型定义与功能验证阶段，后续以二类辅助监测版起步，再根据真实世界证据升级至三类版本。`,
+
+    marketCapability:
+      `1. 需求真实：ICU谵妄在重症监护中高发且后果严重，但中国ICU规范评估率仅约30%，医院长期缺少能够嵌入临床流程、兼顾效率与合规的连续监测工具。2. 市场空间明确：按报名材料口径，中国广义ICU床位约15-25万张，中性值18万张；TAM约54-150亿元/年，SAM约15-40亿元/年。按当前财务模型，Y2累计部署${y2.cumulative_beds}床，Y5累计${y5.cumulative_beds.toLocaleString()}床，Y10累计${y10.cumulative_beds.toLocaleString()}床，仍处低渗透阶段。3. 商业模式清晰：ARIA采用“硬件一次性销售+SaaS年度订阅”双轮驱动，并保留升级服务与渠道合作空间；当前联动口径下，C2硬件${w(model.global.price_hw_c2)}/床、C3硬件${w(model.global.price_hw_c3)}/床、升级服务${w(model.global.price_upgrade)}/床，合作条款为硬件15%、SaaS 35%、授权金和里程碑合计500万。4. 采购逻辑成立：报名材料按20床ICU估算，ARIA创造的年度价值约125万元，折合单床约6.25万元/年，因此项目不是靠“概念创新”卖高价，而是试图用缩短住院时间、减少漏诊和提升护理效率来证明医院ROI。5. 先发窗口存在：按现有检索，全球尚无已获批的“非接触式床垫形态+多模态融合+连续谵妄风险监测”同类产品，这意味着ARIA若能在试点和注册上跑通，将在国内形成较强的首发辨识度。6. 产业化路径务实：项目按“MVP—试点验证—二类注册—三类升级—放量复制”推进，先解决样板医院、真实世界证据和支付价值，再扩大区域复制。7. 财务可追踪：依据当前Finance Plan口径，Y5收入约${w(y5.total_revenue)}、Y10收入约${w(y10.total_revenue)}，Y${ebitdaYear > 0 ? ebitdaYear : 5}实现EBITDA转正，说明该项目不是只讲技术故事，而是已经把市场、定价、融资和里程碑写进同一套可审计模型。`,
+
+    teamIntro:
+      `1. 核心团队结构清晰。当前申报团队由三名核心成员组成，围绕“法规与转化判断—工程实现—医院现场落地”形成闭环。2. 沈如申具有近19年医药及医疗器械法规与质量管理经验，熟悉临床、注册、合规和产品转化全流程，近年来聚焦医疗AI、智能体及多模态风险预警系统；她同时具备生物医学工程本科、工程管理硕士背景，并获得北京大学五四奖学金、实践公益奖和研究生科学实践奖，在项目中主要负责技术发展与证据评估、市场调研及边缘AI本地部署方案。3. 张海涛具有风力发电领域工程技术与系统运维经验，熟悉复杂设备运行监测、多传感器数据分析、异常预警及系统可靠性管理，可将工业场景的状态监测和预测性维护经验迁移到本项目，负责逻辑优化、工程化验证和稳定运行设计。4. 李庆同具有生物医学工程背景和19年CT设备售后服务及现场技术支持经验，长期服务医院临床一线，熟悉安装调试、运行维护、故障诊断、客户培训和临床协作流程，在项目中负责工程化部署、现场验证、运维支持和产品需求优化。5. 团队优势不在人数多，而在经历互补：一端能理解法规、临床和证据要求，一端能把多传感器系统做稳定，一端能把设备真正部署进医院现场。6. 按报名材料，团队目前以创客方式自筹推进，并借助AI工具链承担代码生成、文档初稿、FAQ应答等标准化任务，使核心成员把时间集中在技术路线、法规判断和关键商务节点上。7. 团队当前无外部融资，但协作关系稳定、职责边界明确；同时，项目规划通过外聘北京三甲ICU临床顾问、CDMO和后续QARA岗位补足临床试验、注册执行与供应链能力，使精简团队仍能支撑后续产业化，也避免了“科研强、落地弱”或“销售强、产品弱”的常见断层。`,
+
+    businessProgress:
+      `1. 当前已明确的部分：项目已经完成临床痛点梳理、竞品检索、法规路径设计、商业模式测算以及路演/BP/财务计划/HICOOL申报页的一体化口径搭建，形成了较完整的申报与融资材料基础。2. 正在推进的部分：ARIA处于产品工程化早期阶段，团队正在开发功能原型；算法侧主要基于公开数据集和模拟数据开展验证，边缘AI推理引擎已明确轻量化模型（<10MB）、低功耗（15-20W）、原始数据本地处理后即时清除、仅向HIS推送结构化风险指标的技术规格。3. 尚未完成的关键事项：项目尚未进入真实临床数据训练阶段，尚未完成医院试点、NMPA注册、营业收入转化和外部融资，也尚未申报专利。4. 按当前财务与里程碑计划，后续重点节点包括种子轮${seedRange}、Pre-A ${preARange}，M10-M12完成2家医院40床科研部署，M15-M16争取二类注册证，之后再推进三类升级和商业化放量。5. 若按现有模型推进，项目在Y2形成${y2.cumulative_beds}床基础部署，并为后续放量建立样板，这一逻辑更多依赖试点验证和注册兑现，而不是短期营销投入。6. 经营状态上，报名表已明确项目当前无任何外部融资、无营业收入，由创始团队自筹推进，因此现阶段更应把它视作“准备充分的高潜力早期项目”，而不是“已完成市场验证的成熟公司”。7. 评审视角下，项目最大的进展不在“已经卖了多少”，而在于关键问题已被拆清楚：做什么产品、满足什么场景、按什么法规走、如何定价、何时融资、何时验证、失败和延迟会影响哪里，这些都已能在现有材料中追溯。`,
+
+    investmentHighlights:
+      `1. 痛点足够硬：ICU谵妄高发、高漏诊、高成本，且低活动型长期被忽视，问题真实且价值明确。2. 产品形态有区分度：ARIA不是泛化医疗AI，也不是普通床垫监测，而是“非接触床垫+视频+HIS+边缘AI”的ICU谵妄连续辅助监测方案。3. 先发性真实存在：现有检索显示全球尚无已获批同类产品，项目具备较强的国内首创和全球首发辨识度，但前提是后续试点与注册顺利推进。4. 合规与落地路径清楚：院内部署、数据不出院、二类先行、三类升级，符合医疗机构和监管的现实约束。5. 商业模型可审计：硬件、SaaS、升级服务和渠道条款都已进入财务模型，当前口径下Y5收入约${w(y5.total_revenue)}、Y${ebitdaYear > 0 ? ebitdaYear : 5}实现EBITDA转正。6. 团队虽精简但互补性强，且对当前阶段保持克制判断：项目仍处早期，没有夸大收入和落地进度，反而更利于建立评审与投资端的信任。7. 对大赛评审而言，这类项目的价值不只是“会不会成为大公司”，而是能否清楚回答临床痛点、技术路径、注册逻辑、融资需求和产业化顺序；ARIA现有材料在这五个问题上已经形成了较完整的作答框架。`,
+  };
+}
+
 export function normalizeHicoolDraft(
   draft: HicoolDraft,
   model: ModelInputs,
@@ -176,8 +210,10 @@ export function normalizeHicoolDraft(
   }
 
   const legacySections = buildLegacyDefaultHicoolSections(model, result);
+  const awardV1Sections = buildAwardTemplateV1Sections(model, result);
   const nextDefaultSections = buildDefaultHicoolSections(model, result);
   const shouldUpgrade = areSectionsEqual(draft.sections, legacySections) ||
+    areSectionsEqual(draft.sections, awardV1Sections) ||
     Object.values(draft.sections).every((value) => !value.trim());
 
   return {
