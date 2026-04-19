@@ -1395,6 +1395,85 @@
   font-weight: 700;
 }
 
+/* ===== Glossary Slide ===== */
+
+.glossaryGrid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.glossaryRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.glossaryCard {
+  background: rgba(255 255 255 / 0.04);
+  border: 1px solid rgba(255 255 255 / 0.06);
+  border-radius: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  transition: background 0.2s;
+}
+
+.glossaryCard:hover {
+  background: rgba(255 255 255 / 0.07);
+}
+
+.glossaryHead {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.glossaryAbbr {
+  font-family: 'SF Mono', 'IBM Plex Mono', ui-monospace, monospace;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #00e5ff;
+  white-space: nowrap;
+}
+
+.glossaryFull {
+  font-size: 0.7rem;
+  color: #9db0c9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.glossaryDesc {
+  font-size: 0.65rem;
+  line-height: 1.4;
+  color: #7a90a9;
+  margin: 0;
+}
+
+.glossaryLive {
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #00e5ff;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.glossaryLiveIcon {
+  font-size: 0.5rem;
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+@keyframes livePulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 /* ===== Phase 3: Responsive Overrides ===== */
 
 @media (max-width: 768px) {
@@ -1408,6 +1487,7 @@
   .teamGrid,
   .gridCols5,
   .refColumns,
+  .glossaryRow,
   .kpiStrip,
   .flowGrid,
   .chainLine,

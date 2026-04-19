@@ -21,6 +21,7 @@ import MilestonesSlide from '@/components/roadshow/slides/MilestonesSlide';
 import FundingSlide from '@/components/roadshow/slides/FundingSlide';
 import RevenueSlide from '@/components/roadshow/slides/RevenueSlide';
 import ReferencesSlide from '@/components/roadshow/slides/ReferencesSlide';
+import GlossarySlide from '@/components/roadshow/slides/GlossarySlide';
 
 /** All slide IDs in presentation order. */
 const SLIDE_IDS = [
@@ -40,6 +41,7 @@ const SLIDE_IDS = [
   's14-funding',
   's15-revenue',
   's16-appendix',
+  's17-glossary',
 ];
 
 export default function RoadshowReactPage() {
@@ -82,6 +84,9 @@ export default function RoadshowReactPage() {
       <RevenueSlide model={model} result={result} />
 
       <ReferencesSlide />
+
+      {/* ── Glossary: live simulator values ── */}
+      <GlossarySlide model={model} result={result} />
     </SlideContainer>
   );
 }
