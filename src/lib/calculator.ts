@@ -459,26 +459,26 @@ export interface MappingBlock {
 }
 
 export const MAPPING_BLOCKS: MappingBlock[] = [
-  { id: 'M-01', label: '核心财务指标', bpSection: 'BP §1.5 / §9.2', description: 'Y1-Y10 收入、EBITDA、净利润、ARR' },
-  { id: 'M-02', label: '渠道经济模型', bpSection: 'BP §5.3', description: '经销商佣金、授权金、SaaS分成' },
-  { id: 'M-03', label: '商业化床位曲线', bpSection: 'BP §5.4 / §9.3', description: '直销/经销商 C2/C3 部署计划、升级路径' },
-  { id: 'M-04', label: 'EBITDA盈亏平衡', bpSection: 'BP §9 融资与盈亏', description: 'EBITDA转正时间、融资窗口' },
-  { id: 'M-05', label: '里程碑与注册', bpSection: 'BP §11 里程碑', description: 'C2/C3注册时间、商业化部署节奏' },
-  { id: 'M-06', label: '增长假设', bpSection: 'BP §1.5 增长', description: 'Y6-Y10 增长率曲线' },
-  { id: 'M-07', label: 'ARR与续费', bpSection: 'BP §1.5 ARR', description: 'SaaS续费率、活跃床位、ARR' },
+  { id: '§5→§1.5', label: '核心财务指标', bpSection: 'BP §1.5 / §9.2', description: 'Y1-Y10 收入、EBITDA、净利润、ARR' },
+  { id: '§3.1→§5.3', label: '渠道经济模型', bpSection: 'BP §5.3', description: '经销商佣金、授权金、SaaS分成' },
+  { id: '§3.2→§5.4', label: '商业化床位曲线', bpSection: 'BP §5.4 / §9.3', description: '直销/经销商 C2/C3 部署计划、升级路径' },
+  { id: '§5→§9', label: 'EBITDA盈亏平衡', bpSection: 'BP §9 融资与盈亏', description: 'EBITDA转正时间、融资窗口' },
+  { id: '§2.1→§11', label: '里程碑与注册', bpSection: 'BP §11 里程碑', description: 'C2/C3注册时间、商业化部署节奏' },
+  { id: '§3.2→§1.5', label: '增长假设', bpSection: 'BP §1.5 增长', description: 'Y6-Y10 增长率曲线' },
+  { id: '§5.3→§1.5', label: 'ARR与续费', bpSection: 'BP §1.5 ARR', description: 'SaaS续费率、活跃床位、ARR' },
 ];
 
 /** Parameter group → affected mapping block IDs */
 export const PARAM_MAPPING: Record<string, string[]> = {
-  pricing:    ['M-01', 'M-02'],
-  bom:        ['M-01', 'M-02'],
-  channel:    ['M-02', 'M-07'],
-  deploy:     ['M-01', 'M-03', 'M-04'],
-  opex:       ['M-01', 'M-04'],
-  milestones: ['M-03', 'M-05'],
-  growth:     ['M-01', 'M-06'],
-  renewal:    ['M-07', 'M-01'],
-  funding:    ['M-04'],
+  pricing:    ['§5→§1.5', '§3.1→§5.3'],
+  bom:        ['§5→§1.5', '§3.1→§5.3'],
+  channel:    ['§3.1→§5.3', '§5.3→§1.5'],
+  deploy:     ['§5→§1.5', '§3.2→§5.4', '§5→§9'],
+  opex:       ['§5→§1.5', '§5→§9'],
+  milestones: ['§3.2→§5.4', '§2.1→§11'],
+  growth:     ['§5→§1.5', '§3.2→§1.5'],
+  renewal:    ['§5.3→§1.5', '§5→§1.5'],
+  funding:    ['§5→§9'],
 };
 
 /** Given a list of changed parameter groups, return all affected mapping block IDs */

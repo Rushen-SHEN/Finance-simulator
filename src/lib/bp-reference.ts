@@ -58,7 +58,7 @@ export const ROADSHOW_DATA_POINTS = [
   { slideId: 's17', field: 'y5_revenue_detail',    label: 'Y5总收入(详情页)', bpValue: '¥1,665万', unit: '万' },
 ];
 
-/** M-01 ~ M-07 mapping block definitions with full detail from BP */
+/** Source → BP Section mapping block definitions with full detail from BP */
 export interface MappingBlockDetail {
   id: string;
   source: string;
@@ -100,13 +100,13 @@ export const BP_MAPPING_BLOCKS: MappingBlockDetail[] = [
     checkFields: ['milestones'],
   },
   {
-    id: 'M-06', source: '§3.2 SOM曲线', bpSection: '§1.5 增长启动点',
+    id: '§3.2→§1.5', source: '§3.2 SOM曲线', bpSection: '§1.5 增长启动点',
     content: '"二类获批后即进入放量周期"',
     trigger: '增速假设变化',
     checkFields: ['growth_rates'],
   },
   {
-    id: 'M-07', source: '§5.3 ARR公式', bpSection: '§1.5 ARR数据',
+    id: '§5.3→§1.5', source: '§5.3 ARR公式', bpSection: '§1.5 ARR数据',
     content: 'ARR = 活跃付费床位 × 年化单床SaaS收入',
     trigger: '续约率/单价变化',
     checkFields: ['arr', 'renewal_rate', 'saas_per_bed'],
@@ -188,7 +188,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
         bpValue: bpRev,
         simValue: simRev,
         severity: Math.abs(simRev - bpRev) / bpRev > 0.2 ? 'critical' : 'warning',
-        mappingBlocks: ['M-01'],
+        mappingBlocks: ['§5→§1.5'],
         description: `Y${i + 1} 总收入: BP=${bpRev}万 vs 模拟器=${simRev}万`,
       });
     }
@@ -207,7 +207,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
         bpValue: bpEbitda,
         simValue: simEbitda,
         severity: threshold > 0.2 ? 'critical' : 'warning',
-        mappingBlocks: ['M-01', 'M-04'],
+        mappingBlocks: ['§5→§1.5', '§5→§9'],
         description: `Y${i + 1} EBITDA: BP=${bpEbitda}万 vs 模拟器=${simEbitda}万`,
       });
     }
@@ -224,7 +224,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
         bpValue: bpBeds,
         simValue: simBeds,
         severity: 'warning',
-        mappingBlocks: ['M-03'],
+        mappingBlocks: ['§3.2→§5.4'],
         description: `Y${i + 1} 累计床位: BP=${bpBeds} vs 模拟器=${simBeds}`,
       });
     }
@@ -238,7 +238,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
       bpValue: BP_CHANNEL.renewal_rate,
       simValue: globalRR,
       severity: 'critical',
-      mappingBlocks: ['M-07'],
+      mappingBlocks: ['§5.3→§1.5'],
       description: `续约率: BP=${(BP_CHANNEL.renewal_rate * 100).toFixed(0)}% vs 模拟器=${(globalRR * 100).toFixed(0)}%`,
     });
   }
@@ -253,7 +253,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
         bpValue: `${(bpGrowth * 100).toFixed(0)}%`,
         simValue: `${(growthRates[i] * 100).toFixed(0)}%`,
         severity: 'warning',
-        mappingBlocks: ['M-06'],
+        mappingBlocks: ['§3.2→§1.5'],
         description: `Y${i + 6} 增长率: BP=30% vs 模拟器=${(growthRates[i] * 100).toFixed(0)}%`,
       });
     }
@@ -270,7 +270,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
         bpValue: bpOpex,
         simValue: simOpex,
         severity: 'warning',
-        mappingBlocks: ['M-01', 'M-04'],
+        mappingBlocks: ['§5→§1.5', '§5→§9'],
         description: `Y${i + 1} OpEx: BP=${bpOpex}万 vs 模拟器=${simOpex}万`,
       });
     }
@@ -289,7 +289,7 @@ export function detectConflicts(result: CalcResult, globalRR: number, growthRate
         bpValue: bpNP,
         simValue: simNP,
         severity: threshold > 0.2 ? 'critical' : 'warning',
-        mappingBlocks: ['M-01'],
+        mappingBlocks: ['§5→§1.5'],
         description: `Y${i + 1} 净利润: BP=${bpNP}万 vs 模拟器=${simNP}万`,
       });
     }
@@ -345,7 +345,7 @@ export function generateAuditReport(conflicts: DataConflict[], scenario: string)
   }
 
   lines.push(`───────────────────────────────────────────`);
-  lines.push(`映射块覆盖: M-01~M-07`);
+  lines.push(`映射块覆盖: 7个Source→BP章节映射`);
   lines.push(`检查范围: Y1-Y10 收入/EBITDA/净利润/OpEx/累计床位/续约率/增长率`);
   lines.push(`容差阈值: 5% (>20% 为严重)`);
 

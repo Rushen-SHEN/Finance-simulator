@@ -85,7 +85,7 @@ export default function BPMappingPage() {
                 <b className="text-lg text-white tracking-wider font-black">ARIA</b>
                 <span className="text-[11px] text-amber-400 font-mono tracking-widest">BP映射</span>
               </div>
-              <span className="text-[11px] text-slate-300 tracking-wide">M-01~M-07 数据一致性审计</span>
+              <span className="text-[11px] text-slate-300 tracking-wide">Source → BP 章节数据一致性审计</span>
             </div>
           </div>
           <div className="flex items-center gap-2">

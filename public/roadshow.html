@@ -2867,7 +2867,7 @@
                 <div class="detail">聚焦三级医院 ICU 与支付能力。</div>
               </div>
               <div class="metric projected">
-                <div class="value">第 2 年<span class="cite-inline">[30][31]</span></div>
+                <div class="value" data-field="ebitda-positive">第 2 年<span class="cite-inline">[30][31]</span></div>
                 <div class="label">EBITDA 转正</div>
                 <div class="detail">基准模型下发生在 Year 2。</div>
               </div>
@@ -3382,7 +3382,7 @@
             </div>
             <div class="panel projected">
               <div class="panel-title">关键财务锚点</div>
-              <h3>基准模型下，Year 2 EBITDA 转正，Year 5 总收入约 ¥1,665 万；当前无外部融资，所有财务曲线都应被理解为经营模型而非既有经营结果。</h3>
+              <h3>基准模型下，Year 2 EBITDA 转正，Year 5 总收入约 <span data-field="y5-revenue">¥1,665 万</span>；当前无外部融资，所有财务曲线都应被理解为经营模型而非既有经营结果。</h3>
               <p>这些数字均以注册时点、渠道合作、续约率和单床经济模型为前提；项目下一步的关键，是把融资、注册和试点里程碑严格绑定，避免资金消耗先于证据积累。</p>
             </div>
           </div>
@@ -3413,22 +3413,22 @@
             <div class="grid grid-4">
               <div class="panel projected">
                 <div class="panel-title">Y2</div>
-                <h3>¥932 万</h3>
+                <h3 data-field="y2-revenue">¥932 万</h3>
                 <p>硬件直销 ¥520 万；授权金 + 里程碑 ¥300 万；SaaS 及分成收入开始形成。</p>
               </div>
               <div class="panel projected">
                 <div class="panel-title">Y3</div>
-                <h3>¥1,259 万</h3>
+                <h3 data-field="y3-revenue">¥1,259 万</h3>
                 <p>直销硬件、升级服务、SaaS 与渠道分成同时增长。</p>
               </div>
               <div class="panel projected">
                 <div class="panel-title">Y4</div>
-                <h3>¥1,398 万</h3>
+                <h3 data-field="y4-revenue">¥1,398 万</h3>
                 <p>三类装机扩大，SaaS 贡献占比继续抬升。</p>
               </div>
               <div class="panel projected">
                 <div class="panel-title">Y5</div>
-                <h3>¥1,665 万</h3>
+                <h3 data-field="y5-revenue-detail">¥1,665 万</h3>
                 <p>规模化阶段，SaaS 与渠道分成成为更重要的利润来源。</p>
               </div>
             </div>
@@ -3439,22 +3439,22 @@
                 <div class="roi-row" style="--pct:14;">
                   <span>Year 2</span>
                   <div class="track"><div class="fill"></div></div>
-                  <strong class="mono">110 床</strong>
+                  <strong class="mono" data-field="y2-beds">110 床</strong>
                 </div>
                 <div class="roi-row" style="--pct:37;">
                   <span>Year 3</span>
                   <div class="track"><div class="fill"></div></div>
-                  <strong class="mono">290 床</strong>
+                  <strong class="mono" data-field="y3-beds">290 床</strong>
                 </div>
                 <div class="roi-row" style="--pct:67;">
                   <span>Year 4</span>
                   <div class="track"><div class="fill"></div></div>
-                  <strong class="mono">520 床</strong>
+                  <strong class="mono" data-field="y4-beds">520 床</strong>
                 </div>
                 <div class="roi-row" style="--pct:100;">
                   <span>Year 5</span>
                   <div class="track"><div class="fill"></div></div>
-                  <strong class="mono">780 床</strong>
+                  <strong class="mono" data-field="y5-beds">780 床</strong>
                 </div>
               </div>
             </div>
@@ -3723,6 +3723,64 @@
     });
 
     setActive(0);
+  </script>
+
+  <style>
+    .data-updated {
+      background: rgba(255, 191, 0, 0.22) !important;
+      outline: 2px solid rgba(255, 191, 0, 0.55);
+      outline-offset: 2px;
+      border-radius: 4px;
+      transition: background 0.3s, outline 0.3s;
+      cursor: pointer;
+    }
+    .data-updated:hover {
+      outline-color: rgba(255, 191, 0, 0.9);
+    }
+  </style>
+
+  <script>
+    /* === ARIA Data Binding === */
+    window.addEventListener('message', function(e) {
+      if (!e.data || !e.data.type) return;
+
+      if (e.data.type === 'aria-data-update') {
+        var updates = e.data.updates || {};
+        Object.keys(updates).forEach(function(field) {
+          var el = document.querySelector('[data-field="' + field + '"]');
+          if (!el) return;
+          var newVal = updates[field];
+          var current = el.textContent.trim();
+          if (current !== newVal) {
+            el.textContent = newVal;
+            el.classList.add('data-updated');
+            el.title = '已更新 — 点击接受';
+          }
+        });
+        /* notify parent of pending count */
+        var pending = document.querySelectorAll('.data-updated').length;
+        window.parent.postMessage({ type: 'aria-pending-count', count: pending }, '*');
+      }
+
+      if (e.data.type === 'aria-accept-all') {
+        document.querySelectorAll('.data-updated').forEach(function(el) {
+          el.classList.remove('data-updated');
+          el.removeAttribute('title');
+        });
+        window.parent.postMessage({ type: 'aria-pending-count', count: 0 }, '*');
+      }
+    });
+
+    /* click single element to accept */
+    document.addEventListener('click', function(e) {
+      var el = e.target.closest('.data-updated');
+      if (el) {
+        el.classList.remove('data-updated');
+        el.removeAttribute('title');
+        var pending = document.querySelectorAll('.data-updated').length;
+        window.parent.postMessage({ type: 'aria-pending-count', count: pending }, '*');
+      }
+    });
   </script>
 </body>
 </html>

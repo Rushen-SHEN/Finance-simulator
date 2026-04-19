@@ -77,10 +77,16 @@ export default function Header({ scenario, onScenario, onToggleParams, onExportP
             🎤 路演
           </a>
           <a
+            href={`${process.env.NODE_ENV === 'production' ? '/Finance-simulator' : ''}/qa`}
+            className="px-3 sm:px-3.5 py-1.5 rounded-lg border border-slate-600 bg-slate-900/50 text-slate-300 text-xs font-medium hover:bg-slate-800/50 hover:text-white transition-all"
+          >
+            📊 答疑
+          </a>
+          <a
             href={`${process.env.NODE_ENV === 'production' ? '/Finance-simulator' : ''}/bp-mapping`}
             className="px-3 sm:px-3.5 py-1.5 rounded-lg border border-slate-600 bg-slate-900/50 text-slate-300 text-xs font-medium hover:bg-slate-800/50 hover:text-white transition-all"
           >
-            📊 BP映射
+            BP映射
           </a>
 
           <div className="flex rounded-lg overflow-hidden border border-slate-600 bg-slate-900/50">
