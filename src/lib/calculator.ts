@@ -20,6 +20,7 @@ export interface ScenarioOverrides {
   opex_growth_y10: number;
   cogs_rate_target: number;     // target COGS rate for Y6-Y10 (e.g. 0.34)
   salary_growth: number;        // Y6-Y10 salary growth rate (headcount capped, reflects raises only, e.g. 0.08)
+  overhead_multiplier: number;  // Y1-5 manufacturing overhead on BOM (logistics, QC, warranty, etc. e.g. 2.8)
 }
 
 export interface GlobalInputs {
@@ -318,13 +319,14 @@ export function computeBOM(g: GlobalInputs) {
 }
 
 /** Merge GlobalInputs with scenario overrides to produce effective parameters */
-export function mergeScenario(g: GlobalInputs, so: ScenarioOverrides): { rr: number; growths: number[]; bedFactor: number; opexGrowths: number[]; cogsRate: number } {
+export function mergeScenario(g: GlobalInputs, so: ScenarioOverrides): { rr: number; growths: number[]; bedFactor: number; opexGrowths: number[]; cogsRate: number; overheadMultiplier: number } {
   return {
     rr: so.rr_base,
     growths: [so.growth_y6, so.growth_y7, so.growth_y8, so.growth_y9, so.growth_y10],
     bedFactor: so.bed_growth_factor,
     opexGrowths: [so.opex_growth_y6, so.opex_growth_y7, so.opex_growth_y8, so.opex_growth_y9, so.opex_growth_y10],
     cogsRate: so.cogs_rate_target,
+    overheadMultiplier: so.overhead_multiplier,
   };
 }
 
@@ -415,9 +417,11 @@ export function calculate(g: GlobalInputs, y: YearlyInputs, opex: OpExDetail, mi
 
     // COGS: only direct-sale beds bear ARIA's BOM cost.
     // Baxter/distributor channel beds are manufactured by Baxter; ARIA receives commission only.
+    // overhead_multiplier covers logistics, packaging, QC, warranty, production overhead beyond raw BOM.
     const totalC2 = dC2 + bC2;
     const totalC3 = dC3 + bC3;
-    const cogs = dC2 * bom.c2 + dC3 * bom.c3 + actualUpg * bom.upgrade;
+    const ohm = scenarioOverride?.overhead_multiplier ?? 1.0;
+    const cogs = Math.round((dC2 * bom.c2 + dC3 * bom.c3 + actualUpg * bom.upgrade) * ohm);
     const grossProfit = totalRevenue - cogs;
 
     // OpEx from detail breakdown

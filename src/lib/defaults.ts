@@ -144,6 +144,7 @@ export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
     opex_growth_y6: 0.33, opex_growth_y7: 0.25, opex_growth_y8: 0.24, opex_growth_y9: 0.21, opex_growth_y10: 0.22,
     cogs_rate_target: 0.34,
     salary_growth: 0.08,
+    overhead_multiplier: 2.8,
   },
   optimistic: {
     rr_base: 0.85,
@@ -152,6 +153,7 @@ export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
     opex_growth_y6: 0.30, opex_growth_y7: 0.22, opex_growth_y8: 0.20, opex_growth_y9: 0.18, opex_growth_y10: 0.18,
     cogs_rate_target: 0.32,
     salary_growth: 0.05,
+    overhead_multiplier: 2.5,
   },
   conservative: {
     rr_base: 0.55,
@@ -160,6 +162,7 @@ export const DEFAULT_SCENARIO_OVERRIDES: Record<Scenario, ScenarioOverrides> = {
     opex_growth_y6: 0.35, opex_growth_y7: 0.28, opex_growth_y8: 0.26, opex_growth_y9: 0.24, opex_growth_y10: 0.24,
     cogs_rate_target: 0.36,
     salary_growth: 0.10,
+    overhead_multiplier: 3.2,
   },
 };
 

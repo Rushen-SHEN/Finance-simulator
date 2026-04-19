@@ -137,6 +137,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
     if (key === 'rr_base') clamped = Math.max(0.1, Math.min(0.99, val));
     else if (key === 'bed_growth_factor') clamped = Math.max(0.5, Math.min(2.0, val));
     else if (key === 'cogs_rate_target') clamped = Math.max(0.05, Math.min(0.8, val));
+    else if (key === 'overhead_multiplier') clamped = Math.max(1.0, Math.min(5.0, val));
     else if (key === 'salary_growth') clamped = Math.max(0, Math.min(0.5, val));
     else if (key.startsWith('growth_') || key.startsWith('opex_growth_')) clamped = Math.max(-0.5, Math.min(1.5, val));
     const nextOverrides = { ...model.scenario_overrides, [activeScenario]: { ...so, [key]: clamped } };
@@ -446,6 +447,16 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               </div>
             </div>
 
+            {/* Manufacturing Overhead Multiplier */}
+            <ScenarioBlock scenario={activeScenario} title="制造Overhead乘数 (Y1–5)">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <ScenarioDarkInput label="Overhead乘数" value={so.overhead_multiplier} def={DEFAULT_SCENARIO_OVERRIDES[activeScenario].overhead_multiplier} onChange={v => setSO('overhead_multiplier', v)} step={0.1} scenario={activeScenario} />
+              </div>
+              <div className="mt-2 text-[10px] text-slate-500">
+                ⚙ Y1-5 COGS = (直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM) × <strong>{so.overhead_multiplier.toFixed(1)}×</strong> — 覆盖物流/包装/质检/售后保修/生产overhead。医疗器械行业通常 2.5–3.5×。
+              </div>
+            </ScenarioBlock>
+
             {/* COGS Y1-10 per-year breakdown */}
             <SectionTitle>COGS 年度明细 (Y1–10, 万元)</SectionTitle>
             <div className="overflow-x-auto rounded-lg border border-slate-700/50">
@@ -512,7 +523,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               </table>
             </div>
             <div className="rounded-lg p-2 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500">
-              📐 Y1-5: COGS = Σ(直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM_升级) · Y6-10: COGS = COGS目标比率 × 总收入 · 毛利 = 总收入−COGS
+              📐 Y1-5: COGS = Σ(直销C2×BOM_C2 + 直销C3×BOM_C3 + 升级×BOM) × {so.overhead_multiplier.toFixed(1)}× overhead · Y6-10: COGS = COGS目标比率 × 总收入 · 毛利 = 总收入−COGS
             </div>
 
             {/* ===== Y6-Y10 COGS / OpEx Projection ===== */}
@@ -1349,7 +1360,7 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
               <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500 leading-relaxed space-y-1">
                 <div>📐 <strong>EBITDA</strong> = 总收入 − COGS − OpEx合计 （即 毛利 − 运营费用）</div>
                 <div>📐 <strong>COGS比率</strong> = COGS ÷ 总收入 × 100%</div>
-                <div>　　Y1-5: COGS = Σ(直销C2 × BOM_C2 + 直销C3 × BOM_C3 + 升级 × BOM_升级)  ⚠经销商渠道不计BOM</div>
+                <div>　　Y1-5: COGS = Σ(直销C2 × BOM_C2 + 直销C3 × BOM_C3 + 升级 × BOM) × {so.overhead_multiplier.toFixed(1)}× overhead  ⚠经销商渠道不计BOM</div>
                 <div>　　Y6-10: COGS = 总收入 × 目标COGS率 ({(so.cogs_rate_target * 100).toFixed(0)}%)</div>
                 <div>📐 <strong>薪资合计</strong> (Y1-5) = 团队人数 × 人均薪资 （OpEx tab 手动设置）</div>
                 <div>　　Y6-10: 薪资<sub>Yn</sub> = 薪资<sub>Yn-1</sub> × (1 + 薪资增速) — 人员封顶后仅反映调薪</div>
