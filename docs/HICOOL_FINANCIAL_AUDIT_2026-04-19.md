@@ -81,23 +81,44 @@ const ebitdaYear = y.findIndex((yr) => yr.ebitda > 0) + 1;  // Y2
 - ebitdaYear           → Y2 ✓
 ```
 
-## 7. 建议
+## 7. Finance Plan v2.2 对标结果
+
+**警告**: FP v2.2（latest） 数据明显过期，与最新simulator严重不符
+
+| 指标 | FP v2.2 | 最新Simulator | 差异 | 说明 |
+|---|---:|---:|---:|---|
+| **Y2 EBITDA** | ¥217万 | ¥98万 | -119万 | FP过期 |
+| **Y2 Revenue** | - | 859万 | - | FP未列出 |
+| **Y5 Revenue** | ¥2,049万 | 10,766万 | +8,717万 | 参数漂移大 |
+| **Y5 Beds** | 780床 | 7,403床 | -6,623床 | ⚠️ 床位规划差异9.5倍 |
+| **Y10 Beds** | 3,000床 | 41,615床 | -38,615床 | ⚠️ 床位规划差异13.9倍 |
+| **Y10 EBITDA** | ¥3,292万 | ¥20,950万 | +17,658万 | FP严重低估 |
+
+**结论**: FP v2.2需要立即更新。当前版本基于旧的床位部署计划。
+
+## 8. 建议
 
 | 项 | 当前状态 | 建议 | 优先级 |
 |---|---|---|---|
 | HICOOL财务数据 | ✓ 最新 | 无需修改 | - |
 | HICOOL内容逻辑 | ✓ 动态化 | 继续保持 | - |
-| BP V2.4.1表格 | ⚠️ 过期 | 需要用最新simulator数据更新 | 高 |
-| Finance Plan v2.4.1 | ⚠️ 可能过期 | 需要验证并更新 | 高 |
+| BP V2.4.1表格 | ⚠️ 过期 | 需要用最新simulator数据更新 | **高** |
+| **Finance Plan v2.2** | **❌ 严重过期** | **必须更新所有财务表格和床位数据** | **紧急** |
 | Simulator参数 | ✓ 最新 | 版本: v3.2, neutral scenario | - |
 
-## 8. 合规声明
+**更新优先级顺序：**
+1. Finance Plan v2.2（紧急 - 数据差异巨大）
+2. BP V2.4.1（高 - 用于融资评审）
+3. 所有宣传/投资材料 - 等FP和BP更新后同步
+
+## 9. 合规声明
 
 本审计确认：
 - HICOOL申报页面所有财务数据均来自于simulator的动态计算，不存在硬编码
 - 所有数据与最新simulator (DEFAULT_GLOBAL/YEARLY/OPEX/MILESTONES_BEST + neutral) 保持同步
 - HICOOL内容满足"单一真值来源（Single Source of Truth）"的设计原则
-- 可安全提交审批
+- HICOOL可安全提交审批
+- **警告**: BP V2.4.1 和 Finance Plan v2.2 需要紧急更新，建议先完成更新再进行融资评审
 
 ---
 **审计人**: Copilot Agent  
