@@ -269,7 +269,7 @@ export default function Home() {
         <FinancialTable resultBest={resultBest} resultBase={resultBase} scenario={scenario} />
         <div data-export-module><RevenueCharts result={resultBest} /></div>
         <div data-export-module><ProfitCharts result={resultBest} /></div>
-        <div data-export-module><FundingPlan result={resultBest} scenario={scenario} funding={model.funding} /></div>
+        <div data-export-module><FundingPlan result={resultBest} scenario={scenario} funding={model.funding} global={model.global} /></div>
         <div data-export-module><GanttTimeline scenario={scenario} milestonesBest={model.milestones_best} milestonesBase={model.milestones_base} /></div>
         <div data-export-module><Assumptions scenario={scenario} global={model.global} result={resultBest} /></div>
 

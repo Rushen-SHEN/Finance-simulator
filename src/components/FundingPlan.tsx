@@ -1,13 +1,13 @@
-import { CalcResult, FundingInputs } from '@/lib/calculator';
+import { CalcResult, FundingInputs, GlobalInputs } from '@/lib/calculator';
 
 function wan(n: number) {
   const v = n / 10000;
   return (v >= 0 ? '' : '−') + '¥' + Math.abs(v).toFixed(0) + '万';
 }
 
-interface Props { result: CalcResult; scenario: string; funding: FundingInputs; }
+interface Props { result: CalcResult; scenario: string; funding: FundingInputs; global: GlobalInputs; }
 
-export default function FundingPlan({ result, scenario, funding }: Props) {
+export default function FundingPlan({ result, scenario, funding, global: g }: Props) {
   const y = result.years;
   const cumLossY1 = y[0]?.net_profit || 0;
   const cumTotal = result.cumulative_net_profit;
@@ -20,6 +20,21 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
   const totalMax = (f.seed_max + f.preA_max + f.seriesA_max) / 10000;
   const founderPct = ((1 - f.seed_dilution) * (1 - f.preA_dilution) * (1 - f.seriesA_dilution) * 100).toFixed(0);
 
+  // Funding advisory calculations
+  const seedMax = f.seed_max / 10000;
+  const seedMin = f.seed_min / 10000;
+  const y1Loss = -(y[0]?.net_profit || 0) / 10000;
+  const seedBuffer = seedMax - y1Loss;
+  const licenseAmount = (g.license_amount || 0) / 10000;
+  const milestoneAmount = (g.milestone_payment || 0) / 10000;
+  const cashAfterSeedAndY2 = f.seed_max + (y[0]?.net_profit || 0) + (y[1]?.net_profit || 0);
+  const needPreA = cashAfterSeedAndY2 < 0;
+  const cashAfterPreA = cashAfterSeedAndY2 + f.preA_max + (y[2]?.net_profit || 0);
+  const needSeriesA = cashAfterPreA < 0;
+  let cumNP = 0;
+  const cumByYear = y.slice(0, 5).map(yr => { cumNP += yr.net_profit; return cumNP; });
+  const cumBreakEvenYear = cumByYear.findIndex(c => c >= 0);
+
   return (
     <section className="bg-white rounded-2xl border border-gray-200 shadow-sm p-5 sm:p-8 my-5">
       <div className="flex items-center justify-between mb-1.5">
@@ -28,8 +43,57 @@ export default function FundingPlan({ result, scenario, funding }: Props) {
       </div>
       <p className="text-xs sm:text-[13px] text-gray-600 mb-6">2–3轮 · 合作经销商授权金可替代Pre-A · {ebitdaLabel}后现金流自给 · 当前: {scenarioLabel}情景</p>
 
+      {/* ===== Smart Funding Advisory ===== */}
+      <div className={`rounded-xl p-4 mb-5 text-[13px] leading-relaxed space-y-3 ${seedBuffer < 0 ? 'bg-red-50 border-2 border-red-300' : seedBuffer < 50 ? 'bg-amber-50 border border-amber-300' : 'bg-blue-50 border border-blue-200'}`}>
+        <div className="font-bold text-gray-800 flex items-center gap-2">
+          📊 融资需求智能分析
+          <span className="text-[10px] font-normal text-gray-500">基于模型实时计算</span>
+        </div>
+
+        {/* Seed round */}
+        <div className={`rounded-lg p-3 ${seedBuffer < 0 ? 'bg-red-100/50' : 'bg-white/80'}`}>
+          <div className="font-semibold text-blue-700 mb-1">🏦 种子轮 SEED — Y1覆盖分析</div>
+          <div className="text-gray-700">
+            Y1亏损 <span className="font-bold text-red-600">¥{y1Loss.toFixed(0)}万</span> · 种子轮 ¥{seedMin.toFixed(0)}–{seedMax.toFixed(0)}万
+            {seedBuffer >= 50 && <span className="text-green-600 font-medium"> · ✅ 余量充足 (¥{seedBuffer.toFixed(0)}万)</span>}
+            {seedBuffer >= 0 && seedBuffer < 50 && <span className="text-amber-600 font-medium"> · ⚠️ 余量仅¥{seedBuffer.toFixed(0)}万</span>}
+            {seedBuffer < 0 && <span className="text-red-600 font-bold"> · 🚨 缺口¥{Math.abs(seedBuffer).toFixed(0)}万！</span>}
+          </div>
+          <div className="text-gray-600 mt-1 text-[12px]">
+            建议分两期到账：<span className="text-blue-600">第1期 M1 ¥{Math.round(seedMin * 0.6)}万</span> (CDMO+原型) ·
+            <span className="text-blue-600"> 第2期 M6 ¥{Math.round(seedMax - seedMin * 0.6)}万</span> (试点+CRO)
+          </div>
+        </div>
+
+        {/* Pre-A */}
+        <div className="rounded-lg p-3 bg-white/80">
+          <div className="font-semibold text-purple-700 mb-1">💜 Pre-A轮 — M13~M15到账</div>
+          <div className="text-gray-700">
+            Y2 EBITDA: <span className={y[1]?.ebitda >= 0 ? 'text-green-600 font-medium' : 'text-red-600'}>{y[1]?.ebitda >= 0 ? '+' : ''}{((y[1]?.ebitda || 0) / 10000).toFixed(0)}万</span>
+            · 非稀释收入: 经销商授权金 ¥{licenseAmount.toFixed(0)}万 + 里程碑 ¥{milestoneAmount.toFixed(0)}万
+          </div>
+          {needPreA ? (
+            <div className="text-amber-600 text-[12px] mt-1">⚠️ 种子轮后Y2末现金 ¥{(cashAfterSeedAndY2 / 10000).toFixed(0)}万 → 需Pre-A补充</div>
+          ) : (
+            <div className="text-green-600 text-[12px] mt-1">✅ 种子轮后Y2末现金 +¥{(cashAfterSeedAndY2 / 10000).toFixed(0)}万 → 经销商授权金可替代大部分Pre-A</div>
+          )}
+        </div>
+
+        {/* Series A */}
+        <div className={`rounded-lg p-3 ${needSeriesA ? 'bg-amber-100/50' : 'bg-green-50/80'}`}>
+          <div className="font-semibold text-amber-700 mb-1">🟡 A轮评估</div>
+          {ebitdaPositiveYear >= 0 && ebitdaPositiveYear <= 1 && !needSeriesA ? (
+            <div className="text-green-700">✅ EBITDA Year {ebitdaPositiveYear + 1}转正{cumBreakEvenYear >= 0 ? `，累计Year ${cumBreakEvenYear + 1}回正` : ''} → <b>不需要A轮融资</b></div>
+          ) : needSeriesA ? (
+            <div className="text-amber-700">⚠️ 前期累计亏损尚未完全回补 → 建议保留A轮 ¥{(f.seriesA_min / 10000).toFixed(0)}–{(f.seriesA_max / 10000).toFixed(0)}万</div>
+          ) : (
+            <div className="text-green-700">✅ 现金流充裕，A轮可选。可将A轮最低设为¥0。</div>
+          )}
+        </div>
+      </div>
+
       <div className="rounded-lg p-3 px-4 mb-5 text-[13px] flex items-start gap-2 bg-green-50 border border-green-300 text-green-800 leading-relaxed">
-        💡 <b>关键优势</b>：合作经销商授权金+里程碑=¥500万，可部分或完全替代Pre-A轮融资，大幅降低稀释。EBITDA {ebitdaLabel}转正后无需A轮。
+        💡 <b>关键优势</b>：合作经销商授权金+里程碑=¥{(licenseAmount + milestoneAmount).toFixed(0)}万，可部分或完全替代Pre-A轮融资，大幅降低稀释。EBITDA {ebitdaLabel}转正后无需A轮。
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

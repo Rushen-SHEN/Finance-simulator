@@ -676,6 +676,122 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
           <div className="space-y-4">
             <SectionTitle>融资参数 (万元)</SectionTitle>
             <NoteBar text={model.annotations.funding} annotationKey="funding" onChange={setAnnotation} />
+
+            {/* ===== FUNDING ADVISORY — 融资需求智能分析 ===== */}
+            {(() => {
+              const yrs = resultBest.years;
+              const w = (v: number) => (v / 10000).toFixed(0);
+              const y1Loss = -yrs[0].net_profit;
+              const seedMax = f.seed_max / 10000;
+              const seedMin = f.seed_min / 10000;
+              const seedBuffer = seedMax - y1Loss / 10000;
+              const ebitdaPosIdx = yrs.findIndex(y => y.ebitda > 0);
+              // Cumulative net profit year by year
+              let cumNP = 0;
+              const cumByYear = yrs.slice(0, 5).map(y => { cumNP += y.net_profit; return cumNP; });
+              const cumBreakEvenYear = cumByYear.findIndex(c => c >= 0);
+              // License income from baxter (non-dilutive)
+              const licenseY2 = model.global.license_amount / 10000;
+              const milestoneY3 = model.global.milestone_payment / 10000;
+              // Y2 cumulative position after seed funding
+              const cashAfterSeedAndY2 = f.seed_max + yrs[0].net_profit + yrs[1].net_profit;
+              const needPreA = cashAfterSeedAndY2 < 0;
+              // Series A need: if by end of Y3 cumulative (with seed + preA) still negative
+              const cashAfterPreA = cashAfterSeedAndY2 + f.preA_max + yrs[2].net_profit;
+              const needSeriesA = cashAfterPreA < 0;
+
+              return (
+                <div className="rounded-xl bg-gradient-to-br from-slate-800/80 to-slate-900/80 border border-cyan-500/30 p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-sm font-bold text-cyan-400">📊 融资需求智能分析</span>
+                    <span className="text-[10px] text-slate-500">基于当前模型参数实时计算</span>
+                  </div>
+
+                  {/* Cash flow waterfall */}
+                  <div className="space-y-1">
+                    <div className="text-[11px] text-slate-400 font-semibold mb-1">年度现金流瀑布 (万元)</div>
+                    {yrs.slice(0, 5).map((yr, i) => {
+                      const rev = yr.total_revenue / 10000;
+                      const opex = yr.opex / 10000;
+                      const cogs = yr.cogs / 10000;
+                      const ebitda = yr.ebitda / 10000;
+                      const cum = cumByYear[i] / 10000;
+                      return (
+                        <div key={i} className="flex items-center gap-2 text-[11px] font-mono">
+                          <span className="text-slate-500 w-6">Y{i + 1}</span>
+                          <span className="text-slate-400">收入</span><span className={`w-12 text-right ${rev > 0 ? 'text-green-400' : 'text-slate-500'}`}>{rev.toFixed(0)}</span>
+                          <span className="text-slate-600">−</span>
+                          <span className="text-slate-400">成本</span><span className="w-12 text-right text-orange-400">{(cogs + opex).toFixed(0)}</span>
+                          <span className="text-slate-600">=</span>
+                          <span className="text-slate-400">EBITDA</span><span className={`w-14 text-right font-bold ${ebitda >= 0 ? 'text-green-400' : 'text-red-400'}`}>{ebitda >= 0 ? '+' : ''}{ebitda.toFixed(0)}</span>
+                          <span className="text-slate-600 mx-1">│</span>
+                          <span className="text-slate-500">累计</span><span className={`w-14 text-right ${cum >= 0 ? 'text-green-300' : 'text-red-300'}`}>{cum >= 0 ? '+' : ''}{cum.toFixed(0)}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <div className="border-t border-slate-700/50 pt-3 space-y-2.5">
+                    {/* Seed round advisory */}
+                    <div className={`rounded-lg p-3 text-[11px] leading-relaxed ${seedBuffer < 50 ? 'bg-red-500/10 border border-red-500/30' : 'bg-blue-500/10 border border-blue-500/30'}`}>
+                      <div className="font-bold text-blue-400 mb-1">🏦 种子轮 SEED — M1~M3到账</div>
+                      <div className="text-slate-300">
+                        <span className="text-red-400 font-bold">Y1亏损 ¥{w(y1Loss * 10000)}万</span> ← 种子轮需完全覆盖
+                      </div>
+                      <div className="text-slate-400 mt-1">
+                        建议<b className="text-slate-200">分两期到账</b>：
+                        <span className="text-cyan-400"> 第1期 M1: ¥{Math.round(seedMin * 0.6)}万</span> (CDMO签约+原型开发+云环境) ·
+                        <span className="text-cyan-400"> 第2期 M6: ¥{Math.round(seedMax - seedMin * 0.6)}万</span> (试点部署+CRO启动)
+                      </div>
+                      {seedBuffer < 50 && seedBuffer >= 0 && (
+                        <div className="text-amber-400 mt-1 font-medium">⚠️ 种子轮上限¥{seedMax.toFixed(0)}万 ≥ Y1亏损¥{w(y1Loss * 10000)}万，但余量仅¥{seedBuffer.toFixed(0)}万，建议增加种子轮金额</div>
+                      )}
+                      {seedBuffer < 0 && (
+                        <div className="text-red-400 mt-1 font-bold">🚨 种子轮上限¥{seedMax.toFixed(0)}万 &lt; Y1亏损¥{w(y1Loss * 10000)}万！缺口¥{Math.abs(seedBuffer).toFixed(0)}万，必须增加种子轮金额或压缩Y1支出</div>
+                      )}
+                    </div>
+
+                    {/* Pre-A advisory */}
+                    <div className="rounded-lg p-3 text-[11px] leading-relaxed bg-purple-500/10 border border-purple-500/30">
+                      <div className="font-bold text-purple-400 mb-1">💜 Pre-A轮 — M13~M15到账</div>
+                      <div className="text-slate-300">
+                        Y2 EBITDA: <span className={yrs[1].ebitda >= 0 ? 'text-green-400' : 'text-red-400'}>{yrs[1].ebitda >= 0 ? '+' : ''}{w(yrs[1].ebitda)}万</span>
+                        {yrs[1].ebitda >= 0 ? ' (已转正)' : ' (仍为负)'}
+                      </div>
+                      <div className="text-slate-400 mt-1">
+                        经销商授权金 <span className="text-cyan-400">¥{licenseY2.toFixed(0)}万 (M8~M10)</span> + 里程碑 <span className="text-cyan-400">¥{milestoneY3.toFixed(0)}万 (M26~M28)</span> = 非稀释收入¥{(licenseY2 + milestoneY3).toFixed(0)}万
+                      </div>
+                      {needPreA ? (
+                        <div className="text-amber-400 mt-1 font-medium">⚠️ 种子轮后Y2末现金余额 ¥{(cashAfterSeedAndY2 / 10000).toFixed(0)}万 → 需Pre-A补充运营资金</div>
+                      ) : (
+                        <div className="text-green-400 mt-1">✅ 种子轮后Y2末现金余额 ¥{(cashAfterSeedAndY2 / 10000).toFixed(0)}万 → 经销商授权金可替代大部分Pre-A</div>
+                      )}
+                    </div>
+
+                    {/* Series A advisory */}
+                    <div className={`rounded-lg p-3 text-[11px] leading-relaxed ${needSeriesA ? 'bg-amber-500/10 border border-amber-500/30' : 'bg-green-500/10 border border-green-500/30'}`}>
+                      <div className="font-bold text-amber-400 mb-1">🟡 A轮 (可选) — M25~M30</div>
+                      {ebitdaPosIdx >= 0 && ebitdaPosIdx <= 1 ? (
+                        <>
+                          <div className="text-green-400">✅ EBITDA Year {ebitdaPosIdx + 1}已转正{cumBreakEvenYear >= 0 ? `，累计现金流Year ${cumBreakEvenYear + 1}回正` : ''}</div>
+                          {!needSeriesA ? (
+                            <div className="text-green-300 mt-1 font-medium">→ <b>不需要A轮融资</b>。Y{(ebitdaPosIdx || 1) + 2}起现金流自给。可将A轮最低设为¥0。</div>
+                          ) : (
+                            <div className="text-amber-300 mt-1">→ 虽EBITDA已转正，但前期累计亏损尚未回补。建议保留小额A轮作为安全垫。</div>
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <div className="text-red-400">⚠️ EBITDA至Y2仍未转正 (Year {ebitdaPosIdx >= 0 ? ebitdaPosIdx + 1 : '?'}转正)</div>
+                          <div className="text-amber-300 mt-1">→ 建议保留A轮融资 ¥{(f.seriesA_min / 10000).toFixed(0)}–{(f.seriesA_max / 10000).toFixed(0)}万，确保注册审评期间现金流安全</div>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <FundingCard title="种子轮 SEED" color="from-blue-500/20 to-blue-600/10 border-blue-500/30">
                 <DarkInput label="最低金额" value={f.seed_min / 10000} def={DEFAULT_MODEL.funding.seed_min / 10000} onChange={v => setF('seed_min', v * 10000)} />
