@@ -22,6 +22,8 @@ import {
 } from '@/lib/roadshow-theme';
 import { loadModel } from '@/lib/storage';
 import { extractRoadshowUpdates } from '@/lib/docGenerator';
+import { listArchives } from '@/lib/archiveStore';
+import { detectChanges } from '@/lib/changeTracker';
 
 const BASE_PATH = process.env.NODE_ENV === 'production' ? '/Finance-simulator' : '';
 
@@ -123,8 +125,37 @@ export default function RoadshowPage() {
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [definitionOpen, setDefinitionOpen] = useState(false);
   const [feedback, setFeedback] = useState<string | null>(null);
+  const [staleWarning, setStaleWarning] = useState<string | null>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const importRef = useRef<HTMLInputElement>(null);
+
+  // Check if roadshow archive is stale vs current model
+  useEffect(() => {
+    (async () => {
+      try {
+        const archives = await listArchives('roadshow');
+        if (archives.length === 0) {
+          setStaleWarning('尚未生成路演快照。请返回模拟器点击"接受变更"生成文档。');
+          return;
+        }
+        const latest = archives.sort((a, b) =>
+          b.timestamp - a.timestamp
+        )[0];
+        if (latest.modelSnapshot) {
+          const changes = detectChanges(latest.modelSnapshot, model);
+          if (changes.changedGroups.length > 0) {
+            setStaleWarning(
+              `参数已变更（${changes.changedGroups.map(g => g.label).join('、')}），路演数据尚未更新。请返回模拟器点击"接受变更"以同步。`
+            );
+          } else {
+            setStaleWarning(null);
+          }
+        }
+      } catch {
+        // IndexedDB unavailable — skip
+      }
+    })();
+  }, [model]);
 
   useEffect(() => {
     let cancelled = false;
@@ -659,6 +690,15 @@ export default function RoadshowPage() {
       {feedback && (
         <div className="fixed bottom-4 left-1/2 z-50 -translate-x-1/2 rounded-full border border-slate-600/60 bg-black/70 px-4 py-2 text-xs text-slate-200 shadow-[0_16px_36px_rgba(0,0,0,0.34)] backdrop-blur-xl">
           {feedback}
+        </div>
+      )}
+
+      {staleWarning && (
+        <div className="fixed bottom-14 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl border border-orange-500/40 bg-black/80 px-4 py-2.5 text-xs text-orange-300 shadow-[0_16px_36px_rgba(0,0,0,0.4)] backdrop-blur-xl max-w-[600px]">
+          <span>⚠ {staleWarning}</span>
+          <a href={`${BASE_PATH}/`} className="whitespace-nowrap rounded-lg bg-orange-500/20 border border-orange-500/30 px-2.5 py-1 text-orange-200 hover:bg-orange-500/30 transition-all">
+            返回模拟器
+          </a>
         </div>
       )}
 

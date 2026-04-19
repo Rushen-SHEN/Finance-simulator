@@ -238,7 +238,17 @@ ${yrs.filter((_, i) => i > 0).map((yr, i) => {
 
 ---
 
-## 9. OpEx明细（Y1-Y5，万元）
+## 9. 人工成本与OpEx明细（Y1-Y5）
+
+### 9.1 薪资分解（人数 × 人均薪资）
+
+| 项目 | Y1 | Y2 | Y3 | Y4 | Y5 |
+|---|---:|---:|---:|---:|---:|
+| 团队人数 | ${g.headcount.join(' | ')} |
+| 人均薪资(万) | ${g.avg_salary.map(v => Math.round(v / 10000)).join(' | ')} |
+| **薪资合计(万)** | ${g.headcount.map((h, i) => Math.round(h * g.avg_salary[i] / 10000)).join(' | ')} |
+
+### 9.2 OpEx明细（万元）
 
 | 项目 | Y1 | Y2 | Y3 | Y4 | Y5 |
 |---|---:|---:|---:|---:|---:|
@@ -251,6 +261,8 @@ ${yrs.filter((_, i) => i > 0).map((yr, i) => {
 | 专利/咨询/AI | ${model.opex.patent_ai.map(v => Math.round(v / 10000)).join(' | ')} |
 | 差旅/运营/CMO | ${model.opex.travel_ops.map(v => Math.round(v / 10000)).join(' | ')} |
 | **合计** | ${[0,1,2,3,4].map(i => Math.round(Object.values(model.opex).reduce((s, arr) => s + (arr[i] || 0), 0) / 10000)).join(' | ')} |
+
+> Y6-10 薪资按 OpEx增速 逐年复利推演。CDMO/CRO/试产在Y6+归零。
 
 ---
 
@@ -287,6 +299,7 @@ export function patchBPSections(
 ): { content: string; version: string } {
   let patched = bpContent;
   const yrs = resultBest.years;
+  const g = model.global;
 
   // Bump BP version: find **版本** or **Version** line and increment
   const versionMatch = patched.match(/\*\*版本\*\*:\s*v?(\d+)\.(\d+)/);
@@ -305,26 +318,71 @@ export function patchBPSections(
   const revY10 = Math.round(yrs[9].total_revenue / 10000);
 
   // Patch common financial summary patterns
-  // These are best-effort: if the exact pattern isn't found, skip gracefully
   const replacements: [RegExp, string][] = [
-    // Revenue figures
     [/Y5[^\n]*?¥[\d,]+万/g, `Y5 ¥${revY5.toLocaleString()}万`],
     [/Y10[^\n]*?¥[\d,]+万/g, `Y10 ¥${revY10.toLocaleString()}万`],
   ];
 
   for (const [pattern, replacement] of replacements) {
-    // Only replace if found — don't corrupt document
     if (pattern.test(patched)) {
       patched = patched.replace(pattern, replacement);
     }
   }
 
-  // Add update timestamp at end
-  const updateNote = `\n\n---\n> 🔄 自动更新于 ${todayStr()} — 数据来源: Finance Simulator 参数面板\n`;
+  // Append a live-data section with current simulator state
+  // This ensures all parameter panel changes (headcount, salary, OpEx, COGS) are captured
+  const liveSection = `
+
+---
+
+## 附录: Simulator 实时数据快照
+
+> ⚠ 以下数据由参数面板自动同步，${todayStr()} 生成
+
+### A1. 人工成本（Y1-Y5）
+
+| 项目 | Y1 | Y2 | Y3 | Y4 | Y5 |
+|---|---:|---:|---:|---:|---:|
+| 团队人数 | ${g.headcount.join(' | ')} |
+| 人均薪资(万) | ${g.avg_salary.map(v => Math.round(v / 10000)).join(' | ')} |
+| 薪资合计(万) | ${g.headcount.map((h, i) => Math.round(h * g.avg_salary[i] / 10000)).join(' | ')} |
+
+### A2. 十年财务主表（万元）
+
+| 项目 | ${yrs.map((_, i) => `Y${i + 1}`).join(' | ')} |
+|---|${yrs.map(() => '---:').join('|')}|
+| 总收入 | ${yrs.map(yr => Math.round(yr.total_revenue / 10000).toLocaleString()).join(' | ')} |
+| COGS | ${yrs.map(yr => Math.round(yr.cogs / 10000).toLocaleString()).join(' | ')} |
+| 毛利 | ${yrs.map(yr => Math.round(yr.gross_profit / 10000).toLocaleString()).join(' | ')} |
+| OpEx | ${yrs.map(yr => Math.round(yr.opex / 10000).toLocaleString()).join(' | ')} |
+| EBITDA | ${yrs.map(yr => Math.round(yr.ebitda / 10000).toLocaleString()).join(' | ')} |
+| 净利润 | ${yrs.map(yr => Math.round(yr.net_profit / 10000).toLocaleString()).join(' | ')} |
+
+### A3. OpEx明细（Y1-Y5，万元）
+
+| 项目 | Y1 | Y2 | Y3 | Y4 | Y5 |
+|---|---:|---:|---:|---:|---:|
+| 薪资社保 | ${model.opex.salary.map(v => Math.round(v / 10000)).join(' | ')} |
+| CDMO NRE | ${model.opex.cdmo_nre.map(v => Math.round(v / 10000)).join(' | ')} |
+| 试产样机 | ${model.opex.pilot_bom.map(v => Math.round(v / 10000)).join(' | ')} |
+| CRO/临床 | ${model.opex.cro.map(v => Math.round(v / 10000)).join(' | ')} |
+| 注册审评 | ${model.opex.reg.map(v => Math.round(v / 10000)).join(' | ')} |
+| 合规质量 | ${model.opex.compliance.map(v => Math.round(v / 10000)).join(' | ')} |
+| 专利/AI | ${model.opex.patent_ai.map(v => Math.round(v / 10000)).join(' | ')} |
+| 差旅/运营 | ${model.opex.travel_ops.map(v => Math.round(v / 10000)).join(' | ')} |
+| **合计** | ${[0,1,2,3,4].map(i => Math.round(Object.values(model.opex).reduce((s, arr) => s + (arr[i] || 0), 0) / 10000)).join(' | ')} |
+`;
+
+  // Remove old live-data section if exists and append fresh one
+  patched = patched.replace(/\n---\n\n## 附录: Simulator 实时数据快照[\s\S]*$/, '');
+  patched += liveSection;
+
+  // Add/update timestamp
+  const updateNote = `\n> 🔄 自动更新于 ${todayStr()} — 数据来源: Finance Simulator 参数面板\n`;
   if (!patched.includes('自动更新于')) {
     patched += updateNote;
   } else {
-    patched = patched.replace(/\n\n---\n> 🔄 自动更新于[^\n]+\n/, updateNote);
+    patched = patched.replace(/\n> 🔄 自动更新于[^\n]+\n/, updateNote);
   }
 
   return { content: patched, version: bpVersion };

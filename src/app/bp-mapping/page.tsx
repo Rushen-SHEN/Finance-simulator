@@ -1,9 +1,11 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { ModelInputs, calculate, CalcResult } from '@/lib/calculator';
 import { DEFAULT_MODEL, YEAR_LABELS_SHORT } from '@/lib/defaults';
 import { loadModel, loadAuditLog, AuditEntry } from '@/lib/storage';
+import { listArchives } from '@/lib/archiveStore';
+import { detectChanges } from '@/lib/changeTracker';
 import {
   BP_MAIN_TABLE, BP_SOM, BP_CHANNEL,
   BP_MAPPING_BLOCKS, BP_SENSITIVITY, DOC_VERSIONS,
@@ -16,6 +18,7 @@ export default function BPMappingPage() {
   const [activeBlock, setActiveBlock] = useState<string | null>(null);
   const [showReport, setShowReport] = useState(false);
   const [auditLog, setAuditLog] = useState<AuditEntry[]>([]);
+  const [staleWarning, setStaleWarning] = useState<string | null>(null);
 
   if (!initialized && typeof window !== 'undefined') {
     const saved = loadModel();
@@ -23,6 +26,37 @@ export default function BPMappingPage() {
     setAuditLog(loadAuditLog());
     setInitialized(true);
   }
+
+  // Check if BP/FP archives are stale vs current model
+  useEffect(() => {
+    if (!initialized) return;
+    (async () => {
+      try {
+        const bpArchives = await listArchives('bp');
+        const fpArchives = await listArchives('financial_plan');
+        if (bpArchives.length === 0 && fpArchives.length === 0) {
+          setStaleWarning('尚未生成 BP/财务计划快照。请返回模拟器点击"接受变更"生成文档。');
+          return;
+        }
+        const latest = [...bpArchives, ...fpArchives].sort((a, b) =>
+          b.timestamp - a.timestamp
+        )[0];
+        if (latest.modelSnapshot) {
+          const changes = detectChanges(latest.modelSnapshot, model);
+          if (changes.changedGroups.length > 0) {
+            setStaleWarning(
+              `参数已变更（${changes.changedGroups.map(g => g.label).join('、')}），` +
+              `BP/财务计划快照尚未更新。请返回模拟器点击"接受变更"以同步文档。`
+            );
+          } else {
+            setStaleWarning(null);
+          }
+        }
+      } catch {
+        // IndexedDB unavailable — skip
+      }
+    })();
+  }, [initialized, model]);
 
   const resultBest: CalcResult = useMemo(
     () => calculate(model.global, model.yearly, model.opex, model.milestones_best),
@@ -112,6 +146,18 @@ export default function BPMappingPage() {
       </div>
 
       <div className="max-w-[1400px] mx-auto px-4 sm:px-6 pb-12 pt-4">
+        {/* Stale archive warning */}
+        {staleWarning && (
+          <div className="p-3 rounded-xl border border-orange-500/40 bg-orange-500/10 mb-4 flex items-center justify-between">
+            <div className="text-sm text-orange-300">
+              <span className="font-bold">⚠ 文档未同步：</span>{staleWarning}
+            </div>
+            <a href={`${basePath}/`} className="px-3 py-1.5 rounded-lg bg-orange-500/20 border border-orange-500/30 text-orange-200 text-xs font-medium hover:bg-orange-500/30 transition-all whitespace-nowrap ml-3">
+              返回模拟器 →
+            </a>
+          </div>
+        )}
+
         {/* Conflict summary bar */}
         <div className={`p-4 rounded-xl border mb-6 ${
           criticalConflicts.length > 0
