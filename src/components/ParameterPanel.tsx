@@ -886,6 +886,75 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 </div>
               )}
 
+              {/* EBITDA breakdown reference table */}
+              <SectionTitle>EBITDA 成本结构参考</SectionTitle>
+              <div className="overflow-x-auto rounded-lg border border-slate-700/50">
+                <table className="w-full text-xs">
+                  <thead>
+                    <tr className="bg-slate-800/80">
+                      <th className="text-left px-3 py-2 text-cyan-400 font-semibold w-[100px]">成本项</th>
+                      {Array.from({ length: 10 }, (_, i) => (
+                        <th key={i} className={`text-right px-2 py-2 font-semibold ${i < 5 ? 'text-cyan-400' : 'text-orange-400'}`}>
+                          Y{i + 1}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">薪资合计</td>
+                      {scenarioResult.years.map((yr, i) => (
+                        <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtWan(yr.opex_detail.salary)}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">其他OpEx</td>
+                      {scenarioResult.years.map((yr, i) => {
+                        const otherOpex = yr.opex - yr.opex_detail.salary;
+                        return <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtWan(otherOpex)}</td>;
+                      })}
+                    </tr>
+                    <tr className="border-t border-slate-700/30 bg-slate-800/20">
+                      <td className="px-3 py-2 text-slate-400 font-medium">OpEx 合计</td>
+                      {scenarioResult.years.map((yr, i) => (
+                        <td key={i} className="text-right px-2 py-2 font-mono text-slate-200 font-medium">{fmtWan(yr.opex)}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-slate-400">COGS</td>
+                      {scenarioResult.years.map((yr, i) => (
+                        <td key={i} className="text-right px-2 py-2 font-mono text-slate-300">{fmtWan(yr.cogs)}</td>
+                      ))}
+                    </tr>
+                    <tr className="border-t border-slate-700/30">
+                      <td className="px-3 py-2 text-amber-400/80" title="COGS比率 = COGS ÷ 总收入 × 100%&#10;Y1-5: BOM驱动 (C2×单台BOM + C3×单台BOM + 升级×BOM)&#10;Y6-10: 按目标COGS率推演">COGS比率 ⓘ</td>
+                      {scenarioResult.years.map((yr, i) => {
+                        const rate = yr.total_revenue > 0 ? (yr.cogs / yr.total_revenue * 100) : 0;
+                        return (
+                          <td key={i} className={`text-right px-2 py-2 font-mono ${rate > 50 ? 'text-red-400' : rate > 40 ? 'text-amber-400' : 'text-green-400'}`}>
+                            {yr.total_revenue > 0 ? `${rate.toFixed(0)}%` : '—'}
+                          </td>
+                        );
+                      })}
+                    </tr>
+                    <tr className="border-t border-cyan-500/20 bg-cyan-500/5">
+                      <td className="px-3 py-2 text-cyan-300 font-bold">EBITDA</td>
+                      {scenarioResult.years.map((yr, i) => (
+                        <td key={i} className={`text-right px-2 py-2 font-mono font-bold ${yr.ebitda >= 0 ? 'text-green-400' : 'text-red-400'}`}>
+                          {fmtWan(yr.ebitda)}
+                        </td>
+                      ))}
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-[11px] text-slate-500 leading-relaxed space-y-1">
+                <div>📐 <strong>EBITDA</strong> = 总收入 − COGS − OpEx合计 （即 毛利 − 运营费用）</div>
+                <div>📐 <strong>COGS比率</strong> = COGS ÷ 总收入 × 100%</div>
+                <div>　　Y1-5: COGS = Σ(新增C2床位 × BOM_C2 + 新增C3 × BOM_C3 + 升级 × BOM_升级)</div>
+                <div>　　Y6-10: COGS = 总收入 × 目标COGS率 ({(so.cogs_rate_target * 100).toFixed(0)}%)</div>
+              </div>
+
               <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-xs text-slate-400 leading-relaxed">
                 💡 Y1–5由部署量×定价×SaaS续约自动计算。Y6–10按场景增长率推演。ARR = 活跃付费床位 × 年化单床SaaS (¥{(g.price_saas_c2 / 10000).toFixed(2)}万/床)。续约率={Math.round(so.rr_base * 100)}%。
               </div>
