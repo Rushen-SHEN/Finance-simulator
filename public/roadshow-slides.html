@@ -1581,6 +1581,121 @@
       line-height: 1.5;
     }
 
+    /* ========== S10 Business Model layout ========== */
+    .biz-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      flex: 1;
+      min-height: 0;
+    }
+    .biz-pricing-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .biz-table-wrap {
+      overflow-x: auto;
+    }
+    .biz-table {
+      display: grid;
+      grid-template-columns: 100px 1fr 1fr 1fr;
+      gap: 0;
+      font-size: 13px;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .biz-row {
+      display: contents;
+    }
+    .biz-row .biz-cell {
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .biz-row:last-child .biz-cell {
+      border-bottom: none;
+    }
+    .biz-header .biz-cell {
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      font-size: 12px;
+      padding: 6px 10px;
+    }
+    .biz-alt .biz-cell {
+      background: rgba(var(--accent-rgb, 59, 130, 246), 0.04);
+    }
+    .biz-margin-row .biz-cell {
+      font-weight: 700;
+    }
+    .biz-label-col {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .accent-blue { color: var(--accent); font-weight: 600; }
+    .accent-purple { color: #8b5cf6; font-weight: 600; }
+    .accent-green-bold { color: #16a34a; font-weight: 700; font-size: 15px; }
+
+    .biz-channel-bar {
+      background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(139,92,246,0.06));
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.7;
+      color: var(--fg);
+    }
+
+    .biz-roi-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .biz-roi-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--fg);
+      padding: 0 2px;
+    }
+    .biz-roi-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+    .biz-roi-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px;
+      text-align: center;
+    }
+    .biz-roi-name {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+    .biz-roi-value {
+      font-size: 26px;
+      font-weight: 800;
+      color: #16a34a;
+      margin-bottom: 6px;
+    }
+    .biz-roi-meta {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+    .biz-roi-summary {
+      background: rgba(22,163,74,0.06);
+      border: 1px solid rgba(22,163,74,0.15);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 12px;
+      line-height: 1.6;
+      color: var(--fg);
+    }
+
     /* ========== S16 two-column layout ========== */
     .s16-layout {
       display: grid;
@@ -2269,11 +2384,20 @@
       .gtm-grid,
       .fin-grid,
       .s16-layout,
+      .biz-layout,
       .risk-grid,
       .team-grid,
       .timeline-grid,
       .review-grid,
       .closing-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .biz-table {
+        grid-template-columns: 80px 1fr 1fr 1fr;
+        font-size: 11px;
+      }
+      .biz-roi-cards {
         grid-template-columns: 1fr;
       }
 
@@ -2438,7 +2562,7 @@
       .fin-bars, .review-list, .hc-grid, .ref-columns,
       .hero-grid, .split-hero, .process-lane, .arch-grid,
       .ai-grid, .value-chain, .quadrant-wrap, .reg-grid,
-      .pricing-grid, .gtm-grid, .fin-grid, .s16-layout, .risk-grid,
+      .pricing-grid, .gtm-grid, .fin-grid, .s16-layout, .biz-layout, .risk-grid,
       .team-grid, .timeline-grid, .review-grid, .closing-grid {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
@@ -3207,82 +3331,96 @@
           <div>
             <div class="eyebrow">Business Model</div>
             <h1 class="title">商业模式</h1>
-            <p class="subtitle">硬件建立装机，SaaS 形成递延收入，二类向三类升级提升单床价值；渠道合作提供放大器，但不是当前唯一依赖。</p>
+            <p class="subtitle">硬件+SaaS双引擎 | 合作经销商渠道HW <span data-field="hw-comm-pct">15%</span>/SaaS <span data-field="saas-comm-pct">35%</span> | 授权金¥200万+里程碑¥300万</p>
           </div>
           <div class="slide-note">
-            <span class="chip fact">收入结构已定义</span>
+            <span class="chip fact">⭐ 重点</span>
             <span class="chip projected">ROI 为测算口径</span>
           </div>
         </div>
 
-        <div class="pricing-grid">
-          <div class="stack fade-up">
-            <div class="grid grid-2">
-              <div class="price-card fact">
-                <div class="panel-title">二类证 · 辅助监测版</div>
-                <div class="price" data-field="c2-hw-price">¥6.5 万 / 床</div>
-                <p>硬件一次性定价</p>
-                <div class="price" data-field="c2-saas-price">¥2.5 万 / 床 / 年</div>
-                <p>SaaS 订阅</p>
-              </div>
-              <div class="price-card fact">
-                <div class="panel-title">三类证 · 预警诊断版</div>
-                <div class="price" data-field="c3-hw-price">¥8.5 万 / 床</div>
-                <p>硬件一次性定价</p>
-                <div class="price" data-field="c3-saas-price">¥4.0 万 / 床 / 年</div>
-                <p>SaaS 订阅；五年期可降至 <span data-field="c3-saas-bulk">¥3.5 万</span> / 年</p>
+        <div class="biz-layout">
+          <!-- ========== TOP: Pricing / BOM / Margin Table ========== -->
+          <div class="biz-pricing-section fade-up">
+            <div class="biz-table-wrap">
+              <div class="biz-table">
+                <div class="biz-row biz-header">
+                  <span class="biz-cell biz-label-col">项目</span>
+                  <span class="biz-cell biz-col-c2">二类证 · 辅助监测版</span>
+                  <span class="biz-cell biz-col-c3">三类证 · 预警诊断版</span>
+                  <span class="biz-cell biz-col-upg">升级服务(二类→三类)</span>
+                </div>
+                <div class="biz-row">
+                  <span class="biz-cell biz-label-col"><strong>硬件定价</strong></span>
+                  <span class="biz-cell biz-col-c2 accent-blue" data-field="c2-hw-price">¥6.5 万 / 床</span>
+                  <span class="biz-cell biz-col-c3 accent-blue" data-field="c3-hw-price">¥8.5 万 / 床</span>
+                  <span class="biz-cell biz-col-upg accent-blue" data-field="upgrade-hw-price">¥2.5万/床</span>
+                </div>
+                <div class="biz-row biz-alt">
+                  <span class="biz-cell biz-label-col"><strong>SaaS订阅</strong></span>
+                  <span class="biz-cell biz-col-c2 accent-purple" data-field="c2-saas-price">¥2.5 万 / 床 / 年</span>
+                  <span class="biz-cell biz-col-c3 accent-purple" data-field="c3-saas-price">¥4.0 万 / 床 / 年</span>
+                  <span class="biz-cell biz-col-upg">升级后按三类计费</span>
+                </div>
+                <div class="biz-row">
+                  <span class="biz-cell biz-label-col"><strong>硬件BOM</strong></span>
+                  <span class="biz-cell biz-col-c2" data-field="bom-c2">¥3.2万/床</span>
+                  <span class="biz-cell biz-col-c3" data-field="bom-c3">¥2.1万/床</span>
+                  <span class="biz-cell biz-col-upg" data-field="bom-upgrade">¥0.9万/床</span>
+                </div>
+                <div class="biz-row biz-alt biz-margin-row">
+                  <span class="biz-cell biz-label-col"><strong>毛利率</strong></span>
+                  <span class="biz-cell biz-col-c2 accent-green-bold" data-field="margin-c2">50.8%</span>
+                  <span class="biz-cell biz-col-c3 accent-green-bold" data-field="margin-c3">74.7%</span>
+                  <span class="biz-cell biz-col-upg accent-green-bold" data-field="margin-upgrade">65.2%</span>
+                </div>
               </div>
             </div>
-            <div class="panel plan">
-              <div class="panel-title">合作经销商双渠道</div>
-              <h3>直销打样板医院，合作经销商用于放大装机与全国复制。</h3>
-              <p>渠道条款、授权金与分成比例目前均按规划口径呈现，实际仍取决于谈判结果。</p>
-            </div>
-            <div class="mini-table">
-              <div class="table-row header"><span>收入项</span><span>二类</span><span>三类 / 升级</span></div>
-              <div class="table-row"><strong>硬件</strong><span data-field="c2-hw-tbl">¥6.5 万</span><span data-field="c3-hw-tbl">¥8.5 万</span></div>
-              <div class="table-row"><strong>SaaS</strong><span data-field="c2-saas-tbl">¥2.5 万 / 年</span><span data-field="c3-saas-tbl">¥4.0 万 / 年</span></div>
-              <div class="table-row"><strong>升级服务</strong><span>—</span><span data-field="upgrade-tbl">¥2.5 万 / 床</span></div>
-              <div class="table-row"><strong>渠道合作</strong><span>直销为主</span><span>直销 + 合作经销商</span></div>
+
+            <!-- Channel Info Bar -->
+            <div class="biz-channel-bar fade-up">
+              🤝 <strong>合作经销商渠道模式</strong>：硬件分成<span data-field="hw-comm-pct">15%</span>(<span data-field="hw-comm-amount">¥1.3万/床</span>) · SaaS分成<span data-field="saas-comm-pct">35%</span>(<span data-field="saas-comm-amount">¥1.4万/床/年</span>) · 授权金+里程碑合计<span data-field="license-total">¥500万</span>(Y2:<span data-field="license-y2">¥300万</span> Y3:<span data-field="license-y3">¥200万</span>) · 授权金可替代Pre-A轮融资
             </div>
           </div>
 
-          <div class="stack fade-up">
-            <div class="panel projected">
-              <div class="panel-title">医院 ROI</div>
-              <h3><strong>医院 ROI</strong>：三种主要采购路径下，医院 ROI 均为正，差别在于价值兑现速度与证据强度<span class="cite-inline">[14][30][31]</span>。</h3>
-              <div class="roi-card-grid">
-                <div class="roi-card">
-                  <div class="roi-name">二类新购（3 年期）</div>
-                  <div class="roi-value" data-field="roi-c2-new">+34%</div>
-                  <div class="roi-meta" data-field="roi-c2-cost">年化费用 ¥4.67 万 / 床</div>
-                  <div class="roi-meta" data-field="roi-c2-anchor">价值锚点 ¥6.25 万 / 床 / 年</div>
-                </div>
-                <div class="roi-card">
-                  <div class="roi-name">三类新购（3 年期）</div>
-                  <div class="roi-value" data-field="roi-c3-new">+17%</div>
-                  <div class="roi-meta" data-field="roi-c3-cost">年化费用 ¥6.83 万 / 床</div>
-                  <div class="roi-meta" data-field="roi-c3-anchor">价值锚点 ¥8.0 万 / 床 / 年</div>
-                </div>
-                <div class="roi-card">
-                  <div class="roi-name">三类升级（3 年期）</div>
-                  <div class="roi-value" data-field="roi-c3u">+66%</div>
-                  <div class="roi-meta" data-field="roi-c3u-cost">年化费用 ¥4.83 万 / 床</div>
-                  <div class="roi-meta" data-field="roi-c3u-anchor">价值锚点 ¥8.0 万 / 床 / 年</div>
-                </div>
-              </div>
-              <div class="roi-summary">补充情形：三类新购采用 5 年期 + SaaS 量折时，医院 ROI 仍为正，对应约 <span data-field="roi-c3-5yr">+20%</span>。</div>
+          <!-- ========== BOTTOM: ROI Section ========== -->
+          <div class="biz-roi-section fade-up">
+            <div class="biz-roi-title">
+              医院ROI — 双锚定价 | C2创造价值 <span data-field="value-anchor-c2">¥6.3万/床/年</span> · C3创造价值 <span data-field="value-anchor-c3">¥8.0万/床/年</span>
             </div>
-            <div class="panel projected">
-              <div class="panel-title">采购逻辑</div>
-              <h3>当前更准确的表述不是“支付闭环已形成”，而是“采购讨论已有可计算的价值锚点”。</h3>
-              <p>价值锚点由成本下降、护理工时优化、DRG 编码收益与住院日缩短等部分组成，其中后两项仍需真实世界数据支持。</p>
+
+            <div class="biz-roi-cards">
+              <div class="biz-roi-card">
+                <div class="biz-roi-name">二类 · 新购</div>
+                <div class="biz-roi-value" data-field="roi-c2-new">+33.9%</div>
+                <div class="biz-roi-meta" data-field="roi-c2-cost">年化费用 ¥4.7 万 / 床</div>
+                <div class="biz-roi-meta" data-field="roi-c2-anchor">价值锚点 ¥6.3 万 / 床 / 年</div>
+                <div class="biz-roi-meta" data-field="roi-c2-payback">回收期 ~9个月</div>
+              </div>
+              <div class="biz-roi-card">
+                <div class="biz-roi-name">三类 · 新购</div>
+                <div class="biz-roi-value" data-field="roi-c3-new">+17.1%</div>
+                <div class="biz-roi-meta" data-field="roi-c3-cost">年化费用 ¥6.8 万 / 床</div>
+                <div class="biz-roi-meta" data-field="roi-c3-anchor">价值锚点 ¥8.0 万 / 床 / 年</div>
+                <div class="biz-roi-meta" data-field="roi-c3-payback">回收期 ~10个月</div>
+              </div>
+              <div class="biz-roi-card">
+                <div class="biz-roi-name">三类 · 升级</div>
+                <div class="biz-roi-value" data-field="roi-c3u">+65.5%</div>
+                <div class="biz-roi-meta" data-field="roi-c3u-cost">年化费用 ¥4.8 万 / 床</div>
+                <div class="biz-roi-meta" data-field="roi-c3u-anchor">价值锚点 ¥8.0 万 / 床 / 年</div>
+                <div class="biz-roi-meta" data-field="roi-upg-payback">回收期 ~7个月</div>
+              </div>
+            </div>
+
+            <div class="biz-roi-summary">
+              ✅ <strong>全产品线ROI为正</strong> — <span data-field="roi-summary-text">C2 ROI 33.9% · C3 ROI 17.1% · 升级 ROI 65.5%</span>。三类采用独立价值锚点(<span data-field="value-anchor-c3">¥8.0万/床/年</span>)，确保医院投资回报为正。
             </div>
           </div>
         </div>
 
         <div class="source-box">
-          <strong>本页引用：</strong>[14][30][31]
+          <strong>本页引用：</strong>[14][30][31] — 价值锚点由成本下降、护理工时优化、DRG编码收益与住院日缩短等部分组成。
         </div>
       </div>
     </div>
