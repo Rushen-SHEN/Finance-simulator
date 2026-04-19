@@ -1052,6 +1052,10 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
                 <div>📐 <strong>COGS比率</strong> = COGS ÷ 总收入 × 100%</div>
                 <div>　　Y1-5: COGS = Σ(新增C2床位 × BOM_C2 + 新增C3 × BOM_C3 + 升级 × BOM_升级)</div>
                 <div>　　Y6-10: COGS = 总收入 × 目标COGS率 ({(so.cogs_rate_target * 100).toFixed(0)}%)</div>
+                <div>📐 <strong>薪资合计</strong> (Y1-5) = 团队人数 × 人均薪资 （OpEx tab 手动设置）</div>
+                <div>　　Y6-10: 薪资<sub>Yn</sub> = 薪资<sub>Yn-1</sub> × (1 + OpEx增速<sub>Yn</sub>)</div>
+                <div>　　当前: Y6={(so.opex_growth_y6 * 100).toFixed(0)}% → Y7={(so.opex_growth_y7 * 100).toFixed(0)}% → Y8={(so.opex_growth_y8 * 100).toFixed(0)}% → Y9={(so.opex_growth_y9 * 100).toFixed(0)}% → Y10={(so.opex_growth_y10 * 100).toFixed(0)}%</div>
+                <div>📐 <strong>其他OpEx</strong> (Y6-10): 注册/合规/专利/差旅按同比例增长，CDMO/CRO/试产归零</div>
               </div>
 
               <div className="rounded-lg p-3 bg-slate-800/50 border border-slate-700/30 text-xs text-slate-400 leading-relaxed">
