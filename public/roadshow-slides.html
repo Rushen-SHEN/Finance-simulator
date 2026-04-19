@@ -2154,18 +2154,26 @@
       }
     }
 
-    /* ====== PRINT: one slide = one 16:9 page, pixel-perfect to screen ====== */
-    /* Works on both macOS (custom page size) and Windows (A4 landscape fallback) */
+    /* ====== PRINT: one slide = one page, 16:9 content centered ====== */
+    /*
+     * Strategy: Chrome/Edge IGNORE @page { size: WxH } custom dimensions,
+     * they only support @page { size: landscape | portrait }.
+     * Safari supports custom size.
+     *
+     * Solution: use BOTH size declarations + viewport-relative layout.
+     * The slide fills the page, the frame maintains 16:9 via min() calc,
+     * so it works regardless of whether the browser gives us 960×540
+     * (Safari) or Letter/A4 landscape (Chrome/Edge).
+     */
     @media print {
-      /* Page geometry — 16:9 custom + landscape fallback for Windows */
       @page {
-        size: 960pt 540pt;
+        size: landscape;
         margin: 0;
       }
 
-      /* Reset body for paged media — NO viewport units, all absolute */
       html, body {
-        width: 960pt !important;
+        width: 100% !important;
+        height: 100% !important;
         margin: 0 !important;
         padding: 0 !important;
         background: #040812 !important;
@@ -2174,14 +2182,12 @@
         color-adjust: exact !important;
         overflow: visible !important;
         scroll-snap-type: none !important;
-        /* Kill the grid background overlay */
       }
 
       body::before {
         display: none !important;
       }
 
-      /* Hide all fixed/overlay UI */
       .hud,
       .legend-ribbon,
       .toc,
@@ -2189,25 +2195,26 @@
         display: none !important;
       }
 
-      /* ---- Core: each .slide = exactly one printed page ---- */
+      /* Each .slide = one printed page, fills entire page */
       .slide {
-        display: block !important;
-        position: relative !important;
-        width: 960pt !important;
-        height: 540pt !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        width: 100vw !important;
+        height: 100vh !important;
         min-height: 0 !important;
-        max-height: 540pt !important;
+        max-height: none !important;
         padding: 0 !important;
         margin: 0 !important;
         overflow: hidden !important;
-        /* Page-break: use ALL syntaxes for cross-browser compat */
         page-break-after: always !important;
         break-after: page !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
-        page-break-before: auto !important;
         scroll-snap-align: unset !important;
+        position: relative !important;
         background: #040812 !important;
+        box-sizing: border-box !important;
       }
 
       .slide:last-of-type {
@@ -2215,42 +2222,47 @@
         break-after: auto !important;
       }
 
-      /* Frame: fixed pt size, centered inside the slide page */
+      /*
+       * Frame: 16:9 centered within whatever page size the browser gives.
+       * min(98vw, calc(96vh * 16/9)) → picks the constraining dimension
+       * so the frame is always 16:9 and fits inside the page.
+       */
       .frame {
-        position: absolute !important;
-        top: 10pt !important;
-        left: 16pt !important;
-        width: 928pt !important;
-        height: 520pt !important;
+        width: min(98vw, calc(96vh * 16 / 9)) !important;
+        height: min(96vh, calc(98vw * 9 / 16)) !important;
         aspect-ratio: unset !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
         overflow: hidden !important;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
         background:
           radial-gradient(circle at 18% 12%, rgba(61, 240, 209, 0.1), transparent 22%),
           radial-gradient(circle at 82% 12%, rgba(85, 213, 255, 0.12), transparent 28%),
           linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%) !important;
       }
 
-      /* Remove the decorative grid overlay and inner border in print */
       .frame::before,
       .frame::after {
         display: none !important;
       }
 
       .inner {
-        position: absolute !important;
-        inset: 0 !important;
-        padding: 24pt 28pt 20pt 28pt !important;
-        gap: 12pt !important;
+        position: relative !important;
+        inset: auto !important;
+        padding: 3% 3.5% 2.5% 3.5% !important;
+        gap: 1.5% !important;
         height: 100% !important;
+        width: 100% !important;
         display: flex !important;
         flex-direction: column !important;
         overflow: hidden !important;
+        box-sizing: border-box !important;
       }
 
-      /* Ensure grid layouts don't break across pages */
+      /* Grid layouts: don't break across pages */
       .metric-grid, .grid-5, .grid-4, .grid-3, .grid-2,
       .kpi-strip, .flow, .timeline, .chain-line, .route-line,
       .fin-bars, .review-list, .hc-grid, .ref-columns,
@@ -2260,26 +2272,6 @@
       .team-grid, .timeline-grid, .review-grid, .closing-grid {
         break-inside: avoid !important;
         page-break-inside: avoid !important;
-      }
-
-      /* Typography — use pt for consistency across OS */
-      .title {
-        font-size: 22pt !important;
-        line-height: 1.2 !important;
-      }
-
-      .hero-card h2 {
-        font-size: 28pt !important;
-        line-height: 1.15 !important;
-      }
-
-      .eyebrow {
-        font-size: 8pt !important;
-      }
-
-      .body-text, p, .desc {
-        font-size: 9pt !important;
-        line-height: 1.4 !important;
       }
 
       /* Force exact color reproduction */
@@ -2299,47 +2291,16 @@
         transform: none !important;
       }
 
-      /* Source boxes — static flow */
       .source-box {
         position: static !important;
         break-inside: avoid !important;
-        font-size: 6pt !important;
       }
 
-      /* Links should not show URL */
       a, a::after {
         text-decoration: none !important;
       }
       a[href]::after {
         content: none !important;
-      }
-
-      /* Chip/badge sizing for print */
-      .chip, .legend-chip {
-        font-size: 7pt !important;
-        padding: 2pt 6pt !important;
-      }
-
-      /* Metric cards — compact for print */
-      .metric-card, .kpi-card {
-        padding: 8pt !important;
-      }
-
-      .metric-card .value, .kpi-card .value {
-        font-size: 18pt !important;
-      }
-
-      .metric-card .label, .kpi-card .label {
-        font-size: 7pt !important;
-      }
-
-      /* Slide header compact for print */
-      .slide-header {
-        gap: 6pt !important;
-      }
-
-      .slide-note {
-        gap: 4pt !important;
       }
     }
   </style>
