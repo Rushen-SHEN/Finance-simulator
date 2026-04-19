@@ -729,5 +729,31 @@ function buildScenarioFields(model: ModelInputs, neutralResult: CalcResult): Rec
     'sc-neutral-growth': `${Math.round((so.neutral?.growth_y6 ?? 0.30) * 100)}%→${Math.round((so.neutral?.growth_y10 ?? 0.25) * 100)}%`,
     'sc-opt-growth': `${Math.round((so.optimistic?.growth_y6 ?? 0.40) * 100)}%→${Math.round((so.optimistic?.growth_y10 ?? 0.30) * 100)}%`,
     'sc-con-growth': `${Math.round((so.conservative?.growth_y6 ?? 0.20) * 100)}%→${Math.round((so.conservative?.growth_y10 ?? 0.15) * 100)}%`,
+
+    // Dynamic scenario narrative descriptions (auto-generated from calc results)
+    'sc-opt-desc': (() => {
+      const rr = Math.round(scenarios.optimistic.rr * 100);
+      const cogs = Math.round(scenarios.optimistic.cogsRate * 100);
+      const gr = `${Math.round((so.optimistic?.growth_y6 ?? 0.40) * 100)}%→${Math.round((so.optimistic?.growth_y10 ?? 0.30) * 100)}%`;
+      const margin = ((oY10.ebitda / oY10.total_revenue) * 100).toFixed(0);
+      return `续约率${rr}%推动SaaS复利增长，COGS ${cogs}%释放毛利空间，Y6-Y10增速${gr}。EBITDA利润率可达${margin}%+。`;
+    })(),
+    'sc-neutral-desc': (() => {
+      const rr = Math.round(scenarios.neutral.rr * 100);
+      const cogs = Math.round(scenarios.neutral.cogsRate * 100);
+      const margin = ((nY10.ebitda / nY10.total_revenue) * 100).toFixed(0);
+      return `续约率${rr}%为行业中值假设，COGS ${cogs}%反映标准供应链成本。Y10 EBITDA利润率约${margin}%，健康但非exceptional。`;
+    })(),
+    'sc-con-desc': (() => {
+      const rr = Math.round(scenarios.conservative.rr * 100);
+      const cogs = Math.round(scenarios.conservative.cogsRate * 100);
+      const gr = `${Math.round((so.conservative?.growth_y6 ?? 0.20) * 100)}%→${Math.round((so.conservative?.growth_y10 ?? 0.15) * 100)}%`;
+      const profitable = cY10.ebitda > 0;
+      const desc = profitable
+        ? `Y10 EBITDA转正(¥${Math.round(cY10.ebitda / 10000).toLocaleString()}万)，但利润空间有限。`
+        : `Y10仍处亏损。该情景下需融资输血或战略调整。`;
+      return `续约率${rr}%意味着近半客户不续费，叠加高COGS(${cogs}%)和低增速(${gr})，${desc}`;
+    })(),
+    'sc-appendix-note': `所有情景均基于相同的Y1-Y5 Best Case装机计划（BOM不变），仅调整续约率、增长率与COGS比率等Y6-Y10投影参数。参数面板可实时切换情景并查看完整十年模型。`,
   };
 }
