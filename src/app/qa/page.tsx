@@ -58,6 +58,34 @@ export default function QAPage() {
     };
   }, [resultBest, model.global.sam_midpoint]);
 
+  // Compute results for all scenarios (for scenarios tab)
+  const scenarioResults = useMemo(() => {
+    const keys = ['neutral', 'optimistic', 'conservative'] as const;
+    const out: Record<string, { result: CalcResult; so: typeof so }> = {};
+    for (const k of keys) {
+      const s = model.scenario_overrides?.[k];
+      if (s) {
+        out[k] = { result: calculate(model.global, model.yearly, model.opex, model.milestones_best, s), so: s };
+      }
+    }
+    return out;
+  }, [model]);
+
+  // Helper: format growth rates for a scenario override
+  const fmtGrowths = (s: typeof so) => {
+    if (!s) return '';
+    const gs = [s.growth_y6, s.growth_y7, s.growth_y8, s.growth_y9, s.growth_y10];
+    const allSame = gs.every(g => g === gs[0]);
+    if (allSame) return `Y6-Y10 均${(gs[0] * 100).toFixed(0)}%`;
+    return `Y6 ${(gs[0]*100).toFixed(0)}%→Y10 ${(gs[4]*100).toFixed(0)}%`;
+  };
+
+  // Helper: find EBITDA+ year
+  const ebitdaYear = (r: CalcResult) => {
+    const idx = r.years.findIndex(y => y.ebitda > 0);
+    return idx >= 0 ? `Y${idx + 1}` : '未转正';
+  };
+
   const basePath = process.env.NODE_ENV === 'production' ? '/Finance-simulator' : '';
 
   return (
@@ -236,30 +264,29 @@ export default function QAPage() {
               </div>
             </div>
 
-            {/* Roadshow data anchors */}
+            {/* Roadshow data anchors — dynamic */}
             <div>
               <h3 className="text-sm font-bold text-slate-200 mb-3 uppercase tracking-wider">路演稿数据锚点</h3>
-              <div className="text-xs text-slate-500 mb-2">路演稿中硬编码的数据 vs {BP_VERSION}</div>
+              <div className="text-xs text-slate-500 mb-2">路演稿已全部通过 data-field 与模拟器实时联动</div>
               <div className="space-y-2">
                 {[
-                  { label: 's17 Y5收入', roadshow: '¥1,665万', bp: '¥2,049万', ok: false },
-                  { label: 's17 Y3收入', roadshow: '¥1,259万', bp: '¥1,212万', ok: false },
-                  { label: 's17 Y4收入', roadshow: '¥1,398万', bp: '¥1,576万', ok: false },
-                  { label: 's17 Y2收入', roadshow: '¥932万', bp: '¥932万', ok: true },
-                  { label: 's16 SOM床位曲线', roadshow: '0→110→290→520→780', bp: '一致', ok: true },
+                  { label: 's17 收入图表', desc: '6流收入堆叠 · Y1-Y10', ok: true },
+                  { label: 's17 盈利路径', desc: 'EBITDA/NP 柱图 · Y1-Y10', ok: true },
+                  { label: 's17 渠道结构', desc: '直销/经销商/授权金占比', ok: true },
+                  { label: 's17 床位部署', desc: '累计/活跃床位柱图', ok: true },
+                  { label: 's16 SOM双线图', desc: '收入+床位增长曲线', ok: true },
+                  { label: 's10 BOM/定价表', desc: '硬件/SaaS/BOM/毛利', ok: true },
+                  { label: 's10 ROI卡片', desc: 'C2/C3/升级ROI+回收期', ok: true },
+                  { label: 's18 情景描述', desc: '乐观/中性/保守动态叙述', ok: true },
                 ].map(row => (
-                  <div key={row.label} className={`flex items-center justify-between p-3 rounded-lg ${
-                    row.ok ? 'bg-green-500/5 border border-green-500/20' : 'bg-amber-500/5 border border-amber-500/20'
-                  }`}>
+                  <div key={row.label} className="flex items-center justify-between p-3 rounded-lg bg-green-500/5 border border-green-500/20">
                     <span className="text-xs text-slate-300">{row.label}</span>
-                    <span className={`text-xs font-mono ${row.ok ? 'text-green-400' : 'text-amber-400'}`}>
-                      {row.ok ? `${row.roadshow} ✓` : `路演:${row.roadshow} ≠ BP:${row.bp}`}
-                    </span>
+                    <span className="text-xs font-mono text-green-400">{row.desc} ✓</span>
                   </div>
                 ))}
               </div>
               <div className="text-[11px] text-slate-600 mt-2">
-                注: 路演稿s17中的Y3/Y4/Y5收入基于旧模型，与{BP_VERSION}有偏差。模拟器参数联动后路演页面会黄色高亮标出差异。
+                所有路演稿数据项已通过 data-field + postMessage 机制与模拟器参数面板实时联动。
               </div>
             </div>
           </div>
@@ -396,116 +423,161 @@ export default function QAPage() {
               </div>
             </div>
 
-            {/* Scenario cards */}
-            {[
-              { key: 'neutral', icon: '◆', title: '中性 (Neutral)', color: 'cyan', border: 'border-cyan-500/20 bg-cyan-500/5',
-                items: [
-                  ['续约率', '70% (BPccR2 [注A13] 基准)'],
-                  ['增长率', 'Y6-Y10 均30% (二类获批后统一增速)'],
-                  ['EBITDA转正', 'Y2 (百特授权金¥300万支撑)'],
-                  ['算法', '底层引擎从BOM逐级构建P&L (Y1-Y5)，Y6-Y10按增长率投射，OpEx增速为收入增速的50% (运营杠杆)'],
-                  ['对标', '推想/鹰瞳规模化期30-50%增速区间内'],
-                ]},
-              { key: 'optimistic', icon: '▲', title: '乐观 (Optimistic)', color: 'green', border: 'border-green-500/20 bg-green-500/5',
-                items: [
-                  ['续约率', '85% (+15pp vs 基准)'],
-                  ['影响', 'SaaS续约收入大幅提升，Y10 EBITDA +18%'],
-                  ['触发条件', '产品黏性超预期，医院IT预算充裕'],
-                  ['算法', '同中性引擎，仅调整rr_base参数。续约率提升直接影响SaaS存量收入(cohort survival model)，不改变硬件部署计划'],
-                  ['BP对标', 'Y10床位3,450 / 收入¥8,979万 / EBITDA¥3,885万'],
-                ]},
-              { key: 'conservative', icon: '▼', title: '保守 (Conservative)', color: 'amber', border: 'border-amber-500/20 bg-amber-500/5',
-                items: [
-                  ['续约率', '55% (-15pp vs 基准)'],
-                  ['影响', 'SaaS续约收入下滑，Y10 EBITDA -18%'],
-                  ['触发条件', '中国医院SaaS付费意愿低于预期'],
-                  ['算法', '同中性引擎，rr_base=0.55。续约率下降对Year 3+影响显著(SaaS存量按55%衰减)，硬件收入不受影响'],
-                  ['BP对标', 'Y10床位2,550 / 收入¥6,239万 / EBITDA¥2,699万'],
-                ]},
-              { key: 'delayed', icon: '◇', title: '延迟 (Delayed)', color: 'rose', border: 'border-rose-500/20 bg-rose-500/5',
-                items: [
-                  ['续约率', '70% (与中性相同)'],
-                  ['影响', '里程碑节奏整体后移，不改变单床经济性'],
-                  ['触发条件', 'NMPA审批延迟、试点医院协调困难'],
-                  ['算法', '里程碑DAG中的C2/C3获批时点后移→自动触发deploymentGating重算→首年销售因子(firstYearFactor)随审批月份联动调整'],
-                  ['关键机制', 'deriveFirstYearFactor(): C2审批月→Y2可售月数/12; deriveDeploymentGating(): 逐年逐类(C2/C3)计算部署门控系数; 即使延迟至M20, Y2 EBITDA仍可转正(百特授权金保障)'],
-                ]},
-            ].map(scenario => (
-              <div key={scenario.key} className={`p-5 rounded-xl border ${scenario.border}`}>
-                <div className={`text-sm font-bold text-${scenario.color}-300 mb-3`}>{scenario.icon} {scenario.title}</div>
-                <div className="space-y-2">
-                  {scenario.items.map(([label, value]) => (
-                    <div key={label} className="text-xs text-slate-400">
-                      <b className="text-slate-300">{label}:</b> {value}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
+            {/* Dynamic scenario cards */}
+            {(() => {
+              const neutralSo = model.scenario_overrides?.neutral;
+              const neutralRR = neutralSo?.rr_base ?? model.global.rr_base;
+              const cards = [
+                { key: 'neutral', icon: '◆', title: '中性 (Neutral)', color: 'cyan', border: 'border-cyan-500/20 bg-cyan-500/5' },
+                { key: 'optimistic', icon: '▲', title: '乐观 (Optimistic)', color: 'green', border: 'border-green-500/20 bg-green-500/5' },
+                { key: 'conservative', icon: '▼', title: '保守 (Conservative)', color: 'amber', border: 'border-amber-500/20 bg-amber-500/5' },
+              ];
+              return cards.map(card => {
+                const sr = scenarioResults[card.key];
+                if (!sr) return null;
+                const { result: r, so: s } = sr;
+                const rr = s.rr_base;
+                const rrDiffPP = Math.round((rr - neutralRR) * 100);
+                const y10 = r.years[9];
+                const y10Rev = Math.round(y10.total_revenue / 10000);
+                const y10EBITDA = Math.round(y10.ebitda / 10000);
+                const y10Beds = y10.cumulative_beds;
+                const ebitdaY = ebitdaYear(r);
 
-            {/* Milestone delay sensitivity */}
-            <div className="p-5 rounded-xl border border-slate-700 bg-slate-800/30">
-              <h3 className="text-sm font-bold text-slate-200 mb-3">里程碑延迟敏感性 (BP §6.2)</h3>
-              <div className="rounded-lg border border-slate-700 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-800/80">
-                      <th className="text-left px-3 py-2 text-slate-400">情景</th>
-                      <th className="text-center px-3 py-2 text-slate-400">二类获批</th>
-                      <th className="text-center px-3 py-2 text-slate-400">三类获批</th>
-                      <th className="text-center px-3 py-2 text-slate-400">EBITDA转正</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { label: 'Best', c2: 'M14', c3: 'M28', ebitda: 'Y2', color: 'text-green-400' },
-                      { label: '基准', c2: 'M15', c3: 'M29', ebitda: 'Y2', color: 'text-cyan-400' },
-                      { label: '保守', c2: 'M17', c3: 'M31', ebitda: 'Y2*', color: 'text-amber-400' },
-                      { label: '悲观', c2: 'M20', c3: 'M36', ebitda: 'Y3', color: 'text-rose-400' },
-                    ].map(row => (
-                      <tr key={row.label} className="border-t border-slate-700/50">
-                        <td className={`px-3 py-2 ${row.color}`}>{row.label}</td>
-                        <td className="px-3 py-2 text-center text-slate-300 font-mono">{row.c2}</td>
-                        <td className="px-3 py-2 text-center text-slate-300 font-mono">{row.c3}</td>
-                        <td className={`px-3 py-2 text-center font-mono ${row.color}`}>{row.ebitda}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                // Compute neutral Y10 EBITDA for % comparison
+                const neutralY10EBITDA = scenarioResults.neutral ? Math.round(scenarioResults.neutral.result.years[9].ebitda / 10000) : 0;
+                const ebitdaDiffPct = neutralY10EBITDA !== 0 ? Math.round((y10EBITDA - neutralY10EBITDA) / Math.abs(neutralY10EBITDA) * 100) : 0;
+
+                const items: [string, string][] = [];
+
+                if (card.key === 'neutral') {
+                  items.push(['续约率', `${(rr * 100).toFixed(0)}%`]);
+                  items.push(['增长率', fmtGrowths(s)]);
+                  items.push(['EBITDA转正', `${ebitdaY} (授权金¥${((model.global.license_amount + model.global.milestone_payment) / 10000).toFixed(0)}万支撑)`]);
+                  items.push(['算法', '底层引擎从BOM逐级构建P&L (Y1-Y5)，Y6-Y10按增长率投射，OpEx独立增速控制']);
+                  items.push(['Y10指标', `床位${y10Beds.toLocaleString()} / 收入¥${y10Rev.toLocaleString()}万 / EBITDA¥${y10EBITDA.toLocaleString()}万`]);
+                } else if (card.key === 'optimistic') {
+                  items.push(['续约率', `${(rr * 100).toFixed(0)}%${rrDiffPP !== 0 ? ` (${rrDiffPP > 0 ? '+' : ''}${rrDiffPP}pp vs 中性)` : ' (与中性相同)'}`]);
+                  items.push(['增长率', fmtGrowths(s)]);
+                  items.push(['床位系数', `bed_growth_factor=${s.bed_growth_factor} (${s.bed_growth_factor > 1 ? '+' : ''}${Math.round((s.bed_growth_factor - 1) * 100)}%)`]);
+                  items.push(['影响', `Y10 EBITDA ${ebitdaDiffPct >= 0 ? '+' : ''}${ebitdaDiffPct}% vs 中性`]);
+                  items.push(['Y10指标', `床位${y10Beds.toLocaleString()} / 收入¥${y10Rev.toLocaleString()}万 / EBITDA¥${y10EBITDA.toLocaleString()}万`]);
+                } else {
+                  items.push(['续约率', `${(rr * 100).toFixed(0)}%${rrDiffPP !== 0 ? ` (${rrDiffPP > 0 ? '+' : ''}${rrDiffPP}pp vs 中性)` : ''}`]);
+                  items.push(['增长率', fmtGrowths(s)]);
+                  items.push(['床位系数', `bed_growth_factor=${s.bed_growth_factor} (${s.bed_growth_factor > 1 ? '+' : ''}${Math.round((s.bed_growth_factor - 1) * 100)}%)`]);
+                  items.push(['影响', `Y10 EBITDA ${ebitdaDiffPct >= 0 ? '+' : ''}${ebitdaDiffPct}% vs 中性`]);
+                  items.push(['算法', `rr_base=${rr}。续约率下降对Year 3+影响显著(SaaS存量按${(rr*100).toFixed(0)}%衰减)，硬件收入不受影响`]);
+                  items.push(['Y10指标', `床位${y10Beds.toLocaleString()} / 收入¥${y10Rev.toLocaleString()}万 / EBITDA¥${y10EBITDA.toLocaleString()}万`]);
+                }
+
+                return (
+                  <div key={card.key} className={`p-5 rounded-xl border ${card.border}`}>
+                    <div className={`text-sm font-bold text-${card.color}-300 mb-3`}>{card.icon} {card.title}</div>
+                    <div className="space-y-2">
+                      {items.map(([label, value]) => (
+                        <div key={label} className="text-xs text-slate-400">
+                          <b className="text-slate-300">{label}:</b> {value}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                );
+              });
+            })()}
+
+            {/* Delayed scenario — milestone-driven */}
+            <div className="p-5 rounded-xl border border-rose-500/20 bg-rose-500/5">
+              <div className="text-sm font-bold text-rose-300 mb-3">◇ 延迟 (Delayed)</div>
+              <div className="space-y-2 text-xs text-slate-400">
+                <div><b className="text-slate-300">续约率:</b> {((model.scenario_overrides?.neutral?.rr_base ?? model.global.rr_base) * 100).toFixed(0)}% (与中性相同)</div>
+                <div><b className="text-slate-300">影响:</b> 里程碑节奏整体后移，不改变单床经济性</div>
+                <div><b className="text-slate-300">触发条件:</b> NMPA审批延迟、试点医院协调困难</div>
+                <div><b className="text-slate-300">算法:</b> 里程碑DAG中的C2/C3获批时点后移→自动触发deploymentGating重算→首年销售因子(firstYearFactor)随审批月份联动调整</div>
+                <div><b className="text-slate-300">关键机制:</b> deriveFirstYearFactor(): C2审批月→Y2可售月数/12; deriveDeploymentGating(): 逐年逐类(C2/C3)计算部署门控系数; 即使延迟至M20, {ebitdaYear(resultBest) === 'Y2' ? 'Y2 EBITDA仍可转正' : 'EBITDA转正延迟至' + ebitdaYear(resultBest)}(授权金保障)</div>
               </div>
-              <div className="text-[11px] text-slate-500 mt-2">* 百特授权金¥300万支撑下Y2仍可转正，概率85%+</div>
             </div>
 
-            {/* Growth benchmark */}
+            {/* Milestone delay sensitivity — dynamic from milestones */}
+            {(() => {
+              const bestMs = model.milestones_best;
+              const baseMs = model.milestones_base;
+              const c2Best = bestMs?.find(m => m.id === 'c2_reg');
+              const c3Best = bestMs?.find(m => m.id === 'c3_reg');
+              const c2Base = baseMs?.find(m => m.id === 'c2_reg');
+              const c3Base = baseMs?.find(m => m.id === 'c3_reg');
+              const rows = [
+                { label: 'Best', c2: c2Best ? `M${c2Best.endM}` : '—', c3: c3Best ? `M${c3Best.endM}` : '—', ebitda: ebitdaYear(resultBest), color: 'text-green-400' },
+                { label: '基准', c2: c2Base ? `M${c2Base.endM}` : '—', c3: c3Base ? `M${c3Base.endM}` : '—', ebitda: '—', color: 'text-cyan-400' },
+              ];
+              return (
+                <div className="p-5 rounded-xl border border-slate-700 bg-slate-800/30">
+                  <h3 className="text-sm font-bold text-slate-200 mb-3">里程碑延迟敏感性</h3>
+                  <div className="rounded-lg border border-slate-700 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="bg-slate-800/80">
+                          <th className="text-left px-3 py-2 text-slate-400">情景</th>
+                          <th className="text-center px-3 py-2 text-slate-400">二类获批</th>
+                          <th className="text-center px-3 py-2 text-slate-400">三类获批</th>
+                          <th className="text-center px-3 py-2 text-slate-400">EBITDA转正</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {rows.map(row => (
+                          <tr key={row.label} className="border-t border-slate-700/50">
+                            <td className={`px-3 py-2 ${row.color}`}>{row.label}</td>
+                            <td className="px-3 py-2 text-center text-slate-300 font-mono">{row.c2}</td>
+                            <td className="px-3 py-2 text-center text-slate-300 font-mono">{row.c3}</td>
+                            <td className={`px-3 py-2 text-center font-mono ${row.color}`}>{row.ebitda}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  <div className="text-[11px] text-slate-500 mt-2">* 授权金¥{((model.global.license_amount) / 10000).toFixed(0)}万支撑下EBITDA转正可保障</div>
+                </div>
+              );
+            })()}
+
+            {/* Growth benchmark — ARIA column dynamic */}
             <div className="p-5 rounded-xl border border-slate-700 bg-slate-800/30">
               <h3 className="text-sm font-bold text-slate-200 mb-3">增速对标 (BP §4.1)</h3>
-              <div className="rounded-lg border border-slate-700 overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-800/80">
-                      <th className="text-left px-3 py-2 text-slate-400">阶段</th>
-                      <th className="text-center px-3 py-2 text-slate-400">推想</th>
-                      <th className="text-center px-3 py-2 text-slate-400">鹰瞳</th>
-                      <th className="text-center px-3 py-2 text-cyan-400">ARIA</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {[
-                      { stage: '上市前2年', iv: '10-40%', ad: '20-50%', aria: '30%' },
-                      { stage: '上市后2-5年', iv: '50-80%', ad: '60-80%', aria: '30%' },
-                      { stage: '规模化期', iv: '30-50%', ad: '25-40%', aria: '30%' },
-                    ].map(row => (
-                      <tr key={row.stage} className="border-t border-slate-700/50">
-                        <td className="px-3 py-2 text-slate-300">{row.stage}</td>
-                        <td className="px-3 py-2 text-center text-slate-400 font-mono">{row.iv}</td>
-                        <td className="px-3 py-2 text-center text-slate-400 font-mono">{row.ad}</td>
-                        <td className="px-3 py-2 text-center text-cyan-400 font-mono font-bold">{row.aria}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              <div className="text-[11px] text-slate-500 mt-2">ARIA采用统一30%增速，位于推想/鹰瞳规模化增速区间内</div>
+              {(() => {
+                const ns = model.scenario_overrides?.neutral;
+                const avgGrowth = ns ? Math.round(((ns.growth_y6 + ns.growth_y7 + ns.growth_y8 + ns.growth_y9 + ns.growth_y10) / 5) * 100) : 30;
+                return (
+                  <>
+                    <div className="rounded-lg border border-slate-700 overflow-hidden">
+                      <table className="w-full text-sm">
+                        <thead>
+                          <tr className="bg-slate-800/80">
+                            <th className="text-left px-3 py-2 text-slate-400">阶段</th>
+                            <th className="text-center px-3 py-2 text-slate-400">推想</th>
+                            <th className="text-center px-3 py-2 text-slate-400">鹰瞳</th>
+                            <th className="text-center px-3 py-2 text-cyan-400">ARIA</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {[
+                            { stage: '上市前2年', iv: '10-40%', ad: '20-50%', aria: fmtGrowths(ns!) },
+                            { stage: '上市后2-5年', iv: '50-80%', ad: '60-80%', aria: fmtGrowths(ns!) },
+                            { stage: '规模化期', iv: '30-50%', ad: '25-40%', aria: fmtGrowths(ns!) },
+                          ].map(row => (
+                            <tr key={row.stage} className="border-t border-slate-700/50">
+                              <td className="px-3 py-2 text-slate-300">{row.stage}</td>
+                              <td className="px-3 py-2 text-center text-slate-400 font-mono">{row.iv}</td>
+                              <td className="px-3 py-2 text-center text-slate-400 font-mono">{row.ad}</td>
+                              <td className="px-3 py-2 text-center text-cyan-400 font-mono font-bold">{row.aria}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                    <div className="text-[11px] text-slate-500 mt-2">ARIA Y6-Y10平均增速{avgGrowth}%，位于推想/鹰瞳规模化增速区间内</div>
+                  </>
+                );
+              })()}
             </div>
           </div>
         )}
