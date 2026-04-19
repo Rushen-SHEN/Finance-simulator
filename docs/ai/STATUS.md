@@ -30,7 +30,7 @@
 | 4场景切换 | ✅ | 中性/乐观/保守/延迟，Header一键切换 |
 | Best/Base双Case | ✅ | 各模块独立切换，部署/里程碑各有Best/Base |
 | 参数控制台(9 tabs) | ✅ | 定价/BOM/部署/OpEx/融资/里程碑/测算/注释/存档 |
-| BP映射追踪 | ✅ | 7个M-block + BPBadges + /bp-mapping冲突检测 + 审计报告导出 |
+| BP映射追踪 | ✅ | 7个映射块（§源→§目标格式）+ BPBadges + /bp-mapping冲突检测 + 审计报告导出 |
 | 里程碑前置依赖链 | ✅ | predecessor chain拓扑解算 + 部署gating + 拖拽排序 |
 | 验证告警 | ✅ | error(红) + warning(黄) 双级别 |
 | 存档系统 | ✅ | localStorage profiles + auto-save 60s |
@@ -50,13 +50,13 @@
 
 ---
 
-## BP 源文件位置（2026-04-19迁入）
+## BP 源文件位置（2026-04-19迁入，04-19合并更新）
 
 | 文件 | 路径 | 说明 |
 |------|------|------|
 | BP全文 v2 | `docs/ARIA_BP_v2_Latest.md` | §1-§11，38.9KB |
-| 财务计划 v2.1 | `docs/ARIA_Financial_Plan_latest.md` | 10年主表+SOM+映射块，15.0KB |
-| 集成规划 | `docs/integration/ARIA_FINANCE_PLAN_V2.md` | Simulator集成策略 |
+| 财务计划 v2.2（合并版） | `docs/ARIA_Financial_Plan_latest.md` | 10年主表+SOM+§0 Simulator集成说明+§1 BP映射表（§源→§目标格式） |
+| ~~集成规划~~ | ~~`docs/integration/ARIA_FINANCE_PLAN_V2.md`~~ | **已删除**，内容合并入财务计划 v2.2 |
 | BP源数据(code) | `src/lib/bp-reference.ts` | BP_MAIN_TABLE / BP_SOM / detectConflicts() |
 
 > ⚡ 所有Agent应以 `docs/` 下的BP文件为权威数据源，`src/lib/bp-reference.ts` 为代码级数据对照。
@@ -67,6 +67,7 @@
 
 | 日期 | 变更 | 负责人 |
 |------|------|--------|
+| 2026-04-19 | 合并 Financial_Plan v2.1 + FINANCE_PLAN_V2.md → v2.2合并版；映射ID从 M-01~M-07 改为 §源→§目标 格式；新增§0集成说明；删除 FINANCE_PLAN_V2.md | GitHub Copilot |
 | 2026-04-19 | BP源文件迁入workspace: `docs/ARIA_BP_v2_Latest.md` + `docs/ARIA_Financial_Plan_latest.md` | GitHub Copilot |
 | 2026-04-19 | 完成参考文件(5个)审阅，确认6/7项已实现，3项待改善(audit写入、impact diff、sensitivity对比) | GitHub Copilot |
 | 2026-04-19 | GitHub Pages部署成功(run_attempt:2) | GitHub Copilot |

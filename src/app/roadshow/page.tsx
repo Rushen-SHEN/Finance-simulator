@@ -67,7 +67,15 @@ export default function RoadshowPage() {
   };
 
   const handlePrint = () => {
-    iframeRef.current?.contentWindow?.print();
+    // Open slides in new window for printing — avoids iframe cross-origin
+    // print issues and gives Windows browsers direct access to @page rules
+    const bp = process.env.NODE_ENV === 'production' ? '/Finance-simulator' : '';
+    const printWin = window.open(`${bp}/roadshow-slides.html`, '_blank');
+    if (printWin) {
+      printWin.addEventListener('load', () => {
+        setTimeout(() => { printWin.print(); }, 600);
+      });
+    }
   };
 
   const basePath = process.env.NODE_ENV === 'production' ? '/Finance-simulator' : '';

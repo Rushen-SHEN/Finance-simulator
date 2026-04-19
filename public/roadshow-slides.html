@@ -2155,31 +2155,33 @@
     }
 
     /* ====== PRINT: one slide = one 16:9 page, pixel-perfect to screen ====== */
+    /* Works on both macOS (custom page size) and Windows (A4 landscape fallback) */
     @media print {
-      /* Page geometry — 960×540 pt matches 16:9 */
+      /* Page geometry — 16:9 custom + landscape fallback for Windows */
       @page {
         size: 960pt 540pt;
         margin: 0;
       }
 
-      /* Reset body for paged media */
+      /* Reset body for paged media — NO viewport units, all absolute */
       html, body {
-        margin: 0;
-        padding: 0;
+        width: 960pt !important;
+        margin: 0 !important;
+        padding: 0 !important;
         background: #040812 !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
         color-adjust: exact !important;
         overflow: visible !important;
         scroll-snap-type: none !important;
+        /* Kill the grid background overlay */
       }
 
-      /* Remove backgrounds that interfere */
       body::before {
         display: none !important;
       }
 
-      /* Hide HUD, TOC, legend ribbon — not part of slide content */
+      /* Hide all fixed/overlay UI */
       .hud,
       .legend-ribbon,
       .toc,
@@ -2187,11 +2189,10 @@
         display: none !important;
       }
 
-      /* Each .slide = exactly one page */
+      /* ---- Core: each .slide = exactly one printed page ---- */
       .slide {
-        display: flex !important;
-        align-items: center !important;
-        justify-content: center !important;
+        display: block !important;
+        position: relative !important;
         width: 960pt !important;
         height: 540pt !important;
         min-height: 0 !important;
@@ -2199,39 +2200,54 @@
         padding: 0 !important;
         margin: 0 !important;
         overflow: hidden !important;
+        /* Page-break: use ALL syntaxes for cross-browser compat */
         page-break-after: always !important;
         break-after: page !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
+        page-break-before: auto !important;
         scroll-snap-align: unset !important;
-        position: relative !important;
         background: #040812 !important;
       }
 
-      /* Last slide: no trailing blank page */
       .slide:last-of-type {
         page-break-after: auto !important;
         break-after: auto !important;
       }
 
-      /* Frame fills the page with small padding for visual breathing room */
+      /* Frame: fixed pt size, centered inside the slide page */
       .frame {
-        width: 920pt !important;
-        height: 510pt !important;
-        aspect-ratio: auto !important;
+        position: absolute !important;
+        top: 10pt !important;
+        left: 16pt !important;
+        width: 928pt !important;
+        height: 520pt !important;
+        aspect-ratio: unset !important;
         border-radius: 0 !important;
         border: none !important;
         box-shadow: none !important;
+        overflow: hidden !important;
         background:
           radial-gradient(circle at 18% 12%, rgba(61, 240, 209, 0.1), transparent 22%),
           radial-gradient(circle at 82% 12%, rgba(85, 213, 255, 0.12), transparent 28%),
           linear-gradient(180deg, rgba(7, 15, 29, 0.98) 0%, rgba(5, 10, 20, 0.98) 100%) !important;
       }
 
+      /* Remove the decorative grid overlay and inner border in print */
+      .frame::before,
+      .frame::after {
+        display: none !important;
+      }
+
       .inner {
-        padding: 28pt 32pt 24pt 32pt !important;
-        gap: 14pt !important;
+        position: absolute !important;
+        inset: 0 !important;
+        padding: 24pt 28pt 20pt 28pt !important;
+        gap: 12pt !important;
         height: 100% !important;
+        display: flex !important;
+        flex-direction: column !important;
+        overflow: hidden !important;
       }
 
       /* Ensure grid layouts don't break across pages */
@@ -2246,38 +2262,84 @@
         page-break-inside: avoid !important;
       }
 
-      /* Typography adjustments for print legibility at 960×540 */
+      /* Typography — use pt for consistency across OS */
       .title {
-        font-size: 26pt !important;
+        font-size: 22pt !important;
+        line-height: 1.2 !important;
       }
 
       .hero-card h2 {
-        font-size: 32pt !important;
+        font-size: 28pt !important;
+        line-height: 1.15 !important;
       }
 
-      /* Ensure all text/colors print faithfully */
+      .eyebrow {
+        font-size: 8pt !important;
+      }
+
+      .body-text, p, .desc {
+        font-size: 9pt !important;
+        line-height: 1.4 !important;
+      }
+
+      /* Force exact color reproduction */
       * {
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
-      /* Fix animations that won't render in print */
-      .fade-up, [class*="fade"] {
-        opacity: 1 !important;
-        transform: none !important;
+      /* Kill all animations */
+      *, *::before, *::after {
         animation: none !important;
         transition: none !important;
       }
 
-      /* Source boxes — keep position static for print */
+      .fade-up, [class*="fade"] {
+        opacity: 1 !important;
+        transform: none !important;
+      }
+
+      /* Source boxes — static flow */
       .source-box {
         position: static !important;
         break-inside: avoid !important;
+        font-size: 6pt !important;
       }
 
-      /* Links should not show URL in print */
-      a::after {
+      /* Links should not show URL */
+      a, a::after {
+        text-decoration: none !important;
+      }
+      a[href]::after {
         content: none !important;
+      }
+
+      /* Chip/badge sizing for print */
+      .chip, .legend-chip {
+        font-size: 7pt !important;
+        padding: 2pt 6pt !important;
+      }
+
+      /* Metric cards — compact for print */
+      .metric-card, .kpi-card {
+        padding: 8pt !important;
+      }
+
+      .metric-card .value, .kpi-card .value {
+        font-size: 18pt !important;
+      }
+
+      .metric-card .label, .kpi-card .label {
+        font-size: 7pt !important;
+      }
+
+      /* Slide header compact for print */
+      .slide-header {
+        gap: 6pt !important;
+      }
+
+      .slide-note {
+        gap: 4pt !important;
       }
     }
   </style>

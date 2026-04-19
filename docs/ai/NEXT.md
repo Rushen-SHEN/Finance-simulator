@@ -17,11 +17,13 @@
 
 ## ⚠️ 重要变更通知（2026-04-19）
 
-### BP 源文件已迁入工作区
+### BP 源文件已迁入工作区（已合并更新）
 以下 BP 权威文档已从 OneDrive 迁入 `docs/`，所有 Agent 应以此为数据源：
 - `docs/ARIA_BP_v2_Latest.md` — BP全文 v2（38.9KB），含§1-§11全章节
-- `docs/ARIA_Financial_Plan_latest.md` — 财务计划 v2.1（15.0KB），含10年主表+SOM曲线+映射块
-- `docs/integration/ARIA_FINANCE_PLAN_V2.md` — 集成规划（已有）
+- `docs/ARIA_Financial_Plan_latest.md` — 财务计划 **v2.2 合并版**，含10年主表+SOM曲线+§0 Simulator集成说明+§1 BP映射表
+- ~~`docs/integration/ARIA_FINANCE_PLAN_V2.md`~~ — **已删除**，内容已合并入上述财务计划
+
+> **映射ID规范变更**：映射表不再使用 M-01~M-07 编号，改用 `§源章节→§目标章节` 格式（如 `§5→§1.5`），与 `calculator.ts` MAPPING_BLOCKS 完全对齐。避免与里程碑月份 M1~M60 混淆。
 
 ### 参考文件审阅结论（2026-04-19）
 对比 BP 参考代码（financial-model.v2.0.json / calculation-engine / dashboard / parameters / metric-trace-badges）与当前 simulator，审阅结论：
@@ -45,7 +47,7 @@
 
 ### P1 — 高优先级（审阅发现的3项缺口）
 1. **Audit Log 写入端连接** — `appendAuditEntry()` 从未被调用；需在 ParameterPanel 的参数修改回调中插入写入，并在 Notes tab 展示修改历史 — Frontend Developer
-2. **参数修改实时数值影响 (Impact Diff)** — 当前 BPBadges 只显示定性影响（哪些M-block），缺少定量数值diff（old→new + %变化）；需新增 ImpactDiff 面板 — Frontend Developer
+2. **参数修改实时数值影响 (Impact Diff)** — 当前 BPBadges 只显示定性影响（哪些映射块），缺少定量数值diff（old→new + %变化）；需新增 ImpactDiff 面板 — Frontend Developer
 3. **Baseline vs Scenario 并排灵敏度面板** — 当前 Best/Base 只能切换查看，无法并排对比"默认参数 vs 当前修改"；需在 Dashboard 或 FinancialTable 底部增加 SensitivityPanel — Frontend Developer
 
 ### P2 — 常规
