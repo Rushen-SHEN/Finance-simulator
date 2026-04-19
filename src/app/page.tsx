@@ -177,11 +177,20 @@ export default function Home() {
   }, []);
 
   const handleReset = useCallback(() => {
+    const confirmed = confirm(
+      '⚠️ 确认要恢复所有参数到默认值吗？\n\n这将清除所有本地存储数据，包括:\n' +
+      '• 所有参数调整\n' +
+      '• 自定义场景\n' +
+      '• 参数快照\n\n' +
+      '此操作无法撤销。继续？'
+    );
+    if (!confirmed) return;
+
     clearModel();
     const fresh = structuredClone(DEFAULT_MODEL);
     setModel(fresh);
     setAcceptedModel(structuredClone(fresh));
-    setLastAcceptMsg(null);
+    setLastAcceptMsg('✅ 已恢复默认值。所有参数已重置，新的制造Overhead乘数已应用 (neutral=2.8×)');
   }, []);
 
   const handleScenario = useCallback((s: string) => {

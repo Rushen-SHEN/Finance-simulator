@@ -6,13 +6,18 @@ import { detectChanges } from '@/lib/changeTracker';
 import { listArchives, saveArchive } from '@/lib/archiveStore';
 import { loadModel } from '@/lib/storage';
 import {
+  HICOOL_CHANGE_GROUPS,
   HICOOL_LIMITS,
+  HICOOL_PROMPTS,
   HICOOL_TITLES,
   HicoolDraft,
   HicoolSectionKey,
+  HICOOL_TEMPLATE_VERSION,
+  buildHicoolAuditNotes,
   buildDefaultHicoolSections,
   buildHicoolSourceStamp,
   loadHicoolDraft,
+  normalizeHicoolDraft,
   saveHicoolDraft,
 } from '@/lib/hicool';
 
@@ -31,15 +36,6 @@ const SECTION_ORDER: HicoolSectionKey[] = [
   'investmentHighlights',
 ];
 
-const SECTION_MAPPING: Record<HicoolSectionKey, string[]> = {
-  projectOverview: ['Revenue', 'Milestones'],
-  productFeatures: ['BOM', 'Pricing', 'Channel'],
-  marketCapability: ['Deployment', 'Growth', 'Renewal', 'Funding'],
-  teamIntro: ['Milestones'],
-  businessProgress: ['Revenue', 'Funding', 'Milestones', 'Deployment'],
-  investmentHighlights: ['Revenue', 'Growth', 'Pricing', 'Funding'],
-};
-
 const fmtTime = (ts: number) => new Date(ts).toLocaleString('zh-CN', { hour12: false });
 
 export default function HicoolPage() {
@@ -57,7 +53,9 @@ export default function HicoolPage() {
     const loaded = loadHicoolDraft();
 
     if (loaded) {
-      setDraft(loaded);
+      const normalized = normalizeHicoolDraft(loaded, current, result);
+      setDraft(normalized);
+      saveHicoolDraft(normalized);
     } else {
       const seeded: HicoolDraft = {
         sections: buildDefaultHicoolSections(current, result),
@@ -66,6 +64,7 @@ export default function HicoolPage() {
         submissionVersion: 'HICOOL-V1',
         isSubmissionVersion: false,
         lastSavedAt: Date.now(),
+        templateVersion: HICOOL_TEMPLATE_VERSION,
       };
       setDraft(seeded);
       saveHicoolDraft(seeded);
@@ -98,9 +97,17 @@ export default function HicoolPage() {
     if (!changeReport || !changeReport.hasChanges) return new Set<HicoolSectionKey>();
     const groups = new Set(changeReport.changedGroups.map((g) => g.group));
     return new Set(
-      SECTION_ORDER.filter((section) => SECTION_MAPPING[section].some((g) => groups.has(g))),
+      SECTION_ORDER.filter((section) => HICOOL_CHANGE_GROUPS[section].some((g) => groups.has(g))),
     );
   }, [changeReport]);
+
+  const auditNotes = useMemo(() => {
+    if (!model || !draft) return null;
+    const scenario = model.active_scenario || 'neutral';
+    const so = model.scenario_overrides?.[scenario];
+    const result = calculate(model.global, model.yearly, model.opex, model.milestones_best, so);
+    return buildHicoolAuditNotes(model, result, changeReport, draft.lastSavedAt || Date.now());
+  }, [changeReport, draft, model]);
 
   const saveAll = (next: HicoolDraft, msg = '已保存草稿') => {
     saveHicoolDraft(next);
@@ -142,6 +149,22 @@ export default function HicoolPage() {
         lastSavedAt: Date.now(),
       },
       '已接受参数变更并更新审核基线',
+    );
+  };
+
+  const resetToAwardTemplate = () => {
+    if (!draft || !model) return;
+    const scenario = model.active_scenario || 'neutral';
+    const so = model.scenario_overrides?.[scenario];
+    const result = calculate(model.global, model.yearly, model.opex, model.milestones_best, so);
+    saveAll(
+      {
+        ...draft,
+        sections: buildDefaultHicoolSections(model, result),
+        lastSavedAt: Date.now(),
+        templateVersion: HICOOL_TEMPLATE_VERSION,
+      },
+      '已载入一等奖申报范本',
     );
   };
 
@@ -233,6 +256,18 @@ export default function HicoolPage() {
             <div>{status || '可编辑后单栏保存或整体存档'}</div>
           </div>
         </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button
+            className="rounded-md border border-blue-200 bg-blue-50 px-3 py-1.5 text-sm text-blue-700 hover:bg-blue-100"
+            onClick={resetToAwardTemplate}
+          >
+            载入一等奖申报范本
+          </button>
+          <div className="rounded-md bg-slate-50 px-3 py-1.5 text-xs text-slate-600">
+            范本口径: {HICOOL_TEMPLATE_VERSION} · 默认内容已按 simulator / BP / FP / 路演锚点联动生成
+          </div>
+        </div>
       </section>
 
       <section className="rounded-xl border bg-amber-50 p-4 text-sm">
@@ -258,13 +293,18 @@ export default function HicoolPage() {
           const content = draft.sections[key] || '';
           const limit = HICOOL_LIMITS[key];
           const over = content.length > limit;
+          const remaining = limit - content.length;
           const needsReview = impacted.has(key);
           const reviewed = !!changeKey && draft.reviewedForChangeKey[key] === changeKey;
+          const audit = auditNotes?.[key];
 
           return (
             <article key={key} className="rounded-xl border bg-white p-4 shadow-sm space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-3">
-                <h2 className="font-semibold">{HICOOL_TITLES[key]}</h2>
+                <div>
+                  <h2 className="font-semibold">{HICOOL_TITLES[key]}</h2>
+                  <p className="mt-1 text-sm text-slate-600">{HICOOL_PROMPTS[key]}</p>
+                </div>
                 <div className="flex items-center gap-2 text-xs">
                   {needsReview && !reviewed && (
                     <span className="rounded-full bg-red-100 px-2 py-1 text-red-700">需人工审核</span>
@@ -273,39 +313,77 @@ export default function HicoolPage() {
                     <span className="rounded-full bg-green-100 px-2 py-1 text-green-700">已人工审核</span>
                   )}
                   <span className={over ? 'text-red-600' : 'text-gray-500'}>
-                    {content.length}/{limit}
+                    已写 {content.length} 字
+                  </span>
+                  <span className={over ? 'text-red-600' : 'text-gray-500'}>
+                    {over ? `超出 ${Math.abs(remaining)} 字` : `剩余 ${remaining} 字`}
                   </span>
                 </div>
               </div>
 
-              <textarea
-                className="min-h-36 w-full rounded-md border p-3 text-sm leading-6"
-                value={content}
-                onChange={(e) => {
-                  const next = {
-                    ...draft,
-                    sections: { ...draft.sections, [key]: e.target.value },
-                  };
-                  setDraft(next);
-                }}
-              />
+              <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_320px]">
+                <div className="space-y-3">
+                  <div className="rounded-lg border border-sky-100 bg-sky-50 px-3 py-2 text-xs leading-5 text-sky-800">
+                    栏目要求：{HICOOL_TITLES[key]}。建议按提示覆盖核心信息，避免只写口号或只堆技术名词，评委更关注“问题是否真实、路径是否可执行、数字是否能追溯”。
+                  </div>
 
-              <div className="flex flex-wrap gap-2">
-                <button
-                  className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
-                  onClick={() => saveSection(key, content)}
-                >
-                  保存本栏
-                </button>
+                  <textarea
+                    className="min-h-40 w-full rounded-md border p-3 text-sm leading-6"
+                    value={content}
+                    onChange={(e) => {
+                      const next = {
+                        ...draft,
+                        sections: { ...draft.sections, [key]: e.target.value },
+                      };
+                      setDraft(next);
+                    }}
+                  />
 
-                {needsReview && !reviewed && (
-                  <button
-                    className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
-                    onClick={() => markReviewed(key)}
-                  >
-                    标记为已人工审核
-                  </button>
-                )}
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      className="rounded-md border px-3 py-1.5 text-sm hover:bg-gray-50"
+                      onClick={() => saveSection(key, content)}
+                    >
+                      保存本栏
+                    </button>
+
+                    {needsReview && !reviewed && (
+                      <button
+                        className="rounded-md border border-red-300 px-3 py-1.5 text-sm text-red-700 hover:bg-red-50"
+                        onClick={() => markReviewed(key)}
+                      >
+                        标记为已人工审核
+                      </button>
+                    )}
+                  </div>
+                </div>
+
+                <aside className="rounded-lg border bg-slate-50 p-3 text-xs text-slate-700 space-y-3">
+                  <div>
+                    <div className="font-semibold text-slate-900">审计评语</div>
+                    <p className="mt-1 leading-5">{audit?.summary}</p>
+                  </div>
+
+                  <div className="space-y-1 leading-5">
+                    <div><span className="font-medium text-slate-900">Simulator 时间戳：</span>{audit?.simulatorTimestamp}</div>
+                    <div><span className="font-medium text-slate-900">BP 版本：</span>{audit?.bpLabel}</div>
+                    <div><span className="font-medium text-slate-900">Finance Plan 版本：</span>{audit?.fpLabel}</div>
+                  </div>
+
+                  <div>
+                    <div className="font-medium text-slate-900">路演稿偏差</div>
+                    <p className="mt-1 leading-5">{audit?.roadshowLabel}</p>
+                    {audit && audit.deltaItems.length > 0 && (
+                      <div className="mt-2 space-y-1.5">
+                        {audit.deltaItems.map((item) => (
+                          <div key={item} className="rounded-md border border-amber-200 bg-amber-50 px-2 py-1.5 leading-5 text-amber-900">
+                            {item}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </aside>
               </div>
             </article>
           );

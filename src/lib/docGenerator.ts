@@ -510,6 +510,43 @@ export function extractRoadshowUpdates(model: ModelInputs, resultBest: CalcResul
     'som-chart-beds': JSON.stringify(yrs.map(yr => yr.cumulative_beds)),
     'som-chart-revenue': JSON.stringify(yrs.map(yr => Math.round(yr.total_revenue / 10000))),
 
+    // --- S17: Revenue breakdown chart data (6 revenue streams, 万元) ---
+    's17-rev-hw-direct': JSON.stringify(yrs.map(yr => Math.round(yr.hw_direct / 10000))),
+    's17-rev-hw-baxter': JSON.stringify(yrs.map(yr => Math.round(yr.hw_baxter / 10000))),
+    's17-rev-upgrade': JSON.stringify(yrs.map(yr => Math.round(yr.upgrade_revenue / 10000))),
+    's17-rev-saas-direct': JSON.stringify(yrs.map(yr => Math.round(yr.saas_direct / 10000))),
+    's17-rev-saas-baxter': JSON.stringify(yrs.map(yr => Math.round(yr.saas_baxter / 10000))),
+    's17-rev-license': JSON.stringify(yrs.map(yr => Math.round(yr.baxter_license / 10000))),
+    's17-rev-total': JSON.stringify(yrs.map(yr => Math.round(yr.total_revenue / 10000))),
+
+    // --- S17: Channel mix % data ---
+    's17-channel-direct-pct': JSON.stringify(yrs.map(yr => {
+      const total = yr.total_revenue || 1;
+      return Math.round((yr.hw_direct + yr.saas_direct) / total * 100);
+    })),
+    's17-channel-dealer-pct': JSON.stringify(yrs.map(yr => {
+      const total = yr.total_revenue || 1;
+      return Math.round((yr.hw_baxter + yr.saas_baxter + yr.upgrade_revenue) / total * 100);
+    })),
+    's17-channel-license-pct': JSON.stringify(yrs.map(yr => {
+      const total = yr.total_revenue || 1;
+      return Math.round(yr.baxter_license / total * 100);
+    })),
+
+    // --- S17: EBITDA & Net Profit data (万元) ---
+    's17-ebitda': JSON.stringify(yrs.map(yr => Math.round(yr.ebitda / 10000))),
+    's17-net-profit': JSON.stringify(yrs.map(yr => Math.round(yr.net_profit / 10000))),
+
+    // --- S17: Beds data ---
+    's17-beds-cumulative': JSON.stringify(yrs.map(yr => yr.cumulative_beds)),
+    's17-beds-active': JSON.stringify(yrs.map(yr => yr.active_paying)),
+
+    // --- S17: EBITDA turn-positive year label ---
+    's17-ebitda-year': (() => {
+      const idx = yrs.findIndex(yr => yr.ebitda > 0);
+      return idx >= 0 ? `EBITDA Year ${idx + 1}转正` : 'EBITDA未转正';
+    })(),
+
     // --- Base case revenue chart data ---
     ...buildBaseAndFundingFields(model, resultBest),
 

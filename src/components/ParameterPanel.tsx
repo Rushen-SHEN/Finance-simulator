@@ -286,8 +286,12 @@ export default function ParameterPanel({ model, resultBest, resultBase, onModelC
           <button onClick={() => { saveModel(model); openSnapshotRef.current = JSON.stringify(model); setLastAutoSave(Date.now()); }} className="px-3 py-1.5 text-xs rounded-lg bg-green-500/10 border border-green-500/30 text-green-400 hover:bg-green-500/20 transition-all">
             💾 保存
           </button>
-          <button onClick={onReset} className="px-3 py-1.5 text-xs rounded-lg bg-orange-500/10 border border-orange-500/30 text-orange-400 hover:bg-orange-500/20 transition-all">
-            ↻ 恢复默认
+          <button 
+            onClick={onReset} 
+            title="清空所有参数和本地存储，恢复到最新默认值（包括制造Overhead乘数）"
+            className="px-3 py-1.5 text-xs rounded-lg bg-red-500/15 border border-red-500/40 text-red-300 hover:bg-red-500/25 transition-all font-medium"
+          >
+            ⟲ 完全恢复
           </button>
           <button onClick={handleClose} className="px-3 py-1.5 text-xs rounded-lg bg-slate-700/50 border border-slate-600/50 text-slate-400 hover:bg-slate-600/50 transition-all">
             ✕ 关闭
