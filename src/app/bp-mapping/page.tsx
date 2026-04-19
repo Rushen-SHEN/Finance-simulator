@@ -162,19 +162,29 @@ export default function BPMappingPage() {
     })();
   }, [initialized, model]);
 
+  const scenario = model.active_scenario || 'neutral';
+  const so = model.scenario_overrides?.[scenario];
+
   const resultBest: CalcResult = useMemo(
-    () => calculate(model.global, model.yearly, model.opex, model.milestones_best),
-    [model]
+    () => calculate(model.global, model.yearly, model.opex, model.milestones_best, so),
+    [model, so]
   );
 
+  const effectiveRR = so?.rr_base ?? model.global.rr_base;
   const growthRates = useMemo(
-    () => [model.global.growth_y6, model.global.growth_y7, model.global.growth_y8, model.global.growth_y9, model.global.growth_y10],
-    [model.global]
+    () => [
+      so?.growth_y6 ?? model.global.growth_y6,
+      so?.growth_y7 ?? model.global.growth_y7,
+      so?.growth_y8 ?? model.global.growth_y8,
+      so?.growth_y9 ?? model.global.growth_y9,
+      so?.growth_y10 ?? model.global.growth_y10,
+    ],
+    [model.global, so]
   );
 
   const conflicts: DataConflict[] = useMemo(
-    () => detectConflicts(resultBest, model.global.rr_base, growthRates),
-    [resultBest, model.global.rr_base, growthRates]
+    () => detectConflicts(resultBest, effectiveRR, growthRates),
+    [resultBest, effectiveRR, growthRates]
   );
 
   const criticalConflicts = conflicts.filter(c => c.severity === 'critical');
@@ -601,7 +611,7 @@ export default function BPMappingPage() {
         <div className="mb-8">
           <h2 className="text-sm font-bold text-white mb-3 uppercase tracking-wider">§6 敏感性分析</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {Object.entries(BP_SENSITIVITY).map(([key, s]) => (
+            {Object.entries(BP_SENSITIVITY).map(([key, s]: [string, typeof BP_SENSITIVITY[keyof typeof BP_SENSITIVITY]]) => (
               <div key={key} className={`p-4 rounded-xl border ${
                 key === 'neutral' ? 'border-cyan-500/30 bg-cyan-500/5' :
                 key === 'optimistic' ? 'border-green-500/30 bg-green-500/5' :

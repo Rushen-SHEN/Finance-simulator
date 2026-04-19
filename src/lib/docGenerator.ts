@@ -276,8 +276,9 @@ ${yrs.filter((_, i) => i > 0).map((yr, i) => {
 
 **文件管理**:
 - 本文件由参数面板自动生成，基于 \`src/lib/docGenerator.ts\`
+- **Finance Simulator 是所有财务数据的单一真值来源 (Single Source of Truth)**
 - 所有数据变更均通过 §1 BP映射表追踪同步
-- BP全文权威源：\`docs/ARIA_BP_External.md\`
+- BP全文权威源：\`docs/ARIA_BP_External_clean.md\`（v2.2，财务数据从Simulator同步）
 `;
 
   return { content, version };

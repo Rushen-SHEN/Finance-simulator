@@ -407,4 +407,174 @@
   .slideFrame {
     width: 95vw;
   }
+
+  .finGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .appendixGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .gridCols4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .metricGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Phase 2: Market Slide ===== */
+
+.metricGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.75rem;
+}
+
+.metric {
+  background: rgba(10, 21, 39, 0.84);
+  border: 1px solid rgba(130, 188, 255, 0.18);
+  border-radius: 0.75rem;
+  padding: 1rem 1.25rem;
+}
+
+.metricValue {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #55d5ff;
+  margin-bottom: 0.125rem;
+}
+
+.metricHighlight {
+  color: #3df0d1;
+}
+
+.metricLabel {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #e9f1ff;
+  margin-bottom: 0.25rem;
+}
+
+.metricDetail {
+  font-size: 0.7rem;
+  color: #7590b2;
+  line-height: 1.4;
+}
+
+/* Hospital list */
+.hospitalList {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.hospital {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(5, 12, 24, 0.5);
+  border-radius: 0.5rem;
+  border: 1px solid rgba(130, 188, 255, 0.08);
+}
+
+.hospitalName {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #e9f1ff;
+  flex: 1;
+}
+
+.tier {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: #3df0d1;
+  background: rgba(61, 240, 209, 0.1);
+  border: 1px solid rgba(61, 240, 209, 0.2);
+  border-radius: 9999px;
+  padding: 0.15em 0.6em;
+}
+
+.hospitalBeds {
+  font-size: 0.8rem;
+  color: #55d5ff;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ===== Phase 2: Funding Slide ===== */
+
+.finGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.somCurvePanel {
+  background: rgba(10, 21, 39, 0.84);
+  border: 1px solid rgba(130, 188, 255, 0.18);
+  border-radius: 0.75rem;
+  padding: 1.25rem 1.5rem;
+}
+
+.somChartNote {
+  font-size: 0.7rem;
+  color: #5a6f88;
+  margin-top: 0.625rem;
+  line-height: 1.5;
+  font-style: italic;
+}
+
+/* 4-column table row variant */
+.tableRow4 {
+  grid-template-columns: 1.5fr repeat(3, 1fr);
+}
+
+/* ===== Phase 2: Revenue Slide ===== */
+
+.appendixGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+.gridCols4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.625rem;
+}
+
+/* Horizontal bar chart */
+.barTrack {
+  width: 100%;
+  height: 8px;
+  background: rgba(130, 188, 255, 0.08);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  background: linear-gradient(90deg, #55d5ff 0%, #3df0d1 100%);
+  border-radius: 4px;
+  transition: width 0.4s ease;
+}
+
+/* Wide table variant */
+.wideTable {
+  border: 1px solid rgba(130, 188, 255, 0.18);
+  border-radius: 0.75rem;
+  overflow: hidden;
+}
+
+.appendixNote {
+  font-size: 0.7rem;
+  color: #5a6f88;
+  line-height: 1.6;
+  margin-top: 0.5rem;
 }

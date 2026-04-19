@@ -7,6 +7,9 @@ import { loadModel } from '@/lib/storage';
 import SlideContainer from '@/components/roadshow/SlideContainer';
 import Slide from '@/components/roadshow/Slide';
 import PricingSlide from '@/components/roadshow/slides/PricingSlide';
+import MarketSlide from '@/components/roadshow/slides/MarketSlide';
+import FundingSlide from '@/components/roadshow/slides/FundingSlide';
+import RevenueSlide from '@/components/roadshow/slides/RevenueSlide';
 import styles from '@/components/roadshow/roadshow.module.css';
 
 /** All slide IDs in presentation order. Expand as slides are migrated. */
@@ -25,7 +28,8 @@ const SLIDE_IDS = [
   's12-team',
   's13-milestones',
   's14-funding',
-  's15-appendix',
+  's15-revenue',
+  's16-appendix',
 ];
 
 function PlaceholderSlide({ id, title, eyebrow }: { id: string; title: string; eyebrow: string }) {
@@ -59,19 +63,28 @@ export default function RoadshowReactPage() {
       <PlaceholderSlide id="s03-solution" title="产品方案" eyebrow="Solution" />
       <PlaceholderSlide id="s04-technology" title="核心技术" eyebrow="Technology" />
       <PlaceholderSlide id="s05-clinical" title="临床验证" eyebrow="Clinical Evidence" />
-      <PlaceholderSlide id="s06-market" title="市场规模" eyebrow="Market" />
+
+      {/* ── Phase 2: Market slide (was s06 placeholder) ── */}
+      <MarketSlide model={model} result={result} />
+
       <PlaceholderSlide id="s07-competition" title="竞争格局" eyebrow="Competition" />
       <PlaceholderSlide id="s08-traction" title="商业化进展" eyebrow="Traction" />
       <PlaceholderSlide id="s09-growth" title="增长模型" eyebrow="Growth Model" />
 
-      {/* ── Phase 1 Pilot: fully migrated pricing slide ── */}
+      {/* ── Phase 1: Pricing slide ── */}
       <PricingSlide model={model} result={result} />
 
       <PlaceholderSlide id="s11-regulatory" title="法规路径" eyebrow="Regulatory Path" />
       <PlaceholderSlide id="s12-team" title="核心团队" eyebrow="Team" />
       <PlaceholderSlide id="s13-milestones" title="项目阶段里程碑" eyebrow="Milestones" />
-      <PlaceholderSlide id="s14-funding" title="融资规划" eyebrow="Funding" />
-      <PlaceholderSlide id="s15-appendix" title="附录与引用" eyebrow="Appendix" />
+
+      {/* ── Phase 2: Funding slide (was s14 placeholder) ── */}
+      <FundingSlide model={model} result={result} />
+
+      {/* ── Phase 2: Revenue slide (new) ── */}
+      <RevenueSlide model={model} result={result} />
+
+      <PlaceholderSlide id="s16-appendix" title="附录与引用" eyebrow="Appendix" />
     </SlideContainer>
   );
 }
