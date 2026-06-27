@@ -153,7 +153,7 @@ export default function PricingSlide({ model, result }: PricingSlideProps) {
             <p className={styles.roiSummary}>
               补充情形：三类新购采用 5 年期 + SaaS 量折时，医院 ROI
               仍为正，对应约{' '}
-              <span className="text-[#3df0d1] font-bold">+{c3_5yrROI}%</span>。
+              <span className="text-[#55d5ff] font-bold">+{c3_5yrROI}%</span>。
             </p>
           </div>
 

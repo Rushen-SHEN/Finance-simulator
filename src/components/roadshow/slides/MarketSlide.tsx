@@ -96,15 +96,15 @@ export default function MarketSlide({ model, result }: MarketSlideProps) {
             <div className={styles.panelTitle}>产业环境</div>
             <ul className="text-sm text-[#9db0c9] leading-relaxed list-none p-0 m-0 space-y-2">
               <li>
-                <span className="text-[#3df0d1] font-semibold">政策利好：</span>
+                <span className="text-[#55d5ff] font-semibold">政策利好：</span>
                 国家卫健委 ICU 扩容目标、三类 AI 医疗器械绿色通道
               </li>
               <li>
-                <span className="text-[#3df0d1] font-semibold">竞争空白：</span>
+                <span className="text-[#55d5ff] font-semibold">竞争空白：</span>
                 国内尚无获证的 ICU 谵妄 AI 辅助系统
               </li>
               <li>
-                <span className="text-[#3df0d1] font-semibold">需求刚性：</span>
+                <span className="text-[#55d5ff] font-semibold">需求刚性：</span>
                 ICU 护士短缺 + DRG 控费双重驱动
               </li>
             </ul>
